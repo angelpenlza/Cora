@@ -1,0 +1,36 @@
+body {
+  margin: 0;
+}
+
+.navbar-container {
+  display: flex;
+  border-bottom: solid;
+}
+
+.navbar-item {
+  text-decoration: none;
+  color: black;
+  padding: 25px;
+  cursor: pointer;
+  flex-grow: 1;
+  text-align: center;
+}
+
+.navbar-space {
+  flex-grow: 2;
+}
+
+.navbar-item:hover {
+  background-color: rgb(215, 215, 215);
+}
+
+.error {
+  border: red;
+  color: red;
+  background-color: pink;
+  text-align: center;
+}
+
+.report-container {
+  padding: 30px;
+}
