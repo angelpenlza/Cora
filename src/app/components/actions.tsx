@@ -3,7 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+
+const USERNAME_MIN_LENGTH = 3
+
+function trim(value: FormDataEntryValue | null): string {
+  return (value ?? '').toString().trim()
+}
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
@@ -16,29 +21,64 @@ export async function login(formData: FormData) {
 
   if (error) {
     redirect('/pages/login?err=Invalid Credentials')
-    
-  } else {
-    revalidatePath('/', 'layout')
-    redirect('/')
   }
+
+  revalidatePath('/', 'layout')
+  redirect('/')
 }
 
 export async function signup(formData: FormData) {
   const supabase = await createClient()
 
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
+  const rawUsername = trim(formData.get('username'))
+  const email = trim(formData.get('email'))
+  const password = formData.get('password') as string
+
+  if (!rawUsername) {
+    redirect('/pages/signup?err=Username is required.')
+  }
+  if (rawUsername.length < USERNAME_MIN_LENGTH) {
+    redirect(`/pages/signup?err=Username must be at least ${USERNAME_MIN_LENGTH} characters.`)
+  }
+  if (!email) {
+    redirect('/pages/signup?err=Email is required.')
+  }
+  if (!password) {
+    redirect('/pages/signup?err=Password is required.')
   }
 
-  const { error } = await supabase.auth.signUp(data)
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', rawUsername)
+    .maybeSingle()
+
+  if (existing) {
+    redirect('/pages/signup?err=Username already taken.')
+  }
+
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        username: rawUsername,
+        full_name: rawUsername,
+      },
+    },
+  })
 
   if (error) {
-    redirect('/pages/signup?err=Issue signing up, try again.')
+    const message =
+      error.message?.toLowerCase().includes('already registered') ||
+      error.code === 'user_already_exists'
+        ? 'Email already registered.'
+        : error.message || 'Sign up failed. Try again.'
+    redirect(`/pages/signup?err=${encodeURIComponent(message)}`)
   }
 
   revalidatePath('/', 'layout')
-  redirect('/pages/signup?success=Verification email sent, check your inbox.')
+  redirect('/pages/signup?success=Verification email sent. Check your inbox.')
 }
 
 export async function signout() {

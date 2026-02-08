@@ -3,6 +3,16 @@
 import { signup } from "@/app/components/actions";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useFormStatus } from "react-dom";
+
+function SignupButton() {
+  const { pending } = useFormStatus()
+  return (
+    <button formAction={signup} className="signup-button" disabled={pending}>
+      {pending ? 'Signing up...' : 'Sign up'}
+    </button>
+  )
+}
 
 export default function Signup() {
     const searchParams = useSearchParams()
@@ -13,22 +23,34 @@ export default function Signup() {
       <form className="signup-container">
         <h2>Sign up</h2>
 
-        <label htmlFor="first-name">First name</label>
-        <input id="first-name" name="first-name" required/>
-
-        <label htmlFor="last-name">Last name</label>
-        <input id="last-name" name="last-name" required/>
-
-        <label htmlFor="username">Username</label>
-        <input id="username" name="username" required />
+        <label htmlFor="username">Username (min 3 characters)</label>
+        <input
+          id="username"
+          name="username"
+          autoComplete="username"
+          minLength={3}
+          required
+        />
 
         <label htmlFor="email">Email</label>
-        <input id="email" name="email" type="email" required />
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+        />
 
         <label htmlFor="password">Password</label>
-        <input id="password" name="password" type="password" required />
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          required
+        />
 
-        <button formAction={signup} className="signup-button">Sign up</button>
+        <SignupButton />
         <footer>Already have an account? <Link href='/pages/login'>Log in here</Link></footer>
         { success ? <div className="success">{success}</div> : <></> }
         { err ? <div className="error">{err}</div> : <></> }
