@@ -3,7 +3,6 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { create } from 'domain'
 
 const USERNAME_MIN_LENGTH = 3
 

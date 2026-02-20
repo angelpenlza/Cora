@@ -8,6 +8,7 @@
         ^ found in Project Settings > Data API
     * NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=key
         ^ found in Project Settings > API Keys
+* npm install resend (resend setup was configured through supabase so no api key needed here)
 
 
 First, run the development server:
