@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import NavBar from "./components/navbar";
+import RegisterSw from "./components/register-sw";
 import './styles/globals.css';
 import './styles/forms.css';
 import { createClient } from "@/lib/supabase/server";
@@ -50,6 +51,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <RegisterSw />
         <NavBar user={user}/>
         {children}
       </body>
