@@ -25,10 +25,16 @@ body {
 }
 
 .error {
-  border: red;
-  color: red;
-  background-color: pink;
+  display: flex;
+  justify-content: space-evenly;
+  border: rgb(150, 0, 0);
+  color: rgb(150, 0, 0);
+  background-color: rgb(255, 201, 210);
   text-align: center;
+  cursor: pointer;
+  padding: 10px;
+  border: solid;
+  margin: 10px 0 ;
 }
 
 .report-container {

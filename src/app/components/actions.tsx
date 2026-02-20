@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { create } from 'domain'
 
 const USERNAME_MIN_LENGTH = 3
 
@@ -34,18 +35,10 @@ export async function signup(formData: FormData) {
   const email = trim(formData.get('email'))
   const password = formData.get('password') as string
 
-  if (!rawUsername) {
-    redirect('/pages/signup?err=Username is required.')
-  }
   if (rawUsername.length < USERNAME_MIN_LENGTH) {
     redirect(`/pages/signup?err=Username must be at least ${USERNAME_MIN_LENGTH} characters.`)
   }
-  if (!email) {
-    redirect('/pages/signup?err=Email is required.')
-  }
-  if (!password) {
-    redirect('/pages/signup?err=Password is required.')
-  }
+
 
   const { data: existing } = await supabase
     .from('profiles')
@@ -82,8 +75,26 @@ export async function signup(formData: FormData) {
 }
 
 export async function signout() {
-    const supabase = await createClient();
-    await supabase.auth.signOut();
-    revalidatePath('/', 'layout')
-    redirect('/pages/login')
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  revalidatePath('/', 'layout')
+  redirect('/pages/login')
+}
+
+export async function forgotpass(formData: FormData) {
+  const supabase = await createClient()
+  const email = trim(formData.get('email'))
+
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: process.env.NEXT_PUBLIC_HOME_PAGE + '/pages/forgotpass/resetpass'
+  })
+  
+  redirect('/pages/forgotpass?success=Reset link sent to email')
+}
+
+export async function resetpass(formData: FormData) {
+  const supabase = await createClient()
+  const password = trim(formData.get('password'))
+
+  await supabase.auth.updateUser({ password: password })
 }

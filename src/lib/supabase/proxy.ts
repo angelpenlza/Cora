@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import path from 'path'
 
-const protectedRoutes = ['/pages/account', '/pages/upload']
+const protectedRoutes = ['/pages/account', '/pages/upload', '/pages/forgotpass/resetpass']
 const publicRoutes = ['/pages/login', '/pages/signup']
 
 export async function updateSession(request: NextRequest) {

@@ -4,3 +4,31 @@
     width: 300px;
     margin: auto;
 }
+
+label {
+    padding: 10px 0;
+}
+
+input {
+    padding: 10px;
+}
+
+.toggle-pass {
+    width: 50%;
+    border: solid;
+    text-align: center;
+    cursor: pointer;
+    margin: 10px 0;
+}
+
+.signup-button {
+    cursor: pointer;
+}
+
+.signup-button, .signup-button-blocked {
+    border: solid;
+    text-align: center;
+    background-color: rgb(233, 233, 233);
+    padding: 10px;
+}
+
