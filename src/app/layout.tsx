@@ -6,7 +6,7 @@ import './styles/globals.css';
 import './styles/forms.css';
 import { createClient } from "@/lib/supabase/server";
 import { Analytics } from "@vercel/analytics/next"
-
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,6 +45,7 @@ export default async function RootLayout({
     <html lang="en">
       <head>
          <Analytics />
+         <SpeedInsights />
         <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
         <link rel="shortcut icon" href="/assets/favicon.ico" />
