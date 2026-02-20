@@ -5,3 +5,7 @@ self.addEventListener('install', function () {
 self.addEventListener('activate', function (event) {
   event.waitUntil(self.clients.claim());
 });
+// Fetch handler so Samsung Internet recognizes the SW as controlling the page
+self.addEventListener('fetch', function (event) {
+  event.respondWith(fetch(event.request));
+});

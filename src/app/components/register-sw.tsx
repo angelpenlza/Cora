@@ -9,7 +9,7 @@ export default function RegisterSw() {
       'serviceWorker' in navigator
     ) {
       navigator.serviceWorker
-        .register('/sw.js')
+        .register('/sw.js', { scope: '/' })
         .catch(() => {});
     }
   }, []);
