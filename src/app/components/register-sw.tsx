@@ -6,6 +6,7 @@ export default function RegisterSw() {
   useEffect(() => {
     if (
       typeof window !== 'undefined' &&
+      window.isSecureContext &&
       'serviceWorker' in navigator
     ) {
       navigator.serviceWorker

@@ -3,7 +3,7 @@
   "short_name": "Cora",
   "id": "/",
   "scope": "/",
-  "description": "Insert description here",
+  "description": "A community reporting platform",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

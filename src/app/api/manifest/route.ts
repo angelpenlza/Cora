@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     short_name: 'Cora',
     id: `${base}/`,
     scope: `${base}/`,
-    description: 'Insert description here',
+    description: 'A community reporting platform',
     start_url: `${base}/`,
     display: 'standalone' as const,
     background_color: '#ffffff',

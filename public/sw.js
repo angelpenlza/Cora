@@ -7,5 +7,9 @@ self.addEventListener('activate', function (event) {
 });
 // Fetch handler so Samsung Internet recognizes the SW as controlling the page
 self.addEventListener('fetch', function (event) {
-  event.respondWith(fetch(event.request));
+  event.respondWith(
+    fetch(event.request).catch(function () {
+      return new Response('', { status: 503, statusText: 'Service Unavailable' });
+    })
+  );
 });
