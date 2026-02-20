@@ -1,0 +1,31 @@
+import { NextRequest } from 'next/server';
+
+export async function GET(request: NextRequest) {
+  const base = request.nextUrl.origin;
+
+  const manifest = {
+    name: 'Cora',
+    short_name: 'Cora',
+    id: `${base}/`,
+    scope: `${base}/`,
+    description: 'Insert description here',
+    start_url: `${base}/`,
+    display: 'standalone' as const,
+    background_color: '#ffffff',
+    theme_color: '#000000',
+    orientation: 'portrait-primary' as const,
+    icons: [
+      { src: `${base}/assets/web-app-manifest-192x192.png`, sizes: '192x192', type: 'image/png', purpose: 'any' as const },
+      { src: `${base}/assets/web-app-manifest-512x512.png`, sizes: '512x512', type: 'image/png', purpose: 'any' as const },
+      { src: `${base}/assets/web-app-manifest-192x192.png`, sizes: '192x192', type: 'image/png', purpose: 'maskable' as const },
+      { src: `${base}/assets/web-app-manifest-512x512.png`, sizes: '512x512', type: 'image/png', purpose: 'maskable' as const },
+    ],
+  };
+
+  return new Response(JSON.stringify(manifest), {
+    headers: {
+      'Content-Type': 'application/manifest+json',
+      'Cache-Control': 'public, max-age=0, must-revalidate',
+    },
+  });
+}

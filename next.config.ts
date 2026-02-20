@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async rewrites() {
+    return [{ source: '/manifest.json', destination: '/api/manifest' }];
+  },
   async headers() {
     return [
       {
