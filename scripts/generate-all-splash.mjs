@@ -65,3 +65,12 @@ for (const size of [...uniqueSizes].sort()) {
 }
 
 console.log('Done. Generated', uniqueSizes.size, 'splash images.');
+
+// Android: Chrome uses manifest background_color + theme_color + 512px icon + name for splash.
+// Generate a 512×512 from the same source so Android splash matches iOS branding.
+const assetsDir = join(__dirname, '..', 'public', 'assets');
+const androidSplash512 = join(assetsDir, 'android-splash-512x512.png');
+await sharp(sourcePath)
+  .resize(512, 512, { fit: 'cover', position: 'center' })
+  .toFile(androidSplash512);
+console.log('Written (Android splash): android-splash-512x512.png');
