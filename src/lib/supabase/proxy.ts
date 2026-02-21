@@ -1,9 +1,9 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
 import path from 'path'
+import { createServerClient } from '@supabase/ssr'
+const publicRoutes = ['/pages/login', '/pages/signup']
+import { NextResponse, type NextRequest } from 'next/server'
 
 const protectedRoutes = ['/pages/account', '/pages/upload', '/pages/forgotpass/resetpass']
-const publicRoutes = ['/pages/login', '/pages/signup']
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({

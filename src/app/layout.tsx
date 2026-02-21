@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import NavBar from "./components/navbar";
 import RegisterSw from "./components/register-sw";
-import DebugViewportLogger from "./components/debug-viewport-logger";
 import './styles/globals.css';
 import './styles/forms.css';
 import { createClient } from "@/lib/supabase/server";
@@ -118,13 +117,11 @@ export default async function RootLayout({
         <link rel="shortcut icon" href="/assets/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="splash-debug" content="v2-1320x2868" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         style={{ backgroundColor: '#ffffff' }}
       >
-        <DebugViewportLogger />
         <RegisterSw />
         <NavBar user={user}/>
         {children}
