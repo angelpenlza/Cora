@@ -16,7 +16,7 @@ export default async function Home() {
 
   return (
     <div className="home-container">
-      <h1>Reports</h1>
+      <h1>Reports and complaints</h1>
       { formattedReports?.length == 0 ? <div>no reports yet</div> : formattedReports }
     </div>
   )
