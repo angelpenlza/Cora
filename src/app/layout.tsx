@@ -50,7 +50,11 @@ export default async function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
         <link rel="shortcut icon" href="/assets/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
+        {/* iOS splash: show app icon while loading; one fallback for all devices */}
+        <link rel="apple-touch-startup-image" href="/web-app-manifest-512x512.png" />
         <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#000000" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
