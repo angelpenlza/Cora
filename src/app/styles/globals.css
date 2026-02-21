@@ -1,11 +1,12 @@
 /* Match manifest background so iOS splash / first paint is not blank */
 html {
-  background-color: #ff7b00;
+  background-color: #ffffff;
 }
 
 body {
   margin: 0;
-  background-color: #ff7b00;
+  background-color: #ffffff;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .navbar-container {

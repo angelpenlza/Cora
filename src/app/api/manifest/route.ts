@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     start_url: `${base}/`,
     display: 'standalone' as const,
     background_color: '#ffffff',
-    theme_color: '#000000',
+    theme_color: '#ffffff',
     orientation: 'portrait-primary' as const,
     icons: [
       { src: `${base}/assets/web-app-manifest-192x192.png`, sizes: '192x192', type: 'image/png', purpose: 'any' as const },
