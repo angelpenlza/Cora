@@ -117,6 +117,38 @@ export async function resetpass(formData: FormData) {
   const supabase = await createClient()
   const password = trim(formData.get('password'))
   const confirmPassword = trim(formData.get('confirmPassword'))
+  const code = trim(formData.get('code'))
+
+  // #region agent log
+  fetch('http://127.0.0.1:7619/ingest/b840f1ee-ac9c-402c-a851-53805b34e6d1', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Debug-Session-Id': 'a32f0d',
+    },
+    body: JSON.stringify({
+      sessionId: 'a32f0d',
+      runId: 'pre-fix',
+      hypothesisId: 'H1',
+      location: 'src/app/components/actions.tsx:resetpass:entry',
+      message: 'Entered resetpass',
+      data: {
+        hasPassword: !!password,
+        hasConfirmPassword: !!confirmPassword,
+        hasCode: !!code,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {})
+  // #endregion
+
+  if (!code) {
+    redirect(
+      `/pages/forgotpass/resetpass?err=${encodeURIComponent(
+        'Invalid or missing reset code. Please request a new link.'
+      )}`
+    )
+  }
 
   if (!password) {
     redirect(
@@ -134,14 +166,68 @@ export async function resetpass(formData: FormData) {
     )
   }
 
+  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
+    code
+  )
+
+  // #region agent log
+  fetch('http://127.0.0.1:7619/ingest/b840f1ee-ac9c-402c-a851-53805b34e6d1', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Debug-Session-Id': 'a32f0d',
+    },
+    body: JSON.stringify({
+      sessionId: 'a32f0d',
+      runId: 'pre-fix',
+      hypothesisId: 'H2',
+      location: 'src/app/components/actions.tsx:resetpass:afterExchange',
+      message: 'Result of exchangeCodeForSession',
+      data: {
+        hasCode: !!code,
+        exchangeErrorMessage: exchangeError?.message ?? null,
+        exchangeErrorName: exchangeError?.name ?? null,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {})
+  // #endregion
+
+  if (exchangeError) {
+    redirect(
+      `/pages/forgotpass/resetpass?err=${encodeURIComponent(
+        'Reset link is invalid or has expired. Please request a new link.'
+      )}`
+    )
+  }
+
   const { error } = await supabase.auth.updateUser({ password })
 
   if (error) {
-    const message = error.message?.toLowerCase().includes('jwt') ||
-      error.message?.toLowerCase().includes('session')
-      ? 'Reset link is invalid or has expired. Please request a new link.'
-      : error.message || 'Failed to reset password. Please try again.'
+    const message =
+      error.message || 'Failed to reset password. Please try again.'
 
+    // #region agent log
+    fetch('http://127.0.0.1:7619/ingest/b840f1ee-ac9c-402c-a851-53805b34e6d1', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Debug-Session-Id': 'a32f0d',
+      },
+      body: JSON.stringify({
+        sessionId: 'a32f0d',
+        runId: 'pre-fix',
+        hypothesisId: 'H3',
+        location: 'src/app/components/actions.tsx:resetpass:updateUserError',
+        message: 'updateUser failed',
+        data: {
+          errorMessage: error.message ?? null,
+          errorName: error.name ?? null,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {})
+    // #endregion
     redirect(
       `/pages/forgotpass/resetpass?err=${encodeURIComponent(
         message
