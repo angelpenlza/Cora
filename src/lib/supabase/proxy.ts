@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 const publicRoutes = ['/pages/login', '/pages/signup']
 import { NextResponse, type NextRequest } from 'next/server'
 
-const protectedRoutes = ['/pages/account', '/pages/upload', '/pages/forgotpass/resetpass']
+const protectedRoutes = ['/pages/account', '/pages/upload']
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -34,13 +34,24 @@ export async function updateSession(request: NextRequest) {
   // refreshing the auth token
   const session = await supabase.auth.getUser()
 
+  const url = request.nextUrl
+  const pathname = url.pathname
+  const code = url.searchParams.get('code')
+
+  // If Supabase sent us a recovery link to the wrong path (e.g. '/?code=...'),
+  // normalize it to the dedicated reset password page.
+  if (code && pathname !== '/pages/forgotpass/resetpass') {
+    const redirectUrl = new URL('/pages/forgotpass/resetpass', request.url)
+    redirectUrl.searchParams.set('code', code)
+    return NextResponse.redirect(redirectUrl)
+  }
+
   // protecting routes
-  const pathname = request.nextUrl.pathname
   const isProtected = protectedRoutes.includes(pathname)
 
-  if(isProtected && session.error) {
+  if (isProtected && session.error) {
     return NextResponse.redirect(new URL('/pages/login', request.url))
   }
-  
+
   return supabaseResponse
 }

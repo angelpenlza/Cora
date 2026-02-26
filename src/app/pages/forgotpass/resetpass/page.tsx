@@ -1,32 +1,36 @@
 /* 
   Reset Password page
-  - private route, must be a verfied user to access the page
-  - proxy protects this page by redirecting unauthenticated 
-    users to /pages/login, where they can access the forgot 
-    password link
-  - /pages/forgotpass is able to successfully send a reset link
-    to the email provided
-  - the link takes the user to the following URL: 
-    http://localhost:3000/pages/forgotpass/resetpass?code=generated-code
-    which does not work properly
-
-  - attempts to fix the issue:
-    - added the redirect URLs in the Supabase settings 
-      (Cora Database > Authentication > URL Configuration)
+  - public entry point from Supabase reset email link
+  - expects a `code` query parameter in the URL, which is
+    used on the server to exchange for a session before
+    updating the user's password
 */
 
 'use client'
 
 import { resetpass } from "@/app/components/actions";
+import { useSearchParams } from "next/navigation";
+import Err from "@/app/components/err";
 
 export default function ResetPass() {
+  const searchParams = useSearchParams();
+  const err = searchParams.get("err");
+  const code = searchParams.get("code") ?? "";
 
   return (
     <form>
       <h2>Password Reset</h2>
       <label htmlFor="password">Enter new password</label>
       <input name="password" type="password" required />
+
+      <label htmlFor="confirmPassword">Confirm new password</label>
+      <input name="confirmPassword" type="password" required />
+
+      {/* Carry the Supabase reset code through to the server action */}
+      <input type="hidden" name="code" value={code} />
+
       <button formAction={resetpass}>Reset Password</button>
+      {err ? <Err message={err} /> : null}
     </form>
-  ) 
+  );
 }
