@@ -119,29 +119,6 @@ export async function resetpass(formData: FormData) {
   const confirmPassword = trim(formData.get('confirmPassword'))
   const code = trim(formData.get('code'))
 
-  // #region agent log
-  fetch('http://127.0.0.1:7619/ingest/b840f1ee-ac9c-402c-a851-53805b34e6d1', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Debug-Session-Id': 'a32f0d',
-    },
-    body: JSON.stringify({
-      sessionId: 'a32f0d',
-      runId: 'pre-fix',
-      hypothesisId: 'H1',
-      location: 'src/app/components/actions.tsx:resetpass:entry',
-      message: 'Entered resetpass',
-      data: {
-        hasPassword: !!password,
-        hasConfirmPassword: !!confirmPassword,
-        hasCode: !!code,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {})
-  // #endregion
-
   if (!code) {
     redirect(
       `/pages/forgotpass/resetpass?err=${encodeURIComponent(
@@ -170,29 +147,6 @@ export async function resetpass(formData: FormData) {
     code
   )
 
-  // #region agent log
-  fetch('http://127.0.0.1:7619/ingest/b840f1ee-ac9c-402c-a851-53805b34e6d1', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Debug-Session-Id': 'a32f0d',
-    },
-    body: JSON.stringify({
-      sessionId: 'a32f0d',
-      runId: 'pre-fix',
-      hypothesisId: 'H2',
-      location: 'src/app/components/actions.tsx:resetpass:afterExchange',
-      message: 'Result of exchangeCodeForSession',
-      data: {
-        hasCode: !!code,
-        exchangeErrorMessage: exchangeError?.message ?? null,
-        exchangeErrorName: exchangeError?.name ?? null,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {})
-  // #endregion
-
   if (exchangeError) {
     redirect(
       `/pages/forgotpass/resetpass?err=${encodeURIComponent(
@@ -206,28 +160,6 @@ export async function resetpass(formData: FormData) {
   if (error) {
     const message =
       error.message || 'Failed to reset password. Please try again.'
-
-    // #region agent log
-    fetch('http://127.0.0.1:7619/ingest/b840f1ee-ac9c-402c-a851-53805b34e6d1', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Debug-Session-Id': 'a32f0d',
-      },
-      body: JSON.stringify({
-        sessionId: 'a32f0d',
-        runId: 'pre-fix',
-        hypothesisId: 'H3',
-        location: 'src/app/components/actions.tsx:resetpass:updateUserError',
-        message: 'updateUser failed',
-        data: {
-          errorMessage: error.message ?? null,
-          errorName: error.name ?? null,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {})
-    // #endregion
     redirect(
       `/pages/forgotpass/resetpass?err=${encodeURIComponent(
         message
