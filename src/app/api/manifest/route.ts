@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     short_name: 'Cora',
     id: `${base}/`,
     scope: `${base}/`,
-    description: 'A community reporting platform',
+    description: 'A community reporting platform built especially for Orange County!',
     start_url: `${base}/`,
     display: 'standalone' as const,
     background_color: '#ffffff',
