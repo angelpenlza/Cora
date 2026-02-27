@@ -21,11 +21,15 @@ self.addEventListener('push', function (event) {
 
   const data = event.data.json();
   const title = data.title || 'Cora';
-
+  const base = self.location.origin;
+  function absolute(url) {
+    if (!url) return base + '/assets/web-app-manifest-192x192.png';
+    return url.startsWith('http') ? url : base + (url.startsWith('/') ? url : '/' + url);
+  }
   const options = {
     body: data.body || '',
-    icon: data.icon || '/assets/web-app-manifest-192x192.png',
-    badge: data.badge || '/assets/web-app-manifest-192x192.png',
+    icon: absolute(data.icon),
+    badge: absolute(data.badge) || absolute(data.icon),
     vibrate: [100, 50, 100],
     data: {
       url: data.url || '/',
