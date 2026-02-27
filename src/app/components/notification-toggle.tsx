@@ -54,12 +54,54 @@ export default function NotificationToggle() {
     setError(null);
 
     try {
+      // #region agent log
+      fetch('http://127.0.0.1:7619/ingest/b840f1ee-ac9c-402c-a851-53805b34e6d1', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Debug-Session-Id': '0ad4ed',
+        },
+        body: JSON.stringify({
+          sessionId: '0ad4ed',
+          runId: 'ios',
+          hypothesisId: 'IOS1',
+          location: 'src/app/components/notification-toggle.tsx:handleSubscribe:start',
+          message: 'handleSubscribe start',
+          data: {
+            userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         setError('Notifications are blocked in your browser settings.');
         setLoading(false);
         return;
       }
+
+      // #region agent log
+      fetch('http://127.0.0.1:7619/ingest/b840f1ee-ac9c-402c-a851-53805b34e6d1', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Debug-Session-Id': '0ad4ed',
+        },
+        body: JSON.stringify({
+          sessionId: '0ad4ed',
+          runId: 'ios',
+          hypothesisId: 'IOS2',
+          location: 'src/app/components/notification-toggle.tsx:handleSubscribe:afterPermission',
+          message: 'Notification permission result',
+          data: {
+            permission,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
 
       const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!publicKey) {
@@ -69,6 +111,28 @@ export default function NotificationToggle() {
       }
 
       const registration = await navigator.serviceWorker.ready;
+
+      // #region agent log
+      fetch('http://127.0.0.1:7619/ingest/b840f1ee-ac9c-402c-a851-53805b34e6d1', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Debug-Session-Id': '0ad4ed',
+        },
+        body: JSON.stringify({
+          sessionId: '0ad4ed',
+          runId: 'ios',
+          hypothesisId: 'IOS3',
+          location: 'src/app/components/notification-toggle.tsx:handleSubscribe:afterReady',
+          message: 'Service worker ready on subscribe',
+          data: {
+            hasRegistration: !!registration,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+
       const sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey),
@@ -85,8 +149,33 @@ export default function NotificationToggle() {
       }
 
       setIsSubscribed(true);
-    } catch {
-      setError('Failed to subscribe to notifications.');
+    } catch (err: any) {
+      // #region agent log
+      fetch('http://127.0.0.1:7619/ingest/b840f1ee-ac9c-402c-a851-53805b34e6d1', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Debug-Session-Id': '0ad4ed',
+        },
+        body: JSON.stringify({
+          sessionId: '0ad4ed',
+          runId: 'ios',
+          hypothesisId: 'IOS4',
+          location: 'src/app/components/notification-toggle.tsx:handleSubscribe:error',
+          message: 'Error during handleSubscribe',
+          data: {
+            name: err?.name ?? null,
+            message: err?.message ?? null,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+
+      const fallbackMessage = 'Failed to subscribe to notifications.';
+      const extra =
+        err && (err as Error).message ? ` (${(err as Error).message})` : '';
+      setError(fallbackMessage + extra);
     } finally {
       setLoading(false);
     }
