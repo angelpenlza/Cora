@@ -1,22 +1,24 @@
-import { User } from "@supabase/supabase-js";
+import { User } from '@supabase/supabase-js';
+import { createReport } from '@/app/components/report-actions';
 
-export default function UploadForm({ user }: { user : User | null}) {
+export default function UploadForm({ user }: { user: User | null }) {
   return (
-    <form>
+    <form action={createReport} className="upload-form">
       <h1>Upload</h1>
 
-      <label>Title</label>
-      <input />
+      <label htmlFor="title">Title</label>
+      <input id="title" name="title" type="text" required />
 
-      <label>Category</label>
-      <input />
+      <label htmlFor="category">Category</label>
+      <input id="category" name="category" type="text" />
 
-      <label>Description</label>
-      <input />
+      <label htmlFor="description">Description</label>
+      <textarea id="description" name="description" rows={3} required />
 
-      <label>Image</label>
-      <input type="file" accept="image/png, image/jpeg"/>
+      <label htmlFor="image">Image</label>
+      <input id="image" name="image" type="file" accept="image/png, image/jpeg" />
 
+      <button type="submit">Submit report</button>
     </form>
-  )
+  );
 }
