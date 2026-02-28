@@ -31,8 +31,8 @@ self.addEventListener('push', function (event) {
   const base = self.location.origin;
   const options = {
     body: data.body || '',
-    // Notification Icon
-    icon: data.icon || (base + '/assets/icons/android-badge-icon.png'),
+    // this changed the status icon????
+    icon: data.icon || (base + '/assets/icons/badge-72x72.png'),
     // Hero Image: Only applicable to Android not iOS
     image: data.image || (base + '/assets/icons/noti-HeroImage.png'),
     // Status bar icon (96x96, monochrome) — small icon in system status bar
