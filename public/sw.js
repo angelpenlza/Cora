@@ -31,9 +31,9 @@ self.addEventListener('push', function (event) {
   const base = self.location.origin;
   const options = {
     body: data.body || '',
-    // Home Screen Icon
-    icon: data.icon || (base + '/assets/icons/apple-touch-icon.png'),
-    // This is where any attached images will be displayed
+    // Notification Icon
+    icon: data.icon || (base + '/assets/icons/badge-72x72.png'),
+    // Hero Image: Only applicable to Android not iOS
     image: data.image || (base + '/assets/icons/apple-image.png'),
     // Status bar icon (96x96, monochrome) — small icon in system status bar, not the right-side notification icon
     badge: data.badge || (base + '/assets/icons/badge-96x96.png'),
