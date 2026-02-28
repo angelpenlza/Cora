@@ -32,11 +32,11 @@ self.addEventListener('push', function (event) {
   const options = {
     body: data.body || '',
     // this changed the status icon????
-    icon: data.icon || (base + '/assets/icons/statusBarIcon-96x96.png'),
+    icon: data.icon || (base + '/assets/icons/badge-72x72.png'),
     // Hero Image: Only applicable to Android not iOS
     image: data.image || (base + '/assets/icons/Noti-HeroImage.png'),
     // Status bar icon (96x96, monochrome) — small icon in system status bar !!!!!!!!!!!!
-    badge: data.badge || (base + '/assets/icons/badge-72x72.png'),
+    badge: data.badge || (base + '/assets/icons/statusBarIcon-96x96.png'),
     vibrate: [100, 50, 100],
     data: {
       url: data.url || '/',
