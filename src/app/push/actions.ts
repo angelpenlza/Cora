@@ -12,12 +12,17 @@ if (publicKey && privateKey) {
   webpush.setVapidDetails('mailto:novaocc1@gmail.com', publicKey, privateKey);
 }
 
-/** Base URL for notification assets (icon, badge). Must be absolute for iOS/Android to load correctly. */
+/** Base URL for notification assets (icon, badge). Must be absolute and publicly reachable (no auth).
+ *  Prefer production URL so devices can load images when preview deployments are behind auth (401). */
 function getNotificationBaseUrl(): string {
+  const prod = process.env.NEXT_PUBLIC_APP_URL;
+  if (prod) {
+    return prod.startsWith('http') ? prod : `https://${prod}`;
+  }
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  return 'http://localhost:3000';
 }
 
 type SerializedSubscription = {
