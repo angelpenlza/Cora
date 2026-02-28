@@ -1,4 +1,5 @@
 // Minimal service worker required for PWA install (e.g. Samsung Internet)
+// v2: explicit notification icon/badge paths to fix Android "C" fallback
 self.addEventListener('install', function () {
   self.skipWaiting();
 });
@@ -22,14 +23,10 @@ self.addEventListener('push', function (event) {
   const data = event.data.json();
   const title = data.title || 'Cora';
   const base = self.location.origin;
-  function absolute(url) {
-    if (!url) return base + '/assets/badge-96x96.png';
-    return url.startsWith('http') ? url : base + (url.startsWith('/') ? url : '/' + url);
-  }
   const options = {
     body: data.body || '',
-    icon: absolute(data.icon),
-    badge: absolute(data.badge),
+    icon: base + '/icons/notification-icon.png',
+    badge: base + '/icons/notification-badge.png',
     vibrate: [100, 50, 100],
     data: {
       url: data.url || '/',
