@@ -132,7 +132,7 @@ export default async function RootLayout({
         <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
         <link rel="shortcut icon" href="/assets/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png" /> {/* Home Screen Icon */}
+        <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png" /> {/* Home Screen Icon for iOS*/}
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body

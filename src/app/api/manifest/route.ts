@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     orientation: 'portrait-primary' as const,
     icons: [
       { src: `${base}/assets/icons/apple-touch-icon.png`, sizes: '192x192', type: 'image/png', purpose: 'any' as const },
-      { src: `${base}/assets/icons/android-splash-512x512.png`, sizes: '512x512', type: 'image/png', purpose: 'any' as const },
+      { src: `${base}/assets/icons/android-splash-512x512.png`, sizes: '512x512', type: 'image/png', purpose: 'any' as const },// Android Home Screen Icon
       { src: `${base}/assets/icons/apple-touch-icon.png`, sizes: '192x192', type: 'image/png', purpose: 'maskable' as const },
       { src: `${base}/assets/icons/android-splash-512x512.png`, sizes: '512x512', type: 'image/png', purpose: 'maskable' as const },
     ],
