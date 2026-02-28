@@ -5,6 +5,16 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const protectedRoutes = ['/pages/account', '/pages/upload']
 
+/**
+ * Middleware-style helper for keeping Supabase auth sessions in sync with Next.
+ *
+ * Responsibilities:
+ * - Hydrate/refresh the Supabase session on each request (via cookies).
+ * - Normalize password recovery links to the dedicated reset page.
+ * - Enforce simple route protection for authenticated-only pages.
+ *
+ * Used from `src/proxy.ts` which is wired into Next's middleware config.
+ */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,

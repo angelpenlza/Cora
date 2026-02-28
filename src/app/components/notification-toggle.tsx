@@ -7,6 +7,11 @@ import {
   type PushSubscriptionJSON,
 } from '../push/actions';
 
+/**
+ * Convert a URL-safe base64 string (VAPID public key) to a `Uint8Array`.
+ *
+ * The Push API expects `applicationServerKey` as binary data instead of a string.
+ */
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -26,6 +31,10 @@ export default function NotificationToggle() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Check if a push subscription already exists for this service worker
+   * registration and hydrate local state accordingly.
+   */
   async function hydrateExistingSubscription() {
     try {
       const registration = await navigator.serviceWorker.ready;
@@ -47,6 +56,10 @@ export default function NotificationToggle() {
     }
   }, []);
 
+  /**
+   * Request browser permission, create a new PushSubscription, and persist it
+   * via the `subscribeUser` server action.
+   */
   async function handleSubscribe() {
     if (!isSupported || loading) return;
 
@@ -99,6 +112,10 @@ export default function NotificationToggle() {
     }
   }
 
+  /**
+   * Unsubscribe the existing PushSubscription (if any) and remove the
+   * server-side record via `unsubscribeUser`.
+   */
   async function handleUnsubscribe() {
     if (!isSupported || loading) return;
 

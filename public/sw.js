@@ -1,5 +1,11 @@
-// Minimal service worker required for PWA install (e.g. Samsung Internet)
-// v2: explicit notification icon/badge paths to fix Android "C" fallback
+/**
+ * Minimal service worker for Cora.
+ *
+ * Goals:
+ * - Provide enough functionality for browsers to treat
+ *   the app as a PWA and allow installation.
+ * - Handle Web Push messages and notification clicks for report updates.
+ */
 self.addEventListener('install', function () {
   self.skipWaiting();
 });
@@ -25,8 +31,9 @@ self.addEventListener('push', function (event) {
   const base = self.location.origin;
   const options = {
     body: data.body || '',
-    icon: base + '/icons/notification-icon.png',
-    badge: base + '/icons/notification-badge.png',
+    icon: data.icon || (base + '/assets/badge-96x96.png'),
+    image: data.image || base + '/icons/notification-image.png',
+    badge: data.badge || (base + '/assets/badge-96x96.png'),
     vibrate: [100, 50, 100],
     data: {
       url: data.url || '/',

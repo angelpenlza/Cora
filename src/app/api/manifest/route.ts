@@ -1,5 +1,12 @@
 import { NextRequest } from 'next/server';
 
+/**
+ * Dynamic PWA manifest endpoint.
+ *
+ * This route responds at `/api/manifest` (rewritten to `/manifest.json` in `next.config.ts`).
+ * Using a handler instead of a static JSON file allows the `start_url`, `id`, and icon URLs
+ * to be constructed from the incoming request origin (supporting multiple environments).
+ */
 export async function GET(request: NextRequest) {
   const base = request.nextUrl.origin;
 

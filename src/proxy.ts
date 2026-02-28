@@ -1,6 +1,12 @@
 import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/proxy'
 
+/**
+ * Next.js middleware entrypoint used to:
+ * - Keep Supabase auth cookies in sync on each request.
+ * - Redirect recovery links to the proper reset password route.
+ * - Guard authenticated-only pages.
+ */
 export async function proxy(request: NextRequest) {
   // update user's auth session
   return await updateSession(request)

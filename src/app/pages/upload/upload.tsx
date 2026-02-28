@@ -1,6 +1,19 @@
 import { User } from '@supabase/supabase-js';
 import { createReport } from '@/app/components/report-actions';
 
+/**
+ * Upload form for creating a new report.
+ *
+ * Props:
+ * - `user`: Supabase user or `null` (passed from the server page). At the
+ *   moment this component does not render differently based on auth state,
+ *   but the server action enforces authentication before inserting a report.
+ *
+ * Form:
+ * - Posts to the `createReport` server action.
+ * - Captures title, category, description, and an optional image file
+ *   (image handling can be wired up later).
+ */
 export default function UploadForm({ user }: { user: User | null }) {
   return (
     <form action={createReport} className="upload-form">

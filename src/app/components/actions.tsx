@@ -1,16 +1,41 @@
 'use server'
 
+/**
+ * Server Actions: authentication + account lifecycle.
+ *
+ * These functions run on the server (never in the browser) and are invoked from
+ * forms/components via `formAction`. They generally:
+ * - Call Supabase Auth APIs using the server client (cookie-aware session).
+ * - Use redirects for control flow (success + error messages via query params).
+ * - Revalidate the root layout so nav/session state updates immediately.
+ *
+ * Note: redirects throw internally in Next.js; code after `redirect()` does not run.
+ */
+
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 
+/** Minimum username length enforced before attempting sign-up. */
 const USERNAME_MIN_LENGTH = 3
 
+/**
+ * Normalize form values: coerce `null` to empty string and trim whitespace.
+ *
+ * Server actions receive `FormDataEntryValue | null`; this helper keeps the
+ * downstream logic consistent and avoids repeated casting.
+ */
 function trim(value: FormDataEntryValue | null): string {
   return (value ?? '').toString().trim()
 }
 
+/**
+ * Log a user in using Supabase email/password authentication.
+ *
+ * On failure, redirects back to the login page with a human-readable error.
+ * On success, revalidates the layout (to refresh user state) and redirects home.
+ */
 export async function login(formData: FormData) {
   const supabase = await createClient()
   const data = {
@@ -28,6 +53,16 @@ export async function login(formData: FormData) {
   redirect('/')
 }
 
+/**
+ * Create a new user account via Supabase Auth.
+ *
+ * - Validates username length.
+ * - Checks `profiles.username` uniqueness (application-level constraint).
+ * - Stores `username/full_name` in Auth user metadata (options.data).
+ *
+ * Success redirects back to signup with a "check your email" message because
+ * email verification may be enabled in Supabase.
+ */
 export async function signup(formData: FormData) {
   const supabase = await createClient()
 
@@ -74,6 +109,11 @@ export async function signup(formData: FormData) {
   redirect('/pages/signup?success=Verification email sent. Check your inbox.')
 }
 
+/**
+ * Sign the current user out and redirect to login.
+ *
+ * Layout is revalidated so the navbar immediately reflects signed-out state.
+ */
 export async function signout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
@@ -81,6 +121,12 @@ export async function signout() {
   redirect('/pages/login')
 }
 
+/**
+ * Request a password reset email via Supabase.
+ *
+ * Uses the request `Origin` header (or a configured fallback) to build an
+ * absolute redirect URL for the recovery link.
+ */
 export async function forgotpass(formData: FormData) {
   const supabase = await createClient()
   const email = trim(formData.get('email'))
@@ -113,6 +159,17 @@ export async function forgotpass(formData: FormData) {
   )
 }
 
+/**
+ * Complete a password reset flow.
+ *
+ * Expected inputs (via form):
+ * - `code`: Supabase recovery code from the email link.
+ * - `password` + `confirmPassword`: new password confirmation.
+ *
+ * Flow:
+ * 1) Exchange recovery code for a session (required by Supabase).
+ * 2) Update password for the authenticated user.
+ */
 export async function resetpass(formData: FormData) {
   const supabase = await createClient()
   const password = trim(formData.get('password'))

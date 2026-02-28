@@ -19,6 +19,15 @@ import { forgotpass } from "@/app/components/actions";
 import { useSearchParams } from "next/navigation";
 import Err from "@/app/components/err";
 
+/**
+ * "Forgot password" page.
+ *
+ * - Collects an email address and posts it to the `forgotpass` server action.
+ * - Displays success or error messages passed back as query parameters.
+ *
+ * The actual reset is completed on the dedicated `/pages/forgotpass/resetpass`
+ * page once the user follows the Supabase email link.
+ */
 export default function ForgotPass() {
   const searchParams = useSearchParams()
   const success = searchParams.get('success')

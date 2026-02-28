@@ -4,6 +4,16 @@ import Link from "next/link"
 import { type User } from "@supabase/supabase-js"
 import { signout } from "./actions"
 
+/**
+ * Top navigation bar.
+ *
+ * - Shows different links depending on whether a Supabase `user` is present.
+ * - Uses a client-side confirmation dialog before triggering the `signout` server action.
+ */
+
+/**
+ * Links visible only when the user is authenticated.
+ */
 const LoggedInItems = () => {
   const confirmSignout = () => {
     const cont = window.confirm('are you sure you want to log out?');
@@ -18,6 +28,9 @@ const LoggedInItems = () => {
   )
 }
 
+/**
+ * Links visible when there is no authenticated user.
+ */
 const LoggedOutItems = () => {
   return (
     <>
@@ -27,6 +40,10 @@ const LoggedOutItems = () => {
   )
 }
 
+/**
+ * Wrapper component that chooses which set of nav items to render
+ * based on the current Supabase `user` (passed from the root layout).
+ */
 export default function NavBar({ user }: { user: User | null }) {
 
   return (

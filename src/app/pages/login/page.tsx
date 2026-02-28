@@ -14,6 +14,14 @@ import { useSearchParams } from "next/navigation"
 import { useState } from "react";
 import Err from "@/app/components/err";
 
+/**
+ * Login page.
+ *
+ * - Renders an email/password form that posts to the `login` server action.
+ * - Includes a password visibility toggle for usability.
+ * - Links to the forgot-password flow and sign-up page.
+ * - Displays any error message passed via `?err=` query param using `Err`.
+ */
 export default function Login() {
   const searchParams = useSearchParams();
   const errMessage = searchParams.get('err')

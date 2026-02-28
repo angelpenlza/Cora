@@ -1,5 +1,23 @@
 'use server';
 
+/**
+ * Server Actions: Web Push subscription management + notification fan-out.
+ *
+ * This module is the server-side counterpart to client components that:
+ * - Register a Service Worker (`public/sw.js`)
+ * - Request Notification permission
+ * - Create a PushSubscription via `registration.pushManager.subscribe(...)`
+ *
+ * Responsibilities:
+ * - Persist user subscriptions in `push_subscriptions` (via user session).
+ * - Send notifications to all stored subscriptions (via service-role client).
+ *
+ * Security model:
+ * - `subscribeUser` / `unsubscribeUser` require an authenticated end-user.
+ * - `sendNotification` uses the Supabase service role key (admin client) to
+ *   read all subscriptions and send fan-out pushes.
+ */
+
 import webpush from 'web-push';
 import type { PushSubscription } from 'web-push';
 import { createClient } from '@/lib/supabase/server';
@@ -12,8 +30,13 @@ if (publicKey && privateKey) {
   webpush.setVapidDetails('mailto:novaocc1@gmail.com', publicKey, privateKey);
 }
 
-/** Base URL for notification assets (icon, badge). Must be absolute and publicly reachable (no auth).
- *  Prefer production URL so devices can load images when preview deployments are behind auth (401). */
+/**
+ * Resolve the absolute base URL used to reference notification assets (icon/badge).
+ *
+ * Requirements:
+ * - Must be publicly reachable by devices (no auth) so notification images load.
+ * - Prefer a stable production URL because preview deployments may be protected.
+ */
 function getNotificationBaseUrl(): string {
   const prod = process.env.NEXT_PUBLIC_APP_URL;
   if (prod) {
@@ -35,6 +58,12 @@ type SerializedSubscription = {
 
 export type PushSubscriptionJSON = SerializedSubscription;
 
+/**
+ * Store (or update) the authenticated user's push subscription.
+ *
+ * Uses `upsert` keyed on `endpoint` to avoid duplicates when browsers rotate keys.
+ * The user id is stored to support per-user subscription management.
+ */
 export async function subscribeUser(sub: PushSubscriptionJSON) {
   const supabase = await createClient();
   const {
@@ -72,6 +101,12 @@ export async function subscribeUser(sub: PushSubscriptionJSON) {
   return { success: true };
 }
 
+/**
+ * Remove all push subscriptions associated with the authenticated user.
+ *
+ * This is the server-side cleanup counterpart to calling `subscription.unsubscribe()`
+ * in the browser.
+ */
 export async function unsubscribeUser() {
   const supabase = await createClient();
   const {
@@ -96,6 +131,15 @@ export async function unsubscribeUser() {
   return { success: true };
 }
 
+/**
+ * Send a push notification to every stored subscription.
+ *
+ * This performs a best-effort fan-out:
+ * - Any 404/410 responses indicate an expired subscription and are deleted.
+ * - Other send errors are logged but do not stop the loop.
+ *
+ * Payload shape must match what `public/sw.js` expects (`title`, `body`, `icon`, `badge`).
+ */
 export async function sendNotification(message: string) {
   if (!publicKey || !privateKey) {
     throw new Error('VAPID keys are not configured on the server');
@@ -122,7 +166,7 @@ export async function sendNotification(message: string) {
   }
 
   const base = getNotificationBaseUrl();
-  const iconUrl = `${base}/assets/web-app-manifest-192x192.png`;
+  const iconUrl = `${base}/assets/badge-96x96.png`;
   const badgeUrl = `${base}/assets/badge-96x96.png`;
   const payload = JSON.stringify({
     title: 'Cora Notification',
@@ -157,6 +201,9 @@ export async function sendNotification(message: string) {
   return { success: true };
 }
 
+/**
+ * Convenience wrapper for the "new report created" event.
+ */
 export async function sendNewReportNotification(title: string) {
   const message = `New report: ${title}`;
   return sendNotification(message);

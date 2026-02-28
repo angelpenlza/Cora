@@ -24,6 +24,11 @@ import { useEffect, useState } from "react";
 import Err from "@/app/components/err";
 
 
+/**
+ * Submit button for the signup form.
+ *
+ * Uses `useFormStatus` to reflect server action pending state.
+ */
 function SignupButton() {
   const { pending } = useFormStatus()
   return (
@@ -58,6 +63,14 @@ export default function Signup() {
     }
 
     return (
+      /**
+       * Signup page.
+       *
+       * - Enforces minimum username length via HTML attributes and server validation.
+       * - Collects email and password, including a "confirm password" field.
+       * - Disables the primary button and shows a message when passwords do not match.
+       * - Surfaces `success` / `err` messages from query params.
+       */
       <form className="signup-container">
         <h2>Sign up</h2>
 

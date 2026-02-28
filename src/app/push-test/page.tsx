@@ -3,6 +3,10 @@
 import { useEffect, useState } from 'react';
 import { subscribeUser, unsubscribeUser, sendNotification, type PushSubscriptionJSON } from '../push/actions';
 
+/**
+ * Utility to convert the VAPID public key (URL-safe base64) into a `Uint8Array`
+ * for use with `registration.pushManager.subscribe`.
+ */
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -141,6 +145,12 @@ function PushNotificationManager() {
   );
 }
 
+/**
+ * Development/test page for exercising the push notification flow end-to-end.
+ *
+ * - Allows subscribing/unsubscribing to push from the browser.
+ * - Accepts a free-form message and sends it to all subscribers via the server action.
+ */
 export default function Page() {
   return <PushNotificationManager />;
 }

@@ -12,6 +12,13 @@ import { resetpass } from "@/app/components/actions";
 import { useSearchParams } from "next/navigation";
 import Err from "@/app/components/err";
 
+/**
+ * Reset password page.
+ *
+ * - Entry point for users coming from the Supabase password reset email.
+ * - Expects a `code` query parameter which is passed through to the server action.
+ * - Collects and validates new password + confirmation on the server side.
+ */
 export default function ResetPass() {
   const searchParams = useSearchParams();
   const err = searchParams.get("err");

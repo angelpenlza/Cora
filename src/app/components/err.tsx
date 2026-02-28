@@ -17,6 +17,15 @@
 
 import { useState } from "react"
 
+/**
+ * Small dismissible error banner component.
+ *
+ * Props:
+ * - `message`: string to display; when falsy, nothing is rendered.
+ *
+ * Note: state is local only. If an error is passed via query string and the
+ * page reloads with the same URL, the banner will reappear (by design).
+ */
 export default function Err({ message }: any) {
   const [show, setShow] = useState(true)
   const dismiss = () => {

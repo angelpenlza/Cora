@@ -1,6 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+/**
+ * Supabase server client factory.
+ *
+ * This variant:
+ * - Runs only on the server (uses `next/headers` cookies store).
+ * - Attaches RLS-aware auth/session cookies to outgoing Supabase requests.
+ * - Uses PKCE flow as configured in the Supabase project.
+ *
+ * It is safe to call from Server Components and Server Actions.
+ */
 export async function createClient() {
   const cookieStore = await cookies();
 
