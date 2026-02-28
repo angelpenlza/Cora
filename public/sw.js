@@ -31,9 +31,9 @@ self.addEventListener('push', function (event) {
   const base = self.location.origin;
   const options = {
     body: data.body || '',
-    // Full-color notification icon (Apple touch-style)
+    // Home Screen Icon
     icon: data.icon || (base + '/assets/icons/apple-touch-icon.png'),
-    // Large hero image for platforms that support it
+    // This is where any attached images will be displayed
     image: data.image || (base + '/assets/icons/apple-image.png'),
     // Badge glyph (96x96)
     badge: data.badge || (base + '/assets/icons/badge-96x96.png'),
