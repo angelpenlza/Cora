@@ -31,11 +31,9 @@ self.addEventListener('push', function (event) {
   const base = self.location.origin;
   const options = {
     body: data.body || '',
-    // image to the right of the notification
+    // These 3 are fallbacks in case one isn't assigned
     icon: data.icon || (base + '/assets/icons/statusBarIcon-96x96.png'),
-    // Hero Image: Only applicable to Android not iOS
     image: data.image || (base + '/assets/icons/Noti-HeroImage.png'),
-    // Status bar icon (96x96, monochrome) — small icon in system status bar come back to shis
     badge: data.badge || (base + '/assets/icons/statusBarIcon-96x96.png'),
     vibrate: [100, 50, 100],
     data: {
