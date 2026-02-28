@@ -31,9 +31,9 @@ self.addEventListener('push', function (event) {
   const base = self.location.origin;
   const options = {
     body: data.body || '',
-    icon: data.icon || (base + '/assets/badge-96x96.png'),
-    image: data.image || base + '/icons/notification-image.png',
-    badge: data.badge || (base + '/assets/badge-96x96.png'),
+    icon: data.icon || (base + '/assets/icons/apple-touch-icon.png'),
+    image: data.image || base + '/assets/icons/apple-image.png',
+    badge: data.badge || (base + '/assets/icons/badge-96x96.png'),
     vibrate: [100, 50, 100],
     data: {
       url: data.url || '/',
