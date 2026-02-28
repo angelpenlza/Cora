@@ -169,8 +169,8 @@ export async function sendNotification(message: string) {
   const iconUrl = `${base}/assets/icons/android-badge-icon.png`; //primary notification badge icon
   const badgeUrl = `${base}/assets/icons/statusBarIcon-96x96.png`;//primary notification status bar icon
   const payload = JSON.stringify({
-    title: 'Cora ',
-    body: message,
+    title: `New Report: ${message}`,
+    body: 'this is where the description of the report will go',
     icon: iconUrl,
     badge: badgeUrl,
   });
