@@ -32,11 +32,11 @@ self.addEventListener('push', function (event) {
   const options = {
     body: data.body || '',
     // Notification Icon
-    icon: data.icon || (base + '/assets/icons/badge-72x72.png'),
+    icon: data.icon || (base + '/assets/icons/android-badge-icon.png'),
     // Hero Image: Only applicable to Android not iOS
-    image: data.image || (base + '/assets/icons/apple-image.png'),
-    // Status bar icon (96x96, monochrome) — small icon in system status bar, not the right-side notification icon
-    badge: data.badge || (base + '/assets/icons/badge-96x96.png'),
+    image: data.image || (base + '/assets/icons/noti-HeroImage.png'),
+    // Status bar icon (96x96, monochrome) — small icon in system status bar
+    badge: data.badge || (base + '/assets/icons/statusBarIcon-96x96.png'),
     vibrate: [100, 50, 100],
     data: {
       url: data.url || '/',

@@ -202,7 +202,7 @@ export async function sendNotification(message: string) {
 }
 
 /**
- * Convenience wrapper for the "new report created" event.
+ * Notification text for new report created.
  */
 export async function sendNewReportNotification(title: string) {
   const message = `New report: ${title}`;
