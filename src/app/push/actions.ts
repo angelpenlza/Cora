@@ -166,10 +166,10 @@ export async function sendNotification(message: string) {
   }
 
   const base = getNotificationBaseUrl();
-  const iconUrl = `${base}/assets/icons/apple-touch-icon.png`;
-  const badgeUrl = `${base}/assets/icons/badge-96x96.png`;
+  const iconUrl = `${base}/assets/icons/android-badge-icon.png`;
+  const badgeUrl = `${base}/assets/icons/statusBarIcon-96x96.png`;
   const payload = JSON.stringify({
-    title: 'Cora Notification',
+    title: 'Cora ',
     body: message,
     icon: iconUrl,
     badge: badgeUrl,

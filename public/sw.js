@@ -31,7 +31,7 @@ self.addEventListener('push', function (event) {
   const base = self.location.origin;
   const options = {
     body: data.body || '',
-    // this changed the status icon???? com back to this
+    // image to the right of the notification
     icon: data.icon || (base + '/assets/icons/statusBarIcon-96x96.png'),
     // Hero Image: Only applicable to Android not iOS
     image: data.image || (base + '/assets/icons/Noti-HeroImage.png'),
