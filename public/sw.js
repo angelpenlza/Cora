@@ -35,7 +35,7 @@ self.addEventListener('push', function (event) {
     icon: data.icon || (base + '/assets/icons/apple-touch-icon.png'),
     // This is where any attached images will be displayed
     image: data.image || (base + '/assets/icons/apple-image.png'),
-    // Badge glyph (96x96)
+    // Status bar icon (96x96, monochrome) — small icon in system status bar, not the right-side notification icon
     badge: data.badge || (base + '/assets/icons/badge-96x96.png'),
     vibrate: [100, 50, 100],
     data: {
