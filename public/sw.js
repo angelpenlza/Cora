@@ -31,11 +31,11 @@ self.addEventListener('push', function (event) {
   const base = self.location.origin;
   const options = {
     body: data.body || '',
-    // this changed the status icon????
+    // this changed the status icon???? com back to this
     icon: data.icon || (base + '/assets/icons/statusBarIcon-96x96.png'),
     // Hero Image: Only applicable to Android not iOS
     image: data.image || (base + '/assets/icons/Noti-HeroImage.png'),
-    // Status bar icon (96x96, monochrome) — small icon in system status bar !!!!!!!!!!!!
+    // Status bar icon (96x96, monochrome) — small icon in system status bar come back to shis
     badge: data.badge || (base + '/assets/icons/statusBarIcon-96x96.png'),
     vibrate: [100, 50, 100],
     data: {
