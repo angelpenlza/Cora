@@ -23,42 +23,19 @@ self.addEventListener('push', function (event) {
   const title = data.title || 'Cora';
   const base = self.location.origin;
   function absolute(url) {
-    if (!url) return base + '/assets/web-app-manifest-192x192.png';
+    if (!url) return base + '/assets/badge-96x96.png';
     return url.startsWith('http') ? url : base + (url.startsWith('/') ? url : '/' + url);
   }
   const options = {
     body: data.body || '',
     icon: absolute(data.icon),
-    badge: absolute(data.badge) || absolute(data.icon),
+    badge: absolute(data.badge),
     vibrate: [100, 50, 100],
     data: {
       url: data.url || '/',
       dateOfArrival: Date.now(),
     },
   };
-
-  // #region agent log
-  try {
-    fetch('http://127.0.0.1:7619/ingest/b840f1ee-ac9c-402c-a851-53805b34e6d1', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '281cae' },
-      body: JSON.stringify({
-        sessionId: '281cae',
-        runId: 'sw-push',
-        hypothesisId: 'H3-H5',
-        location: 'sw.js:push',
-        message: 'SW received push',
-        data: {
-          receivedBadge: data.badge,
-          receivedIcon: data.icon,
-          resolvedBadge: options.badge,
-          resolvedIcon: options.icon,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(function () {});
-  } catch (e) {}
-  // #endregion
 
   event.waitUntil(self.registration.showNotification(title, options));
 });
