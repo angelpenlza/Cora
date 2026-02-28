@@ -117,12 +117,32 @@ export async function sendNotification(message: string) {
   }
 
   const base = getNotificationBaseUrl();
+  const iconUrl = `${base}/assets/web-app-manifest-192x192.png`;
+  const badgeUrl = `${base}/assets/badge-72x72.png`;
   const payload = JSON.stringify({
     title: 'Cora Notification',
     body: message,
-    icon: `${base}/assets/web-app-manifest-192x192.png`,
-    badge: `${base}/assets/badge-72x72.png`,
+    icon: iconUrl,
+    badge: badgeUrl,
   });
+
+  // #region agent log (prod: check Vercel/host function logs for [DEBUG-BADGE])
+  const debugPayload = { base, iconUrl, badgeUrl, payloadPreview: payload.substring(0, 280) };
+  console.log('[DEBUG-BADGE] push payload', JSON.stringify(debugPayload));
+  fetch('http://127.0.0.1:7619/ingest/b840f1ee-ac9c-402c-a851-53805b34e6d1', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '281cae' },
+    body: JSON.stringify({
+      sessionId: '281cae',
+      runId: 'sendNotification',
+      hypothesisId: 'H1-H2',
+      location: 'push/actions.ts:payload',
+      message: 'Push payload built',
+      data: debugPayload,
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
 
   for (const sub of subscriptions) {
     const pushSubscription: PushSubscription = {

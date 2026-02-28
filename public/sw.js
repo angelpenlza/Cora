@@ -37,6 +37,29 @@ self.addEventListener('push', function (event) {
     },
   };
 
+  // #region agent log
+  try {
+    fetch('http://127.0.0.1:7619/ingest/b840f1ee-ac9c-402c-a851-53805b34e6d1', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '281cae' },
+      body: JSON.stringify({
+        sessionId: '281cae',
+        runId: 'sw-push',
+        hypothesisId: 'H3-H5',
+        location: 'sw.js:push',
+        message: 'SW received push',
+        data: {
+          receivedBadge: data.badge,
+          receivedIcon: data.icon,
+          resolvedBadge: options.badge,
+          resolvedIcon: options.icon,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(function () {});
+  } catch (e) {}
+  // #endregion
+
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
