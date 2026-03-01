@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     start_url: `${base}/`,//landing page of the app when the app is launched
     display: 'standalone' as const,//specify preferred display mode for the app
     background_color: '#ffffff',//splash screen background color
-    theme_color: '##ff8800',// colors the surrounding os 
+    theme_color: '#ff8800',// colors the surrounding os 
     orientation: 'portrait-primary' as const,
     icons: [
       { src: `${base}/assets/icons/apple-touch-icon.png`, sizes: '192x192', type: 'image/png', purpose: 'any' as const },
