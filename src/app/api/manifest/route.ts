@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     description: 'A community reporting platform built especially for Orange County!',//metadata description
     start_url: `${base}/`,//landing page of the app when the app is launched
     display: 'standalone' as const,//specify preferred display mode for the app
-    background_color: '#ffffff',//splash screen background color
+    background_color: '#ff8800',//splash screen background color
     theme_color: '#ff8800',// colors the surrounding os 
     orientation: 'portrait-primary' as const,
     icons: [
