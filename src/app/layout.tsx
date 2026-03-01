@@ -123,7 +123,7 @@ export default async function RootLayout({
   } = await supabase.auth.getUser();
 
   return (
-    <html lang="en" style={{ backgroundColor: '#ffffff' }}>
+    <html lang="en" >
       <head>
         <meta name="theme-color" content="#ffffff" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -137,7 +137,6 @@ export default async function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        style={{ backgroundColor: '#ffffff' }}
       >
         <RegisterSw />
         <NavBar user={user}/>
