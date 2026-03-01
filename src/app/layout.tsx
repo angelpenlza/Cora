@@ -40,7 +40,6 @@ export const metadata: Metadata = {
   title: "Cora",
   description: "A community reporting platform",
   manifest: "/manifest.json",
-  themeColor: "#ffffff",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
