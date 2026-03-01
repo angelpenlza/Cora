@@ -124,7 +124,7 @@ export default async function RootLayout({
   return (
     <html lang="en" >
       <head>
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#ff8800" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
          <Analytics />
          <SpeedInsights />
