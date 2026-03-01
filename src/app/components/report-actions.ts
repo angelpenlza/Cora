@@ -62,7 +62,7 @@ export async function createReport(formData: FormData) {
       report_title: title,
       report_description: description,
       // Minimal required fields for reports table / RLS
-      category_id: 1, // e.g. 'Safety' from your seed data
+      category_id: 1, // e.g. 'Safety' from current seed data
       created_by: user.id,
       location: 'POINT(0 0)', // placeholder location; replace with real coordinates later
     })

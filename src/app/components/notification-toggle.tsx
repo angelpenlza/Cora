@@ -52,6 +52,9 @@ export default function NotificationToggle() {
 
     if ('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window) {
       setIsSupported(true);
+      if (!('serviceWorker' in navigator)) console.warn('No serviceWorker support');
+      if (!('PushManager' in window)) console.warn('No PushManager support');
+      if (!('Notification' in window)) console.warn('No Notification API');
       void hydrateExistingSubscription();
     }
   }, []);
@@ -80,14 +83,15 @@ export default function NotificationToggle() {
         setLoading(false);
         return;
       }
-
+      // check if service worker is enabled & push manager is supported by browser, .subscribe() creates a subscription object
       const registration = await navigator.serviceWorker.ready;
       const sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey),
       });
-
+      // serialize the subscription object to a JSON string and save to database
       const serialized = JSON.parse(JSON.stringify(sub)) as PushSubscriptionJSON;
+      // save the subscription to the database
       const result = await subscribeUser(serialized);
 
       if (!result?.success) {
@@ -146,7 +150,7 @@ export default function NotificationToggle() {
       </div>
     );
   }
-
+// this is the notification UI toggle component that allows the user to enable or disable push notifications everything above is the client side logic
   return (
     <div
       style={{

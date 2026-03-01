@@ -1,6 +1,4 @@
 /**
- * Minimal service worker for Cora.
- *
  * Goals:
  * - Provide enough functionality for browsers to treat
  *   the app as a PWA and allow installation.
@@ -42,7 +40,7 @@ self.addEventListener('push', function (event) {
     },
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(self.registration.showNotification(title, options)); 
 });
 
 

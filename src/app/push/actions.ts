@@ -4,7 +4,7 @@
  * Server Actions: Web Push subscription management + notification fan-out.
  *
  * This module is the server-side counterpart to client components that:
- * - Register a Service Worker (`public/sw.js`)
+ * - Registers a Service Worker (`public/sw.js`)
  * - Request Notification permission
  * - Create a PushSubscription via `registration.pushManager.subscribe(...)`
  *
@@ -31,8 +31,6 @@ if (publicKey && privateKey) {
 }
 
 /**
- * Resolve the absolute base URL used to reference notification assets (icon/badge).
- *
  * Requirements:
  * - Must be publicly reachable by devices (no auth) so notification images load.
  * - Prefer a stable production URL because preview deployments may be protected.
@@ -66,10 +64,7 @@ export type PushSubscriptionJSON = SerializedSubscription;
  */
 export async function subscribeUser(sub: PushSubscriptionJSON) {
   const supabase = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  const { data: { user }, error: userError, } = await supabase.auth.getUser();
 
   if (userError || !user) {
     return { success: false, error: 'Not authenticated' };
@@ -144,12 +139,12 @@ export async function sendNotification(message: string) {
   if (!publicKey || !privateKey) {
     throw new Error('VAPID keys are not configured on the server');
   }
-
+//we have a tserver role to push notifications to all users
   if (!adminClient) {
     console.error('Supabase admin client is not configured');
     return { success: false, error: 'Server push configuration is missing' };
   }
-
+//server role client to send notifications to all users
   const supabase = adminClient;
 
   const { data: subscriptions, error } = await supabase
@@ -169,7 +164,7 @@ export async function sendNotification(message: string) {
   const iconUrl = `${base}/assets/icons/android-badge-icon.png`; //primary notification badge icon
   const badgeUrl = `${base}/assets/icons/statusBarIcon-96x96.png`;//primary notification status bar icon
   const payload = JSON.stringify({
-    title: `New Report: ${message}`,
+    title: message,
     body: 'this is where the description of the report will go',
     icon: iconUrl,
     badge: badgeUrl,

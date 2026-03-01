@@ -16,14 +16,13 @@ import { useEffect } from 'react';
 export default function RegisterSw() {
   useEffect(() => {
     if (
-      typeof window !== 'undefined' &&
       window.isSecureContext &&
       'serviceWorker' in navigator
     ) {
       navigator.serviceWorker
-        .register('/sw.js', { scope: '/' })
-        .catch(() => {});
-    }
+  .register('/sw.js', { scope: '/' })
+  .then(reg => console.log('SW registered', reg))
+  .catch(err => console.error('SW registration failed', err));    }
   }, []);
   return null;
 }

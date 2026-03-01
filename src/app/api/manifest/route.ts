@@ -15,18 +15,18 @@ export async function GET(request: NextRequest) {
     name: 'Cora',
     short_name: 'Cora',
     id: `${base}/`,//id identifies what version of the app is being installed localhost or production
-    scope: `${base}/`,//scope defines the urls that the app "owns" and controls in navigation. base is the root url of the app so all urls within the app will be controlled by the app.
+    scope: `${base}/`,//what pages can the app navigate to if we had any desktop specific pages we would exclude them from the scope
     description: 'A community reporting platform built especially for Orange County!',//metadata description
     start_url: `${base}/`,//landing page of the app when the app is launched
     display: 'standalone' as const,//specify preferred display mode for the app
     background_color: '#ff8800',//splash screen background color
-    theme_color: '#ff8800',// colors the surrounding os 
+    theme_color: '#ff8800',// colors the statis nar
     orientation: 'portrait-primary' as const,
     icons: [
-      { src: `${base}/assets/icons/apple-touch-icon.png`, sizes: '192x192', type: 'image/png', purpose: 'any' as const },
+      { src: `${base}/assets/icons/apple-touch-icon.png`, sizes: '192x192', type: 'image/png', purpose: 'any' as const },// Apple Touch Icon
       { src: `${base}/assets/icons/android-splash-512x512.png`, sizes: '512x512', type: 'image/png', purpose: 'any' as const },// Android Home Screen Icon
-      { src: `${base}/assets/icons/apple-touch-icon.png`, sizes: '192x192', type: 'image/png', purpose: 'maskable' as const },
-      { src: `${base}/assets/icons/android-splash-512x512.png`, sizes: '512x512', type: 'image/png', purpose: 'maskable' as const },
+      { src: `${base}/assets/icons/apple-touch-icon.png`, sizes: '192x192', type: 'image/png', purpose: 'maskable' as const },// Apple Touch Icon masked
+      { src: `${base}/assets/icons/android-splash-512x512.png`, sizes: '512x512', type: 'image/png', purpose: 'maskable' as const },//Masked Android Home Screen Icon
     ],
   };
 

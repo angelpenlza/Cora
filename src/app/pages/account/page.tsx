@@ -11,9 +11,7 @@ import NotificationToggle from '@/app/components/notification-toggle';
  */
 export default async function Account() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user }, } = await supabase.auth.getUser();
   if (!user) redirect('/pages/login');
 
   const { data: profile } = await supabase

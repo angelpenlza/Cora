@@ -9,7 +9,7 @@ import { cookies } from "next/headers";
  * - Attaches RLS-aware auth/session cookies to outgoing Supabase requests.
  * - Uses PKCE flow as configured in the Supabase project.
  *
- * It is safe to call from Server Components and Server Actions.
+ * It is safe to call from Server Components and Server Actions.d 
  */
 export async function createClient() {
   const cookieStore = await cookies();
