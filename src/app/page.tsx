@@ -3,13 +3,20 @@ import ReportsMap from "./components/ReportsMap";
 
 export default async function Home() {
   const supabase = await createClient();
-  const { data: reports } = await supabase.from("reports").select();
 
-  const formattedReports = reports?.map((report) => (
+  const { data: reports, error } = await supabase
+    .from("reports_map")
+    .select("report_id, report_title, report_description, report_image, category_id, location_geojson");
+
+  if (error) {
+    console.error("Supabase error:", error.message);
+  }
+
+  const formattedReports = (reports ?? []).map((report) => (
     <div key={report.report_id} className="report">
       <h3>{report.report_title}</h3>
       <p>{report.report_description}</p>
-      {report.report_image ? <img /> : <div className="no-image">Empty</div>}
+      {report.report_image ? <img src={report.report_image} alt="" /> : <div className="no-image">Empty</div>}
     </div>
   ));
 
@@ -17,14 +24,9 @@ export default async function Home() {
     <div className="home-container">
       <h1>Reports</h1>
 
-      {/* test component */}
-      <ReportsMap />
+      <ReportsMap reports={reports ?? []} />
 
-      {formattedReports?.length === 0 ? (
-        <div>no reports yet</div>
-      ) : (
-        formattedReports
-      )}
+      {formattedReports.length === 0 ? <div>no reports yet</div> : formattedReports}
     </div>
   );
 }
