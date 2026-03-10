@@ -145,7 +145,7 @@ export default function VerifyPhoneForm() {
             type="tel"
             inputMode="tel"
             autoComplete="tel"
-            placeholder="(714) 234-8210"
+            placeholder="(XXX)-XXX-XXXX"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             required
