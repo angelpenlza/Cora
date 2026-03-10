@@ -8,7 +8,7 @@ import {
   verifyPhoneOtp,
 } from '@/app/components/phone-verification-actions';
 
-const COOLDOWN_SEC = 60;
+const COOLDOWN_SEC = 600;
 const OTP_LENGTH = 6;
 
 function formatPhone(raw: string): string {
