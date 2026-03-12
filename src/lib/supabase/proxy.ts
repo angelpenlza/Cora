@@ -1,4 +1,3 @@
-import path from 'path'
 import { createServerClient } from '@supabase/ssr'
 const publicRoutes = ['/pages/login', '/pages/signup']
 import { NextResponse, type NextRequest } from 'next/server'
@@ -54,10 +53,6 @@ export async function updateSession(request: NextRequest) {
     const redirectUrl = new URL('/pages/resetpass', request.url)
     redirectUrl.searchParams.set('code', code)
     return NextResponse.redirect(redirectUrl)
-  }
-
-  if(code && pathname === '/') {
-    console.log(path)
   }
 
   // protecting routes

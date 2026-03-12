@@ -20,3 +20,5 @@ export const config = {
     '/((?!_next/static|_next/image|assets/|favicon.ico|sw\\.js|manifest\\.json|api/manifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 }
+
+export const runtime = 'edge'
