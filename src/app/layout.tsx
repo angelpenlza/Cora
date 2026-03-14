@@ -113,6 +113,8 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Root layout component.
  *

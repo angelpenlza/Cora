@@ -29,6 +29,7 @@ export default function UploadForm({
   const searchParams = useSearchParams();
   const router = useRouter();
   const err = searchParams.get('err');
+  const reportErr = searchParams.get('report_err');
   const [dismissedHere, setDismissedHere] = useState(false);
   const showPhoneModal =
     !!err || ((!!user && !phoneVerified) && !dismissedHere);
@@ -47,7 +48,11 @@ export default function UploadForm({
       />
       <form action={createReport} className="upload-form">
         <h1>Upload</h1>
-
+        {reportErr && (
+          <p className="error" role="alert">
+            {reportErr}
+          </p>
+        )}
       <label htmlFor="title">Title</label>
       <input id="title" name="title" type="text" required />
 

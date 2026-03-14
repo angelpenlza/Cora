@@ -47,11 +47,11 @@ export async function createReport(formData: FormData) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('phone_verified, phone')
+    .select('phone_verified')
     .eq('id', user.id)
     .maybeSingle();
 
-  if (!profile?.phone_verified || profile.phone == null) {
+  if (!profile?.phone_verified) {
     redirect(
       `/pages/upload?err=${encodeURIComponent(
         'You must verify your phone number before you can create a report.',
@@ -64,7 +64,7 @@ export async function createReport(formData: FormData) {
 
   if (!title || !description) {
     redirect(
-      `/pages/upload?err=${encodeURIComponent(
+      `/pages/upload?report_err=${encodeURIComponent(
         'Title and description are required.',
       )}`,
     );
@@ -85,10 +85,12 @@ export async function createReport(formData: FormData) {
 
   if (error || !data) {
     console.error('Error creating report', error);
+    const isPermissionDenied = error?.code === '42501';
+    const message = isPermissionDenied
+      ? 'Database permission error. Reports table RLS may reference auth.users — use auth.uid() in policies instead.'
+      : 'Failed to create report. Please try again.';
     redirect(
-      `/pages/upload?err=${encodeURIComponent(
-        'Failed to create report. Please try again.',
-      )}`,
+      `/pages/upload?report_err=${encodeURIComponent(message)}`,
     );
   }
 
