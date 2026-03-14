@@ -1,28 +1,58 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
-
-type Report = {
-  report_id: string | number;
-  report_title: string | null;
-  report_description: string | null;
-  report_image: string | null;
-  category_id: number | null;
-  location_geojson: { type: "Point"; coordinates: [number, number] } | null;
-};
-
-function categoryToColor(categoryId: number | null) {
-  if (categoryId === 1) return "red";
-  if (categoryId === 4) return "yellow";
-  return "green";
-}
+import type { Report } from "./mapTypes";
+import {
+  CATEGORY_OPTIONS,
+  categoryToIcon,
+  categoryToLabel,
+  formatReportDate,
+  scoreToStatus,
+  statusToColor,
+} from "./mapHelpers";
+import { styles } from "./mapStyles";
 
 export default function ReportsMap({ reports }: { reports: Report[] }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
+  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
+
   const [locationError, setLocationError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(true);
+
+  const [selectedCategories, setSelectedCategories] = useState<number[]>(
+    CATEGORY_OPTIONS.map((c) => c.id)
+  );
+
+  const [statusFilters, setStatusFilters] = useState({
+    supported: true,
+    unconfirmed: true,
+    disputed: true,
+  });
+
+  const filteredReports = useMemo(() => {
+    return (reports ?? []).filter((r) => {
+      const coords = r.location_geojson?.coordinates;
+      if (!coords || coords.length !== 2) return false;
+
+      const [lng, lat] = coords;
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) return false;
+      if (lng === 0 && lat === 0) return false;
+
+      if (r.category_id == null) return false;
+      if (!selectedCategories.includes(r.category_id)) return false;
+
+      const status = scoreToStatus(r.score);
+      if (status === "supported" && !statusFilters.supported) return false;
+      if (status === "unconfirmed" && !statusFilters.unconfirmed) return false;
+      if (status === "disputed" && !statusFilters.disputed) return false;
+
+      return true;
+    });
+  }, [reports, selectedCategories, statusFilters]);
 
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -33,17 +63,17 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
       return;
     }
 
-    let markers: google.maps.Marker[] = [];
+    let markers: google.maps.marker.AdvancedMarkerElement[] = [];
     let clusterer: MarkerClusterer | null = null;
     let infoWindow: google.maps.InfoWindow | null = null;
     let hoverWindow: google.maps.InfoWindow | null = null;
 
     function loadScript() {
       return new Promise<void>((resolve, reject) => {
-        if ((window as any).google?.maps) return resolve();
+        if ((window as any).google?.maps?.marker) return resolve();
 
         const script = document.createElement("script");
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${key}`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=marker`;
         script.async = true;
         script.onload = () => resolve();
         script.onerror = () => reject(new Error("Failed to load Google Maps script"));
@@ -61,46 +91,65 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
         center: { lat: 33.7175, lng: -117.8311 },
         zoom: 10,
         ...(mapId ? { mapId } : {}),
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
       });
 
       mapInstanceRef.current = map;
+      geocoderRef.current = new google.maps.Geocoder();
       infoWindow = new google.maps.InfoWindow();
       hoverWindow = new google.maps.InfoWindow();
 
-      const validReports = (reports ?? []).filter((r) => {
-        const coords = r.location_geojson?.coordinates;
-        if (!coords || coords.length !== 2) return false;
-        const [lng, lat] = coords;
-        if (!Number.isFinite(lng) || !Number.isFinite(lat)) return false;
-        if (lng === 0 && lat === 0) return false;
-        return true;
-      });
-
-      markers = validReports.map((r) => {
+      markers = filteredReports.map((r) => {
         const [lng, lat] = r.location_geojson!.coordinates;
-        const color = categoryToColor(r.category_id);
+        const status = scoreToStatus(r.score);
+        const color = statusToColor(status);
+        const iconPath = categoryToIcon(r.category_id);
 
-        const marker = new google.maps.Marker({
+        const markerElement = document.createElement("div");
+        markerElement.style.width = "42px";
+        markerElement.style.height = "42px";
+        markerElement.style.borderRadius = "50%";
+        markerElement.style.display = "flex";
+        markerElement.style.alignItems = "center";
+        markerElement.style.justifyContent = "center";
+        markerElement.style.background = color;
+        markerElement.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+        markerElement.style.border = "3px solid white";
+        markerElement.style.cursor = "pointer";
+
+        const icon = document.createElement("img");
+        if (iconPath) {
+          icon.src = iconPath;
+          icon.style.width = "20px";
+          icon.style.height = "20px";
+          markerElement.appendChild(icon);
+        }
+
+        const marker = new google.maps.marker.AdvancedMarkerElement({
           map,
           position: { lat, lng },
-          title: r.report_title ?? "Report",
-          icon: {
-            url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
-            scaledSize: new google.maps.Size(40, 40),
-          },
+          content: markerElement,
         });
 
-        marker.addListener("mouseover", () => {
+        markerElement.addEventListener("mouseenter", () => {
           hoverWindow!.setContent(`
-            <div style="font-family: Arial; max-width: 220px; padding: 0; margin: 0;">
-              <div style="margin:0; padding:0; font-weight:700; font-size:14px; line-height:1.2;">
+            <div style="
+              font-family: Inter, Arial, sans-serif;
+              max-width: 220px;
+              padding: 6px 8px;
+              line-height: 1.3;
+            ">
+              <div style="font-weight:700; font-size:13px; margin-bottom:2px;">
                 ${r.report_title ?? "Report"}
               </div>
-              <div style="margin:4px 0 0 0; font-size:12px; line-height:1.35;">
-                ${r.report_description ?? "No description provided."}
+              <div style="font-size:12px; opacity:.82;">
+                ${(r.report_description ?? "No description provided.").slice(0, 70)}
               </div>
             </div>
           `);
+
           hoverWindow!.open({
             map,
             anchor: marker,
@@ -108,24 +157,114 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
           });
         });
 
-        marker.addListener("mouseout", () => {
+        markerElement.addEventListener("mouseleave", () => {
           hoverWindow!.close();
         });
 
-        marker.addListener("click", () => {
+        markerElement.addEventListener("click", () => {
+          const badgeText =
+            status === "supported"
+              ? "SUPPORTED"
+              : status === "disputed"
+              ? "DISPUTED"
+              : "UNCONFIRMED";
+
+          const badgeBg =
+            status === "supported"
+              ? "#E7F7EE"
+              : status === "disputed"
+              ? "#FFF1E7"
+              : "#FFF9DB";
+
+          const badgeColor =
+            status === "supported"
+              ? "#0B6B3A"
+              : status === "disputed"
+              ? "#D97706"
+              : "#8A6D00";
+
           infoWindow!.setContent(`
-            <div style="font-family: Arial; max-width: 260px; padding: 0; margin: 0;">
-              <div style="margin:0; padding:0; font-weight:700; font-size:16px; line-height:1.2;">
-                ${r.report_title ?? "Report"}
+            <div style="
+              font-family: Inter, Arial, sans-serif;
+              width: 320px;
+              background: white;
+              border-radius: 12px;
+              padding: 16px;
+              box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+            ">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                <div style="
+                  width:34px;
+                  height:34px;
+                  border-radius:50%;
+                  background:#E6EDF3;
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  flex-shrink:0;
+                ">
+                  ${
+                    iconPath
+                      ? `<img src="${iconPath}" style="width:18px;height:18px;" />`
+                      : ``
+                  }
+                </div>
+
+                <div style="
+                  font-weight:700;
+                  font-size:20px;
+                  letter-spacing:0.5px;
+                  color:#1E293B;
+                ">
+                  ${categoryToLabel(r.category_id).toUpperCase()}
+                </div>
+
+                <div style="
+                  margin-left:auto;
+                  background:${badgeBg};
+                  color:${badgeColor};
+                  font-size:12px;
+                  font-weight:700;
+                  padding:4px 10px;
+                  border-radius:999px;
+                  border:1px solid ${badgeColor}33;
+                  white-space:nowrap;
+                ">
+                  ● ${badgeText}
+                </div>
               </div>
-              <div style="margin:6px 0 0 0; font-size:13px; line-height:1.35;">
+
+              <div style="
+                font-weight:700;
+                font-size:18px;
+                margin-bottom:6px;
+                color:#1E293B;
+              ">
+                ${r.report_title ?? ""}
+              </div>
+
+              <div style="
+                font-size:14px;
+                line-height:1.45;
+                color:#334155;
+                margin-bottom:12px;
+              ">
                 ${r.report_description ?? ""}
               </div>
-              <div style="margin:8px 0 0 0; font-size:12px; opacity:.7;">
-                Category: ${r.category_id ?? "N/A"} • Report ID: ${r.report_id}
+
+              <div style="
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                font-size:13px;
+                color:#475569;
+              ">
+                <div>${formatReportDate(r.created_at)}</div>
+                <div style="text-decoration:underline; cursor:pointer;">see more</div>
               </div>
             </div>
           `);
+
           infoWindow!.open({
             map,
             anchor: marker,
@@ -145,10 +284,12 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
       if (clusterer) clusterer.setMap(null);
       if (infoWindow) infoWindow.close();
       if (hoverWindow) hoverWindow.close();
-      markers.forEach((m) => m.setMap(null));
+      markers.forEach((m) => {
+        m.map = null;
+      });
       markers = [];
     };
-  }, [reports]);
+  }, [filteredReports]);
 
   function handleUseCurrentLocation() {
     setLocationError("");
@@ -192,41 +333,199 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
     );
   }
 
-  
+  function handleSearchLocation() {
+    setLocationError("");
+    const map = mapInstanceRef.current;
+    const geocoder = geocoderRef.current;
+
+    if (!map || !geocoder || !searchQuery.trim()) return;
+
+    geocoder.geocode({ address: searchQuery }, (results, status) => {
+      if (status === "OK" && results?.[0]) {
+        const location = results[0].geometry.location;
+        map.panTo(location);
+        map.setZoom(14);
+      } else {
+        setLocationError("Could not find that location.");
+      }
+    });
+  }
+
+  function toggleCategory(categoryId: number) {
+    setSelectedCategories((prev) => {
+      if (prev.includes(categoryId)) {
+        return prev.filter((id) => id !== categoryId);
+      }
+      return [...prev, categoryId];
+    });
+  }
+
+  function toggleStatus(key: "supported" | "unconfirmed" | "disputed") {
+    setStatusFilters((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  }
+
+  function resetAllFilters() {
+    setSelectedCategories(CATEGORY_OPTIONS.map((c) => c.id));
+    setStatusFilters({
+      supported: true,
+      unconfirmed: true,
+      disputed: true,
+    });
+  }
+
   return (
-    <div style={{ width: "100%", maxWidth: "700px", margin: "24px auto" }}>
-      <div style={{ marginBottom: "12px", display: "flex", justifyContent: "flex-end" }}>
+    <div style={styles.wrapper}>
+      <div ref={mapRef} style={styles.map} />
+
+      <div
+        style={{
+          ...styles.filterPanel,
+          width: filtersOpen ? "280px" : "220px",
+        }}
+      >
         <button
-          onClick={handleUseCurrentLocation}
-          style={{
-            padding: "10px 14px",
-            borderRadius: "10px",
-            border: "1px solid #d1d5db",
-            background: "white",
-            cursor: "pointer",
-            fontWeight: 600,
-          }}
+          onClick={() => setFiltersOpen((prev) => !prev)}
+          style={styles.filterHeaderButton}
         >
+          <span>Filters</span>
+          <span style={{ fontSize: "22px", lineHeight: 1 }}>
+            {filtersOpen ? "⌃" : "⌄"}
+          </span>
+        </button>
+
+        {filtersOpen && (
+          <div style={styles.filterBody}>
+            <div style={{ marginBottom: "22px" }}>
+              <div style={styles.sectionTitle}>
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: "#F59E0B",
+                    display: "inline-block",
+                  }}
+                />
+                Timeframe
+              </div>
+
+              <div style={styles.optionGrid}>
+                <label><input type="radio" name="timeframe" disabled /> Daily</label>
+                <label><input type="radio" name="timeframe" disabled defaultChecked /> Weekly</label>
+                <label><input type="radio" name="timeframe" disabled /> Monthly</label>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "22px" }}>
+              <div style={styles.sectionTitle}>
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: "#16A34A",
+                    display: "inline-block",
+                  }}
+                />
+                Report Status
+              </div>
+
+              <div style={styles.optionGrid}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={statusFilters.supported}
+                    onChange={() => toggleStatus("supported")}
+                  />{" "}
+                  Community Supported
+                </label>
+
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={statusFilters.unconfirmed}
+                    onChange={() => toggleStatus("unconfirmed")}
+                  />{" "}
+                  Unconfirmed
+                </label>
+
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={statusFilters.disputed}
+                    onChange={() => toggleStatus("disputed")}
+                  />{" "}
+                  Disputed
+                </label>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "26px" }}>
+              <div style={styles.sectionTitle}>
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: "#6F8F9F",
+                    display: "inline-block",
+                  }}
+                />
+                Category
+              </div>
+
+              <div style={styles.categoryGrid}>
+                {CATEGORY_OPTIONS.map((category) => (
+                  <label
+                    key={category.id}
+                    style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.includes(category.id)}
+                      onChange={() => toggleCategory(category.id)}
+                    />
+                    {category.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <button onClick={resetAllFilters} style={styles.resetButton}>
+              RESET ALL FILTERS
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div style={styles.searchWrapper}>
+        <div style={styles.searchBar}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSearchLocation();
+            }}
+            placeholder="Search by location..."
+            style={styles.searchInput}
+          />
+          <button onClick={handleSearchLocation} style={styles.searchButton}>
+            Search
+          </button>
+        </div>
+      </div>
+
+      <div style={styles.currentLocationWrapper}>
+        <button onClick={handleUseCurrentLocation} style={styles.currentLocationButton}>
           Use My Current Location
         </button>
       </div>
 
-      {locationError ? (
-        <div style={{ marginBottom: "8px", fontSize: "14px", color: "#b91c1c" }}>
-          {locationError}
-        </div>
-      ) : null}
-
-      <div
-        ref={mapRef}
-        style={{
-          height: "400px",
-          width: "100%",
-          border: "none",
-          borderRadius: "12px",
-          overflow: "hidden",
-        }}
-      />
+      {locationError ? <div style={styles.errorToast}>{locationError}</div> : null}
     </div>
   );
 }
