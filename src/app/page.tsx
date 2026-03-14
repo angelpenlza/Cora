@@ -31,6 +31,7 @@ export default function Home() {
       <div className="home-buttons">
         <Link href='/pages/explore' className="home-button">Explore</Link>
         <Link href='/pages/signup' className="home-button">Sign Up</Link>
+        <Link href='/pages/images-test' className="home-button">images</Link>
       </div>
       <input type="hidden" name="code" value={code} />
       <div>{test}</div>

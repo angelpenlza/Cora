@@ -1,4 +1,6 @@
+import { Protocol } from "@aws-sdk/client-s3";
 import type { NextConfig } from "next";
+import { hostname } from "os";
 
 const nextConfig: NextConfig = {
   async rewrites() {
@@ -20,7 +22,17 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
-  },
+  }, 
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.r2.cloudflarestorage.com',
+        port: '',
+        pathname: '/**'
+      }
+    ]
+  }
 };
 
 export default nextConfig;

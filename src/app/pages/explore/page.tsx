@@ -19,5 +19,6 @@ export default async function Explore() {
         <h1>Reports and complaints</h1>
         { formattedReports?.length == 0 ? <div>no reports yet</div> : formattedReports }
       </div>
+      
     )
 }
