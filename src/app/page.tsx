@@ -39,7 +39,7 @@ export default function Home() {
           Mission statement is in progress.
         </p>
       <div className="home-buttons">
-        <Link href='/pages/explore' className="home-button">Explore</Link>
+        <Link href='/pages/reports' className="home-button"> Reports Page</Link>
         <Link href='/pages/signup' className="home-button">Sign Up</Link>
       </div>
       <input type="hidden" name="code" value={code} />

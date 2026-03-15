@@ -27,7 +27,7 @@ export default function ExploreListClient({
       {reports.map((report) => (
         <li key={report.report_id} className="report report-card">
           <Link
-            href={`/pages/explore/${report.report_id}`}
+            href={`/pages/reports/${report.report_id}`}
             className="report-card-link"
             prefetch={false}
           >

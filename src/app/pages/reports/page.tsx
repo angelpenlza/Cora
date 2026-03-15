@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { getReportCommentCounts } from '@/app/components/report-actions';
-import ExploreListClient from './explore-list-client';
+import ExploreListClient from './report-list-client';
 
 export const dynamic = 'force-dynamic';
 
