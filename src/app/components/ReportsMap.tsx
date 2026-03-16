@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import type { Report } from "./mapTypes";
+import { generateReportPopup } from "./mapHelpers";
+
 import {
   CATEGORY_OPTIONS,
   categoryToIcon,
@@ -134,21 +136,15 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
         });
 
         markerElement.addEventListener("mouseenter", () => {
-          hoverWindow!.setContent(`
-            <div style="
-              font-family: Inter, Arial, sans-serif;
-              max-width: 220px;
-              padding: 6px 8px;
-              line-height: 1.3;
-            ">
-              <div style="font-weight:700; font-size:13px; margin-bottom:2px;">
-                ${r.report_title ?? "Report"}
-              </div>
-              <div style="font-size:12px; opacity:.82;">
-                ${(r.report_description ?? "No description provided.").slice(0, 70)}
-              </div>
-            </div>
-          `);
+          hoverWindow!.setContent(
+            generateReportPopup(
+              r,
+              iconPath,
+              categoryToLabel(r.category_id),
+              status,
+              formatReportDate(r.created_at)
+            )
+          );
 
           hoverWindow!.open({
             map,
@@ -183,87 +179,15 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
               ? "#D97706"
               : "#8A6D00";
 
-          infoWindow!.setContent(`
-            <div style="
-              font-family: Inter, Arial, sans-serif;
-              width: 320px;
-              background: white;
-              border-radius: 12px;
-              padding: 16px;
-              box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-            ">
-              <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                <div style="
-                  width:34px;
-                  height:34px;
-                  border-radius:50%;
-                  background:#E6EDF3;
-                  display:flex;
-                  align-items:center;
-                  justify-content:center;
-                  flex-shrink:0;
-                ">
-                  ${
-                    iconPath
-                      ? `<img src="${iconPath}" style="width:18px;height:18px;" />`
-                      : ``
-                  }
-                </div>
-
-                <div style="
-                  font-weight:700;
-                  font-size:20px;
-                  letter-spacing:0.5px;
-                  color:#1E293B;
-                ">
-                  ${categoryToLabel(r.category_id).toUpperCase()}
-                </div>
-
-                <div style="
-                  margin-left:auto;
-                  background:${badgeBg};
-                  color:${badgeColor};
-                  font-size:12px;
-                  font-weight:700;
-                  padding:4px 10px;
-                  border-radius:999px;
-                  border:1px solid ${badgeColor}33;
-                  white-space:nowrap;
-                ">
-                  ● ${badgeText}
-                </div>
-              </div>
-
-              <div style="
-                font-weight:700;
-                font-size:18px;
-                margin-bottom:6px;
-                color:#1E293B;
-              ">
-                ${r.report_title ?? ""}
-              </div>
-
-              <div style="
-                font-size:14px;
-                line-height:1.45;
-                color:#334155;
-                margin-bottom:12px;
-              ">
-                ${r.report_description ?? ""}
-              </div>
-
-              <div style="
-                display:flex;
-                align-items:center;
-                justify-content:space-between;
-                font-size:13px;
-                color:#475569;
-              ">
-                <div>${formatReportDate(r.created_at)}</div>
-                <div style="text-decoration:underline; cursor:pointer;">see more</div>
-              </div>
-            </div>
-          `);
+          infoWindow!.setContent(
+            generateReportPopup(
+              r,
+              iconPath,
+              categoryToLabel(r.category_id),
+              status,
+              formatReportDate(r.created_at)
+            )
+          );
 
           infoWindow!.open({
             map,
