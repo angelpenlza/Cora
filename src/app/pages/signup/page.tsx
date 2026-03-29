@@ -19,8 +19,9 @@
 import { signInWithGoogle, signup } from "@/app/components/actions";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Script from "next/script";
 import { useFormStatus } from "react-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Err from "@/app/components/err";
 
 
@@ -46,17 +47,13 @@ export default function Signup() {
     const err = searchParams.get('err')
     const [pass, setPass] = useState('')
     const [confirmPass, setConfirmPass] = useState('')
-    const [arePassesEqual, setArePassesEqual] = useState(true)
     const [showPass, setShowPass] = useState(false)
 
 
-    useEffect(() => {
-      if(confirmPass != pass) setArePassesEqual(false) 
-      else setArePassesEqual(true)
-    }, [confirmPass])
+    const arePassesEqual = confirmPass === pass
 
-    const handlePassUpdate = (e: any) => { setPass(e.target.value) }
-    const handleConfirmPassUpdate = (e: any) => { setConfirmPass(e.target.value) }
+    const handlePassUpdate = (e: React.ChangeEvent<HTMLInputElement>) => { setPass(e.target.value) }
+    const handleConfirmPassUpdate = (e: React.ChangeEvent<HTMLInputElement>) => { setConfirmPass(e.target.value) }
     const togglePass = () => {
       if(showPass) { setShowPass(false) }
       else { setShowPass(true) }
@@ -72,6 +69,12 @@ export default function Signup() {
        * - Surfaces `success` / `err` messages from query params.
        */
       <form className="signup-container">
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          strategy="afterInteractive"
+          async
+          defer
+        />
         <h2>Sign up</h2>
 
         <label htmlFor="username">Username (min 3 characters)</label>
@@ -115,6 +118,12 @@ export default function Signup() {
         <div className="toggle-pass" onClick={togglePass}>
           { showPass ? <>hide</> : <>show</> } password
         </div>
+
+        <div
+          className="cf-turnstile"
+          data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+          data-theme="light"
+        />
 
         { arePassesEqual ? <>
           <SignupButton />      

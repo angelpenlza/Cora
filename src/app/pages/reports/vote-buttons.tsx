@@ -1,0 +1,105 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import PhoneVerificationModal from '@/app/components/phone-verification-modal';
+import { useVotes } from './vote-context';
+
+type VoteButtonsProps = {
+  reportId: number;
+  initialUpvotes: number;
+  initialDownvotes: number;
+  initialUserVote: number;
+  compact?: boolean;
+};
+
+/**
+ * Universal vote buttons component. Reads from and writes to VoteContext
+ * so vote state is shared across explore list and detail pages.
+ *
+ * Pass compact={true} for the explore list (arrow-only buttons).
+ * Pass compact={false} for the detail page (labeled buttons).
+ */
+export default function VoteButtons({
+  reportId,
+  initialUpvotes,
+  initialDownvotes,
+  initialUserVote,
+  compact = false,
+}: VoteButtonsProps) {
+  const router = useRouter();
+  const { getVoteEntry, castVote, registerReport } = useVotes();
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+
+  useEffect(() => {
+    registerReport(reportId, initialUpvotes, initialDownvotes);
+  }, [reportId, initialUpvotes, initialDownvotes, registerReport]);
+
+  const entry = getVoteEntry(reportId);
+  const userVote = entry?.userVote ?? initialUserVote;
+  const upvotes = entry?.upvotes ?? initialUpvotes;
+  const downvotes = entry?.downvotes ?? initialDownvotes;
+
+  const handleVote = async (e: React.MouseEvent, value: 1 | -1) => {
+    if (compact) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const result = await castVote(reportId, value, upvotes, downvotes);
+    if (result.error === 'VERIFICATION_REQUIRED') {
+      setShowVerificationModal(true);
+    }
+  };
+
+  return (
+    <>
+      <PhoneVerificationModal
+        open={showVerificationModal}
+        onVerifyLater={() => setShowVerificationModal(false)}
+        onVerifyNow={() => router.push('/pages/verify-phone')}
+      />
+      <div
+        className={compact ? 'explore-vote-block' : 'report-vote-block'}
+        onClick={compact ? (e) => e.stopPropagation() : undefined}
+      >
+        <button
+          type="button"
+          onClick={(e) => handleVote(e, 1)}
+          aria-pressed={userVote === 1}
+          className={`vote-button ${userVote === 1 ? 'vote-button--active' : ''}`}
+        >
+          {compact ? '↑' : '↑ Upvote'}
+        </button>
+        {compact ? (
+          <span className="report-vote-counts" aria-live="polite">
+            {upvotes} up · {downvotes} down
+          </span>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={(e) => handleVote(e, -1)}
+              aria-pressed={userVote === -1}
+              className={`vote-button ${userVote === -1 ? 'vote-button--active' : ''}`}
+            >
+              ↓ Downvote
+            </button>
+            <span className="vote-counts">
+              ({upvotes} up / {downvotes} down)
+            </span>
+          </>
+        )}
+        {compact && (
+          <button
+            type="button"
+            onClick={(e) => handleVote(e, -1)}
+            aria-pressed={userVote === -1}
+            className={`vote-button ${userVote === -1 ? 'vote-button--active' : ''}`}
+          >
+            ↓
+          </button>
+        )}
+      </div>
+    </>
+  );
+}

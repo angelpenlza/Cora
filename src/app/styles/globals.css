@@ -296,3 +296,40 @@ body {
 .verify-phone-home .verify-phone-link {
   color: rgb(60, 60, 60);
 }
+
+/* Vote buttons: default and active (user has voted this way) */
+.vote-button {
+  padding: 6px 12px;
+  border: 1px solid rgb(180, 180, 180);
+  background: rgb(248, 248, 248);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.vote-button:hover {
+  background: rgb(235, 235, 235);
+}
+
+.vote-button--active {
+  background: rgb(220, 240, 255);
+  border-color: rgb(100, 160, 220);
+  color: rgb(40, 100, 180);
+}
+
+.vote-button--active:hover {
+  background: rgb(200, 228, 255);
+}
+
+.report-vote-block,
+.explore-vote-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.report-score {
+  font-weight: 600;
+  min-width: 1.5em;
+}

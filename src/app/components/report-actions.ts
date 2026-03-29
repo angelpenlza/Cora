@@ -104,3 +104,223 @@ export async function createReport(formData: FormData) {
   redirect('/');
 }
 
+// --- Voting and comments (interactive reports) ---
+// Client code should compare action result with: result.error === 'VERIFICATION_REQUIRED'
+
+/**
+ * Get the current user's vote for a report (1 = upvote, -1 = downvote, 0 = none).
+ */
+export async function getReportVote(
+  reportId: number,
+  userId: string | null
+): Promise<number> {
+  if (!userId) return 0;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('votes')
+    .select('vote')
+    .eq('report_id', reportId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  return data?.vote ?? 0;
+}
+
+/**
+ * Get the current user's vote for a report using auth on the server.
+ * Use from the client when RSC payload may be cached (e.g. after voting then navigating).
+ */
+export async function getMyReportVote(reportId: number): Promise<number> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return 0;
+  const { data } = await supabase
+    .from('votes')
+    .select('vote')
+    .eq('report_id', reportId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+  return data?.vote ?? 0;
+}
+
+/**
+ * Get the current user's votes for multiple reports using auth on the server.
+ * Use from the client to hydrate vote state (e.g. after server restart when RSC had no session).
+ */
+export async function getMyVotes(
+  reportIds: number[]
+): Promise<Record<number, number>> {
+  if (!reportIds.length) return {};
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return {};
+  const { data: rows } = await supabase
+    .from('votes')
+    .select('report_id, vote')
+    .eq('user_id', user.id)
+    .in('report_id', reportIds);
+  const out: Record<number, number> = {};
+  rows?.forEach((r) => {
+    out[r.report_id] = r.vote;
+  });
+  return out;
+}
+
+/**
+ * Set, update, or remove the current user's vote.
+ * value: 1 = upvote, -1 = downvote, 0 = remove my vote.
+ * Returns { error: VERIFICATION_REQUIRED } if not phone-verified.
+ */
+export async function setReportVote(
+  reportId: number,
+  value: 1 | -1 | 0
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { error: 'VERIFICATION_REQUIRED' };
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('phone_verified')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (!profile?.phone_verified) {
+    return { error: 'VERIFICATION_REQUIRED' };
+  }
+
+  const { error: rpcError } = await supabase.rpc('set_vote', {
+    p_report_id: reportId,
+    p_value: value,
+  });
+
+  if (rpcError) {
+    if (rpcError.code === '42501' || rpcError.message?.includes('permission')) {
+      return { error: 'VERIFICATION_REQUIRED' };
+    }
+    console.error('set_vote RPC error', rpcError);
+    return { error: `Failed to record vote: ${rpcError.message}` };
+  }
+
+  // Do not revalidate here: it triggers an immediate RSC refetch. The refetched payload
+  // can have stale initialUserVote (e.g. 0) while score is already updated, so the client
+  // sync effect overwrites optimistic state (button goes inactive, then next click shows 2).
+  // Explore and report-detail are force-dynamic, so navigation loads fresh data.
+  return {};
+}
+
+export type ReportCommentRow = {
+  id: string;
+  body: string;
+  username: string;
+  created_at: string;
+};
+
+/**
+ * Get comment counts for multiple reports in one query. Returns report_id -> count.
+ */
+export async function getReportCommentCounts(
+  reportIds: number[]
+): Promise<Record<number, number>> {
+  if (!reportIds.length) return {};
+  const supabase = await createClient();
+  const { data: rows } = await supabase
+    .from('report_comments')
+    .select('report_id')
+    .in('report_id', reportIds);
+  const out: Record<number, number> = {};
+  reportIds.forEach((id) => {
+    out[id] = 0;
+  });
+  rows?.forEach((r) => {
+    out[r.report_id] = (out[r.report_id] ?? 0) + 1;
+  });
+  return out;
+}
+
+/**
+ * Get comments for a report with username (from profiles).
+ */
+export async function getReportComments(
+  reportId: number
+): Promise<ReportCommentRow[]> {
+  const supabase = await createClient();
+  const { data: comments } = await supabase
+    .from('report_comments')
+    .select('id, body, created_at, user_id')
+    .eq('report_id', reportId)
+    .order('created_at', { ascending: true });
+
+  if (!comments?.length) return [];
+
+  const userIds = [...new Set(comments.map((c) => c.user_id))];
+  const { data: profilesData } = await supabase
+    .from('profiles')
+    .select('id, username')
+    .in('id', userIds);
+  const profileMap = new Map(
+    profilesData?.map((p) => [p.id, p.username ?? 'Unknown']) ?? []
+  );
+
+  return comments.map((c) => ({
+    id: c.id,
+    body: c.body,
+    username: profileMap.get(c.user_id) ?? 'Unknown',
+    created_at: c.created_at,
+  }));
+}
+
+/**
+ * Create a comment on a report. Returns { error: VERIFICATION_REQUIRED } if not phone-verified.
+ */
+export async function createReportComment(
+  reportId: number,
+  body: string
+): Promise<{ error?: string }> {
+  const trimmed = (body ?? '').toString().trim();
+  if (!trimmed) return { error: 'Comment cannot be empty.' };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { error: 'VERIFICATION_REQUIRED' };
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('phone_verified')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (!profile?.phone_verified) {
+    return { error: 'VERIFICATION_REQUIRED' };
+  }
+
+  const { error: insertError } = await supabase.from('report_comments').insert({
+    report_id: reportId,
+    user_id: user.id,
+    body: trimmed,
+  });
+
+  if (insertError) {
+    console.error('Error inserting comment', insertError);
+    return { error: 'Failed to post comment.' };
+  }
+
+  revalidatePath(`/pages/explore/${reportId}`);
+  return {};
+}
+

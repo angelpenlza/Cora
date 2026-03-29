@@ -26,7 +26,7 @@ import { useState } from "react"
  * Note: state is local only. If an error is passed via query string and the
  * page reloads with the same URL, the banner will reappear (by design).
  */
-export default function Err({ message }: any) {
+export default function Err({ message }: { message: string }) {
   const [show, setShow] = useState(true)
   const dismiss = () => {
     setShow(false)

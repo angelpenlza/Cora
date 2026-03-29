@@ -18,6 +18,8 @@ import { createClient } from '@/lib/supabase/server'
 
 /** Minimum username length enforced before attempting sign-up. */
 const USERNAME_MIN_LENGTH = 3
+const TURNSTILE_VERIFY_URL =
+  'https://challenges.cloudflare.com/turnstile/v0/siteverify'
 
 /**
  * Normalize form values: coerce `null` to empty string and trim whitespace.
@@ -27,6 +29,41 @@ const USERNAME_MIN_LENGTH = 3
  */
 function trim(value: FormDataEntryValue | null): string {
   return (value ?? '').toString().trim()
+}
+
+type TurnstileVerifyResponse = {
+  success: boolean
+  'error-codes'?: string[]
+}
+
+async function verifyTurnstileToken(token: string): Promise<TurnstileVerifyResponse> {
+  const secret = process.env.TURNSTILE_SECRET_KEY
+  if (!secret) {
+    return { success: false, 'error-codes': ['missing-secret'] }
+  }
+
+  const body = new URLSearchParams()
+  body.set('secret', secret)
+  body.set('response', token)
+
+  try {
+    const res = await fetch(TURNSTILE_VERIFY_URL, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      body,
+    })
+
+    if (!res.ok) {
+      return { success: false, 'error-codes': ['siteverify-http-error'] }
+    }
+
+    const json = (await res.json()) as TurnstileVerifyResponse
+    return json
+  } catch {
+    return { success: false, 'error-codes': ['siteverify-network-error'] }
+  }
 }
 
 /**
@@ -69,6 +106,21 @@ export async function signup(formData: FormData) {
   const rawUsername = trim(formData.get('username'))
   const email = trim(formData.get('email'))
   const password = formData.get('password') as string
+  const turnstileToken = trim(formData.get('cf-turnstile-response'))
+
+  if (!turnstileToken) {
+    redirect('/pages/signup?err=Please complete the Turnstile verification.')
+  }
+
+  const turnstile = await verifyTurnstileToken(turnstileToken)
+  if (!turnstile.success) {
+    const errCode = turnstile['error-codes']?.[0]
+    const message =
+      errCode === 'missing-secret'
+        ? 'Turnstile is not configured on the server.'
+        : 'Turnstile verification failed. Please try again.'
+    redirect(`/pages/signup?err=${encodeURIComponent(message)}`)
+  }
 
   if (rawUsername.length < USERNAME_MIN_LENGTH) {
     redirect(`/pages/signup?err=Username must be at least ${USERNAME_MIN_LENGTH} characters.`)

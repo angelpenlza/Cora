@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation"
 import { useState } from "react";
 import Err from "@/app/components/err";
+import Script from "next/script";
 
 /**
  * Login page.
@@ -34,6 +35,12 @@ export default function Login() {
 
   return (
     <form className="login-container">
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          strategy="afterInteractive"
+          async
+          defer
+        />
       <h2>Sign In</h2>
       <label htmlFor="email">Email</label>
       <input id="email" name="email" type="email" required />
@@ -53,10 +60,16 @@ export default function Login() {
 
       <Link href='/pages/forgotpass'>Forgot Password?</Link>
 
+      <div
+          className="cf-turnstile"
+          data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+          data-theme="light"
+        />
+
       <button formAction={login} type="submit" className="login-button">Login</button>
       <div className="or">or</div>
       <div onClick={signInWithGoogle} className="google-login">Sign in with Google</div>
-      <footer>Don't have an account? <Link href='/pages/signup'>Sign-up here</Link></footer>
+      <footer>Don&apos;t have an account? <Link href='/pages/signup'>Sign-up here</Link></footer>
       { errMessage ? <Err message={errMessage}/> : <></>}
     </form>
   )

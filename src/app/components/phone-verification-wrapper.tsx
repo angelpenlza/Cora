@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import PhoneVerificationModal from '@/app/components/phone-verification-modal';
@@ -21,13 +21,10 @@ export default function PhoneVerificationWrapper({
   phoneVerified,
 }: PhoneVerificationWrapperProps) {
   const router = useRouter();
-  const [dismissedThisSession, setDismissedThisSession] = useState(true);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    setDismissedThisSession(stored === 'true');
-  }, []);
+  const [dismissedThisSession, setDismissedThisSession] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return sessionStorage.getItem(STORAGE_KEY) === 'true';
+  });
 
   const showModal =
     !!user && !phoneVerified && !dismissedThisSession;

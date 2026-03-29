@@ -102,7 +102,7 @@ export default function NotificationToggle() {
       }
 
       setIsSubscribed(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       const fallbackMessage = 'Failed to subscribe to notifications.';
       const msg = err && (err as Error).message ? (err as Error).message : '';
       const extra = msg

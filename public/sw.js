@@ -12,6 +12,14 @@ self.addEventListener('activate', function (event) {
 });
 // Fetch handler so Samsung Internet recognizes the SW as controlling the page
 self.addEventListener('fetch', function (event) {
+  const url = new URL(event.request.url);
+
+  // Don't intercept cross-origin requests (e.g., analytics, Turnstile).
+  // Let the browser handle those directly so failures are reported accurately.
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request).catch(function () {
       return new Response('', { status: 503, statusText: 'Service Unavailable' });

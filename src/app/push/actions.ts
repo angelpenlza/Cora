@@ -181,10 +181,11 @@ export async function sendNotification(message: string) {
 
     try {
       await webpush.sendNotification(pushSubscription, payload);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error sending push notification:', err);
 
-      if (err?.statusCode === 404 || err?.statusCode === 410) {
+      const statusCode = (err as { statusCode?: number } | null)?.statusCode
+      if (statusCode === 404 || statusCode === 410) {
         await supabase
           .from('push_subscriptions')
           .delete()
