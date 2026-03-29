@@ -42,10 +42,23 @@ export default async function ReportDetailPage({ params }: PageProps) {
   const upvotes = report.upvotes ?? 0;
   const downvotes = report.downvotes ?? 0;
 
+  let hideReportFlag = false;
+  if (userId) {
+    const { data: authorRow } = await supabase
+      .from('reports')
+      .select('created_by')
+      .eq('report_id', reportId)
+      .maybeSingle();
+    hideReportFlag = authorRow?.created_by === userId;
+  }
+
   return (
     <div className="report-detail">
       <article>
         <h1>{report.report_title ?? 'Untitled'}</h1>
+        <span className={`report-status-badge report-status-badge--${(report.status ?? 'Unconfirmed').toLowerCase()}`} >
+                {report.status ?? 'Unconfirmed'}
+              </span>
         {report.author_username && (
           <p className="report-author">by {report.author_username}</p>
         )}
@@ -65,6 +78,7 @@ export default async function ReportDetailPage({ params }: PageProps) {
         initialDownvotes={downvotes}
         initialUserVote={userVote}
         initialComments={comments}
+        hideReportFlag={hideReportFlag}
       />
     </div>
   );

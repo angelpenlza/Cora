@@ -9,6 +9,7 @@ import {
 } from '@/app/components/report-actions';
 import { formatDistanceToNow } from 'date-fns';
 import VoteButtons from '../vote-buttons';
+import ReportFlagControls from './report-flag-controls';
 
 type ReportDetailClientProps = {
   reportId: number;
@@ -16,6 +17,7 @@ type ReportDetailClientProps = {
   initialDownvotes: number;
   initialUserVote: number;
   initialComments: ReportCommentRow[];
+  hideReportFlag?: boolean;
 };
 
 export default function ReportDetailClient({
@@ -24,6 +26,7 @@ export default function ReportDetailClient({
   initialDownvotes,
   initialUserVote,
   initialComments,
+  hideReportFlag = false,
 }: ReportDetailClientProps) {
   const router = useRouter();
   const [comments, setComments] = useState(initialComments);
@@ -60,6 +63,8 @@ export default function ReportDetailClient({
         initialDownvotes={initialDownvotes}
         initialUserVote={initialUserVote}
       />
+
+      {!hideReportFlag && <ReportFlagControls reportId={reportId} />}
 
       <section className="report-comments" aria-label={`Comments (${comments.length})`}>
         <h3>Comments ({comments.length})</h3>

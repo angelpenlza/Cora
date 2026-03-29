@@ -15,6 +15,11 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { sendNewReportNotification } from '@/app/push/actions';
+import {
+  isReportFlagReasonCode,
+  REPORT_FLAG_OTHER_MAX_LEN,
+} from '@/lib/report-flag-reasons';
+import type { ReportFlagReasonCode } from '@/lib/report-flag-reasons';
 
 /**
  * Normalize form values: coerce `null` to empty string and trim whitespace.
@@ -321,6 +326,99 @@ export async function createReportComment(
   }
 
   revalidatePath(`/pages/explore/${reportId}`);
+  return {};
+}
+
+/**
+ * Submit a moderation flag on a report. Requires phone-verified user.
+ * Returns { error: 'VERIFICATION_REQUIRED' } when not signed in or not verified.
+ */
+export async function submitReportFlag(
+  reportId: number,
+  reasonCode: string,
+  details?: string | null
+): Promise<{ error?: string }> {
+  if (!Number.isFinite(reportId) || reportId < 1) {
+    return { error: 'Invalid report.' };
+  }
+
+  if (!isReportFlagReasonCode(reasonCode)) {
+    return { error: 'Please choose a valid reason.' };
+  }
+
+  const trimmedDetails = (details ?? '').toString().trim();
+  if (reasonCode === 'other') {
+    if (!trimmedDetails) {
+      return { error: 'Please describe your reason when selecting Other.' };
+    }
+    if (trimmedDetails.length > REPORT_FLAG_OTHER_MAX_LEN) {
+      return {
+        error: `Details must be at most ${REPORT_FLAG_OTHER_MAX_LEN} characters.`,
+      };
+    }
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { error: 'VERIFICATION_REQUIRED' };
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('phone_verified')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (!profile?.phone_verified) {
+    return { error: 'VERIFICATION_REQUIRED' };
+  }
+
+  const { data: reportRow } = await supabase
+    .from('reports')
+    .select('created_by')
+    .eq('report_id', reportId)
+    .maybeSingle();
+
+  if (!reportRow) {
+    return { error: 'Report not found.' };
+  }
+
+  if (reportRow.created_by === user.id) {
+    return { error: 'You cannot report your own report.' };
+  }
+
+  const payload: {
+    report_id: number;
+    reporter_id: string;
+    reason_code: ReportFlagReasonCode;
+    details: string | null;
+  } = {
+    report_id: reportId,
+    reporter_id: user.id,
+    reason_code: reasonCode,
+    details: reasonCode === 'other' ? trimmedDetails : null,
+  };
+
+  const { error: insertError } = await supabase
+    .from('report_user_flags')
+    .insert(payload);
+
+  if (insertError) {
+    if (insertError.code === '23505') {
+      return { error: 'You have already reported this.' };
+    }
+    console.error('Error inserting report_user_flags', insertError);
+    return { error: 'Could not submit report. Please try again.' };
+  }
+
+  revalidatePath(`/pages/reports/${reportId}`);
+  revalidatePath('/pages/reports');
+  revalidatePath('/');
   return {};
 }
 
