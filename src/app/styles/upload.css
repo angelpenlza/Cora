@@ -1,14 +1,12 @@
-.upload-page {
-    max-width: 600px;
-    width: 80%;
-    margin: 50px auto;
-}
-
 .upload-container {
     border: solid;
     display: flex;
     flex-direction: column;
     padding: 50px;
+    width: 60%;
+    max-width: 500px;
+    margin: 50px auto;
+    gap: 20px;
 }
 
 .upload-label {

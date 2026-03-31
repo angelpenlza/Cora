@@ -72,9 +72,9 @@ export default function UploadForm({
 
       <label htmlFor="title" className='upload-label'>Title</label>
       <input id="title" name="title" type="text" className='upload-input' maxLength={50} required />
-{/* 
+
       <label htmlFor='address' className='upload-label'>Address</label>
-      <input id='address' name='address' className='upload-input' /> */}
+      <input id='address' name='address' className='upload-input' />
 
       <label htmlFor="description" className='upload-label'>Description</label>
       <textarea id="description" name="description" rows={3} className='upload-input' maxLength={400} required />

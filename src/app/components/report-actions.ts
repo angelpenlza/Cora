@@ -63,12 +63,12 @@ export async function createReport(formData: FormData) {
   const description = trim(formData.get('description'));
   const image: File = formData.get('image') as File;
   const category = trim(formData.get('category'));
-  // const address = trim(formData.get('address'));
+  const address = trim(formData.get('address'));
 
-  if (!title || !description) {
+  if (!title || !description || !category || !address) {
     redirect(
       `/pages/upload?report_err=${encodeURIComponent(
-        'Title and description are required.',
+        'Missing fields.',
       )}`,
     );
   }
@@ -78,9 +78,11 @@ export async function createReport(formData: FormData) {
     .insert({
       report_title: title,
       report_description: description,
-      report_image: image.name,
+      report_image: image.name != 'undefined' ? image.name : null,
       // Minimal required fields for reports table / RLS
       category_id: 1, // e.g. 'Safety' from current seed data
+      category: category,
+      address: address,
       created_by: user.id,
       location: 'POINT(0 0)', // placeholder location; replace with real coordinates later
     })

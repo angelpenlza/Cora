@@ -17,6 +17,7 @@ import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { deleteImage } from './cfhelpers'
 import { NextRequest } from 'next/server'
+import { create } from 'domain'
 
 /** Minimum username length enforced before attempting sign-up. */
 const USERNAME_MIN_LENGTH = 3
@@ -110,6 +111,39 @@ export async function signup(formData: FormData) {
 
   revalidatePath('/', 'layout')
   redirect('/pages/signup?success=Verification email sent. Check your inbox.')
+}
+
+/*-------------------------
+updateProfile()
+- update the user's information
+*/
+export async function updateProfile(formData: FormData) {
+  const supabase = await createClient();
+  console.log('updating profile...')
+  const getImage: File = formData.get('image') as File;
+  const username = trim(formData.get('username'));
+  const name = trim(formData.get('name'));
+  const phoneNum = trim(formData.get('phone'));
+  const uid = trim(formData.get('uid'));
+
+  const image = getImage.name != 'undefined' ? `${username}-${getImage.name}` : null;
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      full_name: name,
+      username: username,
+      avatar_url: image,
+      phone: phoneNum
+    })
+    .eq('id', uid)
+
+
+  if(error) {
+    redirect(`/pages/account?err=${error.message}`)
+  } else {
+    redirect('/pages/account?success=Account updated successfully')
+  }
 }
 
 /**
@@ -300,7 +334,7 @@ export async function deleteReport(formData: FormData) {
   if(sbRes.status === 204) {
     console.log('supabase: successfully deleted')
   } else {
-    console.log('supabase: failed to delete')
+    console.log(`supabase: failed to delete report of ID ${report.report_id} due to this error: ${sbRes.error?.message}`)
     return
   }
 
