@@ -119,21 +119,36 @@ export async function updateProfile(formData: FormData) {
   const pfpDatabase = 'user-avatars';
   const supabase = await createClient();
   console.log('updating profile...')
-  const getImage: File = formData.get('image') as File;
-  const username = trim(formData.get('username'));
-  const name = trim(formData.get('name'));
-  const phoneNum = trim(formData.get('phone'));
+  const image: File = formData.get('image') as File;
+  const oldAvatarName = trim(formData.get('oldAvatarName'));
+  const removeImage = formData.get('remove');
+  const username = trim(formData.get('Username'));
+  const name = trim(formData.get('Name'));
+  const phoneNum = trim(formData.get('Phone'));
   const uid = trim(formData.get('uid'));
+  let url = null
+  let avatarName = null
 
-  console.log('uploading image to cloudflare...')
-  const image = getImage.name != 'undefined' ? `${username}-${getImage.name}` : null;
-  const uploadImageStatus = await postImage({image: getImage, database: pfpDatabase, rid: null, username: username});
+  if(!removeImage) {
+    avatarName = username + '-' + image.name;
+    console.log('uploading image to cloudflare...')
+    const uploadImageStatus = await postImage({
+      image: image, 
+      database: pfpDatabase, 
+      rid: null, 
+      username: username
+    });
+  
+    if(uploadImageStatus.status === 500) {
+      console.log('error uploading avatar: ', uploadImageStatus.message)
+    } 
+    url = uploadImageStatus?.url;
+  } else {
+    console.log('removing image: ', oldAvatarName)
+    deleteImage({image: oldAvatarName, database: 'user-avatars'})
+  }
 
-  if(uploadImageStatus.status === 500) {
-    redirect(`/pages/account?err=Cloudflare could not upload image, status: ${uploadImageStatus}`)
-  } 
 
-  const url = uploadImageStatus?.url;
 
   console.log('uploading data to supabase...')
   const { error } = await supabase
@@ -141,6 +156,7 @@ export async function updateProfile(formData: FormData) {
     .update({
       full_name: name,
       username: username,
+      avatar_name: avatarName,
       avatar_url: url,
       phone: phoneNum
     })

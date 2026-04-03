@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { deleteReport, updateProfile } from "./actions"
 import Link from "next/link"
-import { getAvatar } from "./cfhelpers"
 
 /**
  * Small dismissible error banner component.
@@ -160,148 +159,152 @@ export function Dropdown({ options, update, category }: {
 
 }
 
-/*
+/*---------------------
+<Avatar />
+- shows the user's avatar
+- input the src link or null
+- outputs a formatted avatar with provided src link
+- or a default user avatar if null is provided
+---------------------*/
+export function Avatar({avatar_url}: {avatar_url: string | null}) {
+  if(avatar_url) {
+    return (
+      <Image 
+        src={avatar_url}
+        alt="usr-pfp"
+        width={100}
+        height={100}
+        className="pfp"
+      />
+    )
+  } else {
+    return (
+      <img
+        src='/assets/user.png'
+        alt="usr-pfp"
+        width={100}
+        height={100}
+        className="pfp"
+      />
+    )
+  }
+}
+
+/*---------------------
 <UpdateAccount />
 - update your username, profile picture, and password
-*/
+---------------------*/
 export function UpdateAccount({user}: {user: any}) {
+  const [editing, setEditing] = useState(false);
+  const [deleteImage, setDeleteImage] = useState(false);
 
-  const Avatar = () => {
-    if(user.avatar_url) {
-      console.log('image:', user.avatar_url)
-      return (
-        <Image
-          src={user.avatar_url}
-          alt="usr-pfp"
-          height={100}
-          width={100}
-          className="pfp"
-        />
-      )
-    } else {
-      console.log('img', user.avatar_url)
-      return (
-        <img
-          src='assests/user.png'
-          alt="usr-pfp"
-          className="pfp"
-        />
-      )
-    }
+  const deleteAvatar = (e: any) => {
+    e.preventDefault();
+    setDeleteImage(true);
   }
 
-  const [editing, setEditing] = useState(false);
-  const [username, setUsername] = useState(user.username);
-  const [name, setName] = useState(user.full_name);
-  // const [email, setEmail] = useState(user.email);
-  const [phoneNum, setPhoneNum] = useState(user.phone);
-  const [pfp, setPfp] = useState(user.avatar_url)
-
-  console.log('pfp:', pfp)
-
-  const toggleEditing = () => {
-    if(editing) { setEditing(false) }
+  const toggleEditing = (e: any) => {
+    e.preventDefault();
+    if(editing) { 
+      setDeleteImage(false);
+      setEditing(false) 
+    }
     else { setEditing(true) }
   }
 
-  const deleteChanges = () => {
-    const confirm = window.confirm('revert changes?');
-    if(confirm) {
-      setUsername(user.username)
-      setName(user.name)
-      setPhoneNum(user.phoneNum)
-      setPfp(user.avatar_url)
-      toggleEditing();
+  const DisplayAvater = ({ url }: { url: string }) => {
+    const [pfp, setPfp] = useState(url);
+    const handleImageChange = (e: any) => {
+      setPfp(URL.createObjectURL(e.target.files[0]));
+      setDeleteImage(false);
+
     }
+    return (
+      <>
+        {
+          editing ? 
+            <div>
+              <Avatar avatar_url={deleteImage ? null : pfp}/>
+              <input 
+                name={deleteImage ? "remove" : "image"}
+                id="image"
+                type="file"
+                accept="image/png, image/jpeg"
+                onChange={handleImageChange}
+              />
+              <button onClick={deleteAvatar}>Delete Avatar</button>
+            </div> :
+            <Avatar avatar_url={url}/>
+        }
+      </>
+    )
   }
 
-  const updateUsername = (e: any) => { setUsername(e.target.value) }
-  const updateName = (e: any) => { setName(e.target.value) }
-  // const updateEmail = (e: any) => { setEmail(e.target.value) }
-  const updatePhoneNum = (e: any) => { setPhoneNum(e.target.value) }
-  const updatePfp = (e: any) => { 
-    const url = URL.createObjectURL(e.target.files[0]);
-    setPfp(url);
+  const AccountDetail = ({title, value}: {
+    title: any,
+    value: any,
+  }) => {
+    const [editValue, setEditValue] = useState(value);
+    return (
+      <> 
+        <label htmlFor={title}>{title}</label>
+        {
+          editing ? 
+            <section>
+              <input 
+                name={title}
+                id={title}
+                value={editValue}
+                onChange={(e: any) => setEditValue(e.target.value)}
+                className="upload-input"
+                required
+              />
+            </section> :
+            <section>
+              <input 
+                value={value}
+                disabled
+                className="upload-input"
+              />
+            </section>
+          } 
+      </>
+    )
   }
 
   return (
-    <form className="upload-container">
-      <h3>Update Profile</h3>
-
-      <div className="update-pfp-container">
+    <div className="upload-container">
+      <h3>Account</h3>
+      <form>
+        <DisplayAvater url={user.avatar_url}/> <br/>
+        <AccountDetail 
+          title="Username"
+          value={user.username}
+        />
+        <AccountDetail
+          title="Name"
+          value={user.full_name}
+        />
+        <AccountDetail
+          title="Phone"
+          value={user.phone}
+        />
+        <input type="hidden" name="uid" id="uid" value={user.id} />
+        <input type="hidden" name="oldAvatarName" id="oldAvatarName" value={`${user.avatar_name}`} />
         {
           editing ? 
-          <div className="image-options">
-            {/* <img 
-              src={pfp}
-              alt="usrpfp"
-              width={100}
-              height={100}
-              className="pfp"
-            /> */}
-            <input id="image" name="image" type="file" accept="image/png, image/jpeg" onChange={updatePfp} /> 
-            <div>delete photo</div>
-          </div> : 
-          <Avatar />
+            <div className="edit-profile-buttons">
+            <button onClick={toggleEditing}>
+              Cancel Changes
+            </button>
+            <button formAction={updateProfile}>
+              Submit Changes
+            </button>
+          </div> :
+          <button onClick={toggleEditing}>Edit Profile</button>
         }
-      </div>
-
-
-      <label htmlFor="username">Username</label>
-      <input 
-        className="upload-input"
-        id="username"
-        name="username" 
-        value={username} 
-        onChange={updateUsername} 
-        disabled={!editing} 
-        required
-      />
-
-      <label htmlFor="name">Name</label>
-      <input 
-        className="upload-input"
-        id="name"
-        name="name" 
-        value={name} 
-        onChange={updateName} 
-        disabled={!editing} 
-        required
-      />
-
-      {/* <label htmlFor="email">Email</label>
-      <input 
-        className="upload-input"
-        id="email"
-        name="email" 
-        value={email} 
-        onChange={updateEmail} 
-        disabled={!editing} 
-        required
-      /> */}
-
-      <label htmlFor="phone">Phone Number</label>
-      <input 
-        className="upload-input"
-        id="phone"
-        name="phone" 
-        value={phoneNum} 
-        onChange={updatePhoneNum} 
-        disabled={!editing} 
-        required 
-      />
-
-      <input type="hidden" name="uid" id="uid" value={user.id} required />
-
-      {
-        editing ? 
-        <>
-          <button onClick={deleteChanges}>Delete Changes</button>
-          <button formAction={updateProfile}>Submit Changes</button>
-        </>
-        :
-        <button onClick={toggleEditing}>Edit Profile</button>
-      }
-    </form>
+      </form>
+    </div>
   )
 }
+
