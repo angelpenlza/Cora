@@ -10,7 +10,7 @@ import {
   categoryToIcon,
   categoryToLabel,
   formatReportDate,
-  scoreToStatus,
+  resolveMapStatus,
   statusToColor,
 } from "./mapHelpers";
 import { styles } from "./mapStyles";
@@ -96,7 +96,7 @@ export default function ReportsMap({
         return false;
       }
 
-      const status = scoreToStatus(r.score);
+      const status = resolveMapStatus(r.score, r.status);
       if (status === "supported" && !statusFilters.supported) return false;
       if (status === "unconfirmed" && !statusFilters.unconfirmed) return false;
       if (status === "disputed" && !statusFilters.disputed) return false;
@@ -138,7 +138,7 @@ export default function ReportsMap({
 
       markers = filteredReports.map((r) => {
         const [lng, lat] = r.location_geojson!.coordinates;
-        const status = scoreToStatus(r.score);
+        const status = resolveMapStatus(r.score, r.status);
         const color = statusToColor(status);
         const iconPath = categoryToIcon(r.category_id);
 

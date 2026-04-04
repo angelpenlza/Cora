@@ -13,6 +13,35 @@ export function scoreToStatus(score: number | null) {
     return "disputed";
 }
 
+export type MapStatusKey = "supported" | "unconfirmed" | "disputed";
+
+/**
+ * Prefer canonical status from the database (`reports_with_meta.status`), e.g.
+ * `Community-Supported`, so the map matches the rest of the app. Falls back to
+ * score-based rules when status is missing or unknown.
+ */
+export function resolveMapStatus(
+    score: number | null,
+    dbStatus: string | null | undefined
+): MapStatusKey {
+    if (dbStatus != null && String(dbStatus).trim() !== "") {
+        const key = String(dbStatus)
+            .toLowerCase()
+            .trim()
+            .replace(/[\s_]+/g, "-");
+        if (key === "community-supported" || key === "supported") {
+            return "supported";
+        }
+        if (key === "disputed") {
+            return "disputed";
+        }
+        if (key === "unconfirmed") {
+            return "unconfirmed";
+        }
+    }
+    return scoreToStatus(score) as MapStatusKey;
+}
+
 export function statusToColor(status: string) {
     if (status === "supported") return "#0B6B3A";
     if (status === "disputed") return "#D97706";
@@ -41,6 +70,12 @@ export function formatReportDate(dateString: string | null) {
     year: "numeric",
     });
 }
+function reportDetailHref(report: { report_id?: string | number | null }): string {
+    const id = report?.report_id;
+    if (id == null || id === "") return "#";
+    return `/pages/reports/${encodeURIComponent(String(id))}`;
+}
+
 export function generateReportPopup(
     report: any,
     iconPath: string | null,
@@ -48,6 +83,8 @@ export function generateReportPopup(
     status: string,
     formattedDate: string
 ) {
+    const detailHref = reportDetailHref(report);
+
     const badgeText =
     status === "supported"
         ? "SUPPORTED"
@@ -147,7 +184,11 @@ export function generateReportPopup(
         color:#475569;
         ">
         <div>${formattedDate}</div>
-        <div style="text-decoration:underline; cursor:pointer;">see more</div>
+        ${
+            detailHref !== "#"
+                ? `<a href="${detailHref}" style="color:#1d4ed8;font-size:13px;font-weight:600;text-decoration:underline;cursor:pointer;">see more</a>`
+                : `<span style="font-size:13px;color:#94a3b8;">see more</span>`
+        }
         </div>
 
     </div>

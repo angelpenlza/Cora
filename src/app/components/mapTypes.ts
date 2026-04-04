@@ -8,6 +8,8 @@ export type Report = {
     upvotes: number | null;
     downvotes: number | null;
     score: number | null;
+    /** From `reports_with_meta.status` when present; drives map badge when set. */
+    status: string | null;
     location_geojson: { type: "Point"; coordinates: [number, number] } | null;
 };
 

@@ -17,6 +17,7 @@ type MetaRow = {
   report_title: string | null;
   report_description: string | null;
   report_image: string | null;
+  status: string | null;
   score: number | null;
   upvotes: number | null;
   downvotes: number | null;
@@ -49,7 +50,7 @@ async function fetchAllMeta(
     const { data, error } = await supabase
       .from('reports_with_meta')
       .select(
-        'report_id, report_title, report_description, report_image, score, upvotes, downvotes'
+        'report_id, report_title, report_description, report_image, status, score, upvotes, downvotes'
       )
       .order('report_id', { ascending: true })
       .range(from, from + PAGE_SIZE - 1);
@@ -125,6 +126,7 @@ function normalizeToReport(m: MetaRow, g: GeoRow | undefined): Report {
     upvotes: m.upvotes,
     downvotes: m.downvotes,
     score: m.score,
+    status: m.status ?? null,
     location_geojson,
   };
 }
