@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import type { Report } from "./mapTypes";
 import { generateReportPopup } from "./mapHelpers";
@@ -14,12 +14,30 @@ import {
   statusToColor,
 } from "./mapHelpers";
 import { styles } from "./mapStyles";
+import { ensureGoogleMapsReady } from "@/lib/googleMapsLoader";
 
-export default function ReportsMap({ reports }: { reports: Report[] }) {
+const KNOWN_CATEGORY_IDS = new Set(CATEGORY_OPTIONS.map((c) => c.id));
+
+type ReportsMapProps = {
+  reports: Report[];
+  fillViewport?: boolean;
+};
+
+export default function ReportsMap({
+  reports,
+  fillViewport = false,
+}: ReportsMapProps) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
+
+  const googleMapsApiKey = (
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ""
+  ).trim();
+  const mapsUnavailableMessage = googleMapsApiKey
+    ? null
+    : "Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to .env.local and restart the dev server.";
 
   const [locationError, setLocationError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,6 +53,33 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
     disputed: true,
   });
 
+  const wrapperStyle = useMemo((): CSSProperties => {
+    if (!fillViewport) return styles.wrapper;
+    return {
+      ...styles.wrapper,
+      flex: 1,
+      minHeight: 0,
+      width: "100%",
+      maxWidth: "none",
+      margin: 0,
+      display: "flex",
+      flexDirection: "column",
+      position: "relative",
+      overflow: "hidden",
+    };
+  }, [fillViewport]);
+
+  const mapBlockStyle = useMemo((): CSSProperties => {
+    if (!fillViewport) return styles.map;
+    return {
+      ...styles.map,
+      flex: 1,
+      minHeight: 0,
+      height: "auto",
+      borderRadius: 0,
+    };
+  }, [fillViewport]);
+
   const filteredReports = useMemo(() => {
     return (reports ?? []).filter((r) => {
       const coords = r.location_geojson?.coordinates;
@@ -42,10 +87,14 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
 
       const [lng, lat] = coords;
       if (!Number.isFinite(lng) || !Number.isFinite(lat)) return false;
-      if (lng === 0 && lat === 0) return false;
 
-      if (r.category_id == null) return false;
-      if (!selectedCategories.includes(r.category_id)) return false;
+      if (
+        r.category_id != null &&
+        KNOWN_CATEGORY_IDS.has(r.category_id) &&
+        !selectedCategories.includes(r.category_id)
+      ) {
+        return false;
+      }
 
       const status = scoreToStatus(r.score);
       if (status === "supported" && !statusFilters.supported) return false;
@@ -57,39 +106,23 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
   }, [reports, selectedCategories, statusFilters]);
 
   useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
+    if (!googleMapsApiKey) return;
 
-    if (!key) {
-      console.error("Missing NEXT_PUBLIC_GOOGLE_MAPS_API_KEY");
-      return;
-    }
+    const key = googleMapsApiKey;
+    const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID?.trim() || undefined;
 
-    let markers: google.maps.marker.AdvancedMarkerElement[] = [];
+    let markers: google.maps.Marker[] = [];
     let clusterer: MarkerClusterer | null = null;
     let infoWindow: google.maps.InfoWindow | null = null;
     let hoverWindow: google.maps.InfoWindow | null = null;
 
-    function loadScript() {
-      return new Promise<void>((resolve, reject) => {
-        if ((window as any).google?.maps?.marker) return resolve();
-
-        const script = document.createElement("script");
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=marker`;
-        script.async = true;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error("Failed to load Google Maps script"));
-        document.head.appendChild(script);
-      });
-    }
-
     async function init() {
-      await loadScript();
+      await ensureGoogleMapsReady(key, mapId);
       if (!mapRef.current) return;
 
-      const google = (window as any).google as typeof window.google;
+      const gmaps = (window as unknown as { google: typeof google }).google;
 
-      const map = new google.maps.Map(mapRef.current, {
+      const map = new gmaps.maps.Map(mapRef.current, {
         center: { lat: 33.7175, lng: -117.8311 },
         zoom: 10,
         ...(mapId ? { mapId } : {}),
@@ -99,9 +132,9 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
       });
 
       mapInstanceRef.current = map;
-      geocoderRef.current = new google.maps.Geocoder();
-      infoWindow = new google.maps.InfoWindow();
-      hoverWindow = new google.maps.InfoWindow();
+      geocoderRef.current = new gmaps.maps.Geocoder();
+      infoWindow = new gmaps.maps.InfoWindow();
+      hoverWindow = new gmaps.maps.InfoWindow();
 
       markers = filteredReports.map((r) => {
         const [lng, lat] = r.location_geojson!.coordinates;
@@ -109,33 +142,21 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
         const color = statusToColor(status);
         const iconPath = categoryToIcon(r.category_id);
 
-        const markerElement = document.createElement("div");
-        markerElement.style.width = "42px";
-        markerElement.style.height = "42px";
-        markerElement.style.borderRadius = "50%";
-        markerElement.style.display = "flex";
-        markerElement.style.alignItems = "center";
-        markerElement.style.justifyContent = "center";
-        markerElement.style.background = color;
-        markerElement.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
-        markerElement.style.border = "3px solid white";
-        markerElement.style.cursor = "pointer";
-
-        const icon = document.createElement("img");
-        if (iconPath) {
-          icon.src = iconPath;
-          icon.style.width = "20px";
-          icon.style.height = "20px";
-          markerElement.appendChild(icon);
-        }
-
-        const marker = new google.maps.marker.AdvancedMarkerElement({
+        const marker = new gmaps.maps.Marker({
           map,
           position: { lat, lng },
-          content: markerElement,
+          title: r.report_title ?? undefined,
+          icon: {
+            path: gmaps.maps.SymbolPath.CIRCLE,
+            fillColor: color,
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 2,
+            scale: 14,
+          },
         });
 
-        markerElement.addEventListener("mouseenter", () => {
+        const openHover = () => {
           hoverWindow!.setContent(
             generateReportPopup(
               r,
@@ -145,40 +166,13 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
               formatReportDate(r.created_at)
             )
           );
+          hoverWindow!.open({ map, anchor: marker, shouldFocus: false });
+        };
 
-          hoverWindow!.open({
-            map,
-            anchor: marker,
-            shouldFocus: false,
-          });
-        });
+        marker.addListener("mouseover", openHover);
+        marker.addListener("mouseout", () => hoverWindow!.close());
 
-        markerElement.addEventListener("mouseleave", () => {
-          hoverWindow!.close();
-        });
-
-        markerElement.addEventListener("click", () => {
-          const badgeText =
-            status === "supported"
-              ? "SUPPORTED"
-              : status === "disputed"
-              ? "DISPUTED"
-              : "UNCONFIRMED";
-
-          const badgeBg =
-            status === "supported"
-              ? "#E7F7EE"
-              : status === "disputed"
-              ? "#FFF1E7"
-              : "#FFF9DB";
-
-          const badgeColor =
-            status === "supported"
-              ? "#0B6B3A"
-              : status === "disputed"
-              ? "#D97706"
-              : "#8A6D00";
-
+        marker.addListener("click", () => {
           infoWindow!.setContent(
             generateReportPopup(
               r,
@@ -188,18 +182,18 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
               formatReportDate(r.created_at)
             )
           );
-
-          infoWindow!.open({
-            map,
-            anchor: marker,
-            shouldFocus: false,
-          });
+          infoWindow!.open({ map, anchor: marker, shouldFocus: false });
         });
 
         return marker;
       });
 
       clusterer = new MarkerClusterer({ map, markers });
+
+      if (fillViewport) {
+        const resize = () => gmaps.maps.event.trigger(map, 'resize');
+        requestAnimationFrame(() => requestAnimationFrame(resize));
+      }
     }
 
     init().catch(console.error);
@@ -208,12 +202,10 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
       if (clusterer) clusterer.setMap(null);
       if (infoWindow) infoWindow.close();
       if (hoverWindow) hoverWindow.close();
-      markers.forEach((m) => {
-        m.map = null;
-      });
+      markers.forEach((m) => m.setMap(null));
       markers = [];
     };
-  }, [filteredReports]);
+  }, [filteredReports, googleMapsApiKey, fillViewport]);
 
   function handleUseCurrentLocation() {
     setLocationError("");
@@ -225,9 +217,9 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const google = (window as any).google as typeof window.google;
+        const gmaps = (window as unknown as { google: typeof google }).google;
         const map = mapInstanceRef.current;
-        if (!map || !google) return;
+        if (!map || !gmaps) return;
 
         const userPos = {
           lat: position.coords.latitude,
@@ -241,13 +233,13 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
           userMarkerRef.current.setMap(null);
         }
 
-        userMarkerRef.current = new google.maps.Marker({
+        userMarkerRef.current = new gmaps.maps.Marker({
           map,
           position: userPos,
           title: "Your current location",
           icon: {
             url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-            scaledSize: new google.maps.Size(42, 42),
+            scaledSize: new gmaps.maps.Size(42, 42),
           },
         });
       },
@@ -301,8 +293,34 @@ export default function ReportsMap({ reports }: { reports: Report[] }) {
   }
 
   return (
-    <div style={styles.wrapper}>
-      <div ref={mapRef} style={styles.map} />
+    <div style={wrapperStyle}>
+      {mapsUnavailableMessage ? (
+        <div
+          style={{
+            ...mapBlockStyle,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#e5e5e5",
+          }}
+          role="status"
+        >
+          <p
+            style={{
+              padding: 24,
+              textAlign: "center",
+              maxWidth: 440,
+              margin: 0,
+              lineHeight: 1.5,
+              color: "#333",
+            }}
+          >
+            {mapsUnavailableMessage}
+          </p>
+        </div>
+      ) : (
+        <div ref={mapRef} style={mapBlockStyle} />
+      )}
 
       <div
         style={{

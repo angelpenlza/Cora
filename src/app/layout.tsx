@@ -151,7 +151,7 @@ export default async function RootLayout({
         <RegisterSw />
         <NavBar user={user} />
         <PhoneVerificationWrapper user={user} phoneVerified={phoneVerified} />
-        {children}
+        <main className="site-main">{children}</main>
         <Analytics />
         <SpeedInsights />
       </body>
