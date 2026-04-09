@@ -1,0 +1,131 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Cora",
+  "colors": {
+  "primary": "#F27F0D",
+  "light": "#00AF54",
+  "dark": "#E07000"
+},
+  "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:corafyi@gmail.com"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Open Cora",
+      "href": "https://cora.fyi"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "User Guide",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": [
+              "user/introduction",
+              "user/quickstart"
+            ]
+          },
+          {
+            "group": "Submitting reports",
+            "pages": [
+              "user/how-to-report",
+              "user/report-categories",
+              "user/location-accuracy"
+            ]
+          },
+          {
+            "group": "Your account",
+            "pages": [
+              "user/creating-an-account",
+              "user/privacy-and-data"
+            ]
+          },
+          {
+            "group": "Support",
+            "pages": [
+              "user/faq"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Developer Docs",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "dev/introduction",
+              "dev/tech-stack",
+              "dev/architecture"
+            ]
+          },
+          {
+            "group": "Setup",
+            "pages": [
+              "dev/environment-setup",
+              "dev/environment-variables"
+            ]
+          },
+          {
+            "group": "Database",
+            "pages": [
+              "dev/supabase-schema",
+              "dev/postgis-setup"
+            ]
+          },
+          {
+            "group": "Auth",
+            "pages": [
+              "dev/google-oauth",
+              "dev/twilio-verify"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "dev/deployment-guide"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/Davidc45/Cora",
+          "icon": "github"
+        },
+        {
+          "anchor": "Report an issue",
+          "href": "mailto:corafyi@gmail.com",
+          "icon": "circle-exclamation"
+        }
+      ]
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "claude"
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/Davidc45/Cora"
+    }
+  }
+}
