@@ -4,7 +4,6 @@ postImage
   function for posting an image to Cloudflare
   - input: name of the image as type STRING
   - output: JSON package confirming success or failure
-  WORK IN PROGRESS
 --------------------------------*/
 export async function postImage({image, database, username, rid}: {
   image: File | null,
@@ -43,7 +42,7 @@ getImages()
   function for getting image(s) from Cloudflare
   - input: no input required
   - output:  
-    - (null): upon success, returns array of all images in 'cora-image-database'
+    - upon success, returns array of all images in 'cora-image-database'
     - upon failure, returns an array with the error message as the first value
 --------------------------------*/
 export async function getImages() {

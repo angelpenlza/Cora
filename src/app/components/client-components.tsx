@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import Image from "next/image"
 import { deleteReport, updateProfile } from "./actions"
 import Link from "next/link"
@@ -16,19 +16,13 @@ import Link from "next/link"
  */
 export function Err({ message }: any) {
   const [show, setShow] = useState(true)
-  const dismiss = () => {
-    setShow(false)
-  }
-
+  const dismiss = () => { setShow(false) }
   return (
-    <> { 
-      message && show ?
-        <div className="error">
-          Error: {message}
-          <div onClick={dismiss}>X</div>
-        </div> :
-        <></>
-      } </>
+    message && show ?
+      <div className="error">
+        Error: {message}
+        <div onClick={dismiss}>X</div>
+      </div> : <></>
   )
 }
 
@@ -42,13 +36,28 @@ Input
 - inAccount: boolean value, if true, will display a delete button with each report
 ---------------------*/
 export function Reports({ reports, images, inAccount }: any | null) {
-  if(reports.length <= 0) { return <div className="report-container">No reports</div> } 
-  else if(!reports || !images) { return <div className="report-container">Error getting reports or images</div> } 
+  if(reports.length <= 0) return <div className="report-container">No reports</div>
+  else if(!reports || !images) return <div className="report-container">Error getting reports</div>
   else {
-    const formattedReports = reports?.map((report: any) => {
-      const url = images[report.report_id + '-' + report.report_image];
+    const ReportContainer = ({ children, rid }: { 
+      children: React.ReactNode, 
+      rid: string
+    }) => {
       return (
-        <Link href={`/pages/user-report?report=${report.report_id}`} key={report.report_id} className="report">
+        inAccount ? 
+        <div className="report">
+          {children}
+        </div> : 
+        <Link href={`/pages/user-report?report=${rid}`} className="report">
+          {children}
+        </Link>
+
+      )
+    }
+    const formattedReports = reports?.map(async (report: any) => {
+      const url = images[report.report_id + '-' + report.report_image]
+      return (
+        <ReportContainer rid={report.report_id}>
           <div className="report-header">
             <h2 className="report-category">{report.category}</h2>
             <div className={report.status}>{report.status}</div>
@@ -58,28 +67,26 @@ export function Reports({ reports, images, inAccount }: any | null) {
 
           {
             inAccount ? 
-            <div>
-              {/* <Image 
-                src={url}
+            <form>
+              <input type="hidden" name="rid" value={report.report_id}/>
+              <button formAction={(e) => {
+                const confirm = window.confirm('delete post?');
+                if(confirm) { 
+                  console.log('e: ', e)
+                  deleteReport(e) 
+                } 
+              }} className="report-delete">
+                delete
+              </button>
+            </form> : 
+            <div className="report-details">
+              <Image 
+                src={url || '/assets/user.png'}
                 alt="usr-img"
                 width={100}
                 height={100}
                 className="report-image"
-              />  */}
-              <form>
-                <input type="hidden" name="rid" value={report.report_id}/>
-                <button formAction={(e) => {
-                  const confirm = window.confirm('delete post?');
-                  if(confirm) { 
-                    console.log('e: ', e)
-                    deleteReport(e) 
-                  } 
-                }} className="report-delete">
-                  delete
-                </button>
-              </form>
-            </div> : 
-            <div className="report-details">
+              /> 
               <div className="report-dates">
                 <div>{report.updated_at}</div>
                 <div>{report.address}</div>
@@ -90,7 +97,7 @@ export function Reports({ reports, images, inAccount }: any | null) {
               </div>
             </div>
           }
-        </Link>
+        </ReportContainer>
       )
     });
     return (
@@ -189,122 +196,3 @@ export function Avatar({avatar_url}: {avatar_url: string | null}) {
     )
   }
 }
-
-/*---------------------
-<UpdateAccount />
-- update your username, profile picture, and password
----------------------*/
-export function UpdateAccount({user}: {user: any}) {
-  const [editing, setEditing] = useState(false);
-  const [deleteImage, setDeleteImage] = useState(false);
-
-  const deleteAvatar = (e: any) => {
-    e.preventDefault();
-    setDeleteImage(true);
-  }
-
-  const toggleEditing = (e: any) => {
-    e.preventDefault();
-    if(editing) { 
-      setDeleteImage(false);
-      setEditing(false) 
-    }
-    else { setEditing(true) }
-  }
-
-  const DisplayAvater = ({ url }: { url: string }) => {
-    const [pfp, setPfp] = useState(url);
-    const handleImageChange = (e: any) => {
-      setPfp(URL.createObjectURL(e.target.files[0]));
-      setDeleteImage(false);
-
-    }
-    return (
-      <>
-        {
-          editing ? 
-            <div>
-              <Avatar avatar_url={deleteImage ? null : pfp}/>
-              <input 
-                name={deleteImage ? "remove" : "image"}
-                id="image"
-                type="file"
-                accept="image/png, image/jpeg"
-                onChange={handleImageChange}
-              />
-              <button onClick={deleteAvatar}>Delete Avatar</button>
-            </div> :
-            <Avatar avatar_url={url}/>
-        }
-      </>
-    )
-  }
-
-  const AccountDetail = ({title, value}: {
-    title: any,
-    value: any,
-  }) => {
-    const [editValue, setEditValue] = useState(value);
-    return (
-      <> 
-        <label htmlFor={title}>{title}</label>
-        {
-          editing ? 
-            <section>
-              <input 
-                name={title}
-                id={title}
-                value={editValue}
-                onChange={(e: any) => setEditValue(e.target.value)}
-                className="upload-input"
-                required
-              />
-            </section> :
-            <section>
-              <input 
-                value={value}
-                disabled
-                className="upload-input"
-              />
-            </section>
-          } 
-      </>
-    )
-  }
-
-  return (
-    <div className="upload-container">
-      <h3>Account</h3>
-      <form>
-        <DisplayAvater url={user.avatar_url}/> <br/>
-        <AccountDetail 
-          title="Username"
-          value={user.username}
-        />
-        <AccountDetail
-          title="Name"
-          value={user.full_name}
-        />
-        <AccountDetail
-          title="Phone"
-          value={user.phone}
-        />
-        <input type="hidden" name="uid" id="uid" value={user.id} />
-        <input type="hidden" name="oldAvatarName" id="oldAvatarName" value={`${user.avatar_name}`} />
-        {
-          editing ? 
-            <div className="edit-profile-buttons">
-            <button onClick={toggleEditing}>
-              Cancel Changes
-            </button>
-            <button formAction={updateProfile}>
-              Submit Changes
-            </button>
-          </div> :
-          <button onClick={toggleEditing}>Edit Profile</button>
-        }
-      </form>
-    </div>
-  )
-}
-

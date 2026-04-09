@@ -11,7 +11,7 @@ export function AddressForms() {
     county: '',
     state: '', 
     country: '',
-    coordinates: []
+    coordinates: [0, 0]
   })
   const inputRef = useRef<HTMLInputElement>(null);
   const { isLoaded, loadError } = useLoadScript({
@@ -22,14 +22,18 @@ export function AddressForms() {
   const handlePlaceChanged = (address: any) => {
     const place = address.getPlace();
     if(place) {
-      console.log('place: ', place.address_components)
-      setAddressComponents(place.address_components)
+      setAddressComponents(place)
     }
   }
 
-  const setAddressComponents = (addr: any) => {
+  const setAddressComponents = (place: any) => {
+    const addr = place.address_components;
+    const lat = place.geometry.location.lat()
+    const lng = place.geometry.location.lng()
+    console.log(`lat: ${lat}, lng: ${lng}`)
+
     setAddress(prev => ({...prev, 
-      street: addr[0].short_name + addr[1].short_name,
+      street: `${addr[0].short_name} ${addr[1].short_name}`,
       city: addr[2].short_name,
       state: addr[4].short_name,
       country: addr[5].short_name,

@@ -1,6 +1,6 @@
 'use server';
 
-/**
+/*
  * Server Actions: reporting workflow.
  *
  * `createReport` is invoked by the upload form and runs on the server. It:
@@ -15,6 +15,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { sendNewReportNotification } from '@/app/push/actions';
+import { postImage } from './cfhelpers';
+import { report } from 'process';
 
 /**
  * Normalize form values: coerce `null` to empty string and trim whitespace.
@@ -47,7 +49,7 @@ export async function createReport(formData: FormData) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('phone_verified')
+    .select('phone_verified, username')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -63,9 +65,12 @@ export async function createReport(formData: FormData) {
   const description = trim(formData.get('description'));
   const image: File = formData.get('image') as File;
   const category = trim(formData.get('category'));
-  const address = trim(formData.get('address'));
+  const street = trim(formData.get('street'));
+  const city = trim(formData.get('city'));
+  const state = trim(formData.get('state'));
+  const country = trim(formData.get('country'));
 
-  if (!title || !description || !category || !address) {
+  if (!title || !description || !category) {
     redirect(
       `/pages/upload?report_err=${encodeURIComponent(
         'Missing fields.',
@@ -82,36 +87,21 @@ export async function createReport(formData: FormData) {
       // Minimal required fields for reports table / RLS
       category_id: 1, // e.g. 'Safety' from current seed data
       category: category,
-      address: address,
+      address: `${street}, ${city}, ${state}, ${country}`,
       created_by: user.id,
-      location: 'POINT(0 0)', // placeholder location; replace with real coordinates later
+      location: `POINT(0 0)`, // placeholder location; replace with real coordinates later
     })
     .select('*')
     .single();
 
-  if(data) {
-    const imageFormData = new FormData();
-    imageFormData.append('rid', data.report_id);
-    imageFormData.append('image', image)
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_HOME_PAGE}/api/cloudflare`, {
-        method: 'POST', 
-        body: imageFormData,
-      })
-      
-      const recv = await response.json();
-      if(!recv.success) {
-        console.log('failed to upload image')
-        // redirect(`/pages/upload?err=${recv.message}`)
-      } 
-      console.log('success: ', recv.message)
-      // redirect('/')
-
-    } catch(err) {
-      console.log('error: ', err)
-      // redirect(`/pages/upload?err=${err}`)
-    }
+  if(data && image) {
+    const res = await postImage({
+      image: image, 
+      database: 'cora-image-database', 
+      username: profile.username, 
+      rid: data.report_id, 
+    })
+    console.log('res: ', res)
   }
 
   if (error || !data) {

@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import NotificationToggle from '@/app/components/notification-toggle';
 import VerifiedToast from '@/app/components/verified-toast';
-import { Reports, UpdateAccount } from '@/app/components/client-components';
+import { Reports } from '@/app/components/client-components';
+import { UpdateAccount } from './account';
 import { getAvatar, getImages } from '@/app/components/cfhelpers';
 
 /**
