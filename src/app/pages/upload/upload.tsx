@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 import { createReport } from '@/app/components/report-actions';
 import PhoneVerificationModal from '@/app/components/phone-verification-modal';
+import { Dropdown } from '@/app/components/client-components';
+import Link from 'next/link';
+import { AddressForms } from '@/app/components/autocomplete';
 
 /**
  * Upload form for creating a new report.
@@ -26,6 +29,7 @@ export default function UploadForm({
   user: User | null;
   phoneVerified?: boolean;
 }) {
+  const [category, setCategory] = useState('');
   const searchParams = useSearchParams();
   const router = useRouter();
   const err = searchParams.get('err');
@@ -40,33 +44,50 @@ export default function UploadForm({
   };
 
   return (
-    <>
+    <div>
       <PhoneVerificationModal
         open={showPhoneModal}
         onVerifyLater={handleCloseModal}
         onVerifyNow={() => router.push('/pages/verify-phone')}
       />
-      <form action={createReport} className="upload-form">
+      <form action={createReport} className='upload-container'>
         <h1>Upload</h1>
         {reportErr && (
           <p className="error" role="alert">
             {reportErr}
           </p>
         )}
-      <label htmlFor="title">Title</label>
-      <input id="title" name="title" type="text" required />
 
-      <label htmlFor="category">Category</label>
-      <input id="category" name="category" type="text" />
+      <label className="upload-label">Category</label>
+      <input id="category" name="category" type='hidden' value={category} required/>
+      <Dropdown 
+        options={[
+          'Robbery', 
+          'Traffic', 
+          'Assault', 
+          'Suspicious Activity',
+          'Hazard', 
+          'Other',
+        ]}
+        update={setCategory}
+        category={category}
+        />
 
-      <label htmlFor="description">Description</label>
-      <textarea id="description" name="description" rows={3} required />
+      <label htmlFor="title" className='upload-label'>Title</label>
+      <input id="title" name="title" type="text" className='upload-input' maxLength={50} required />
 
-      <label htmlFor="image">Image</label>
-      <input id="image" name="image" type="file" accept="image/png, image/jpeg" />
+      <label className='upload-label'>Address</label>
+      <AddressForms />
+
+      <label htmlFor="description" className='upload-label'>Description</label>
+      <textarea id="description" name="description" rows={3} className='upload-input' maxLength={400} required />
+
+      <input id="image" name="image" type="file" accept="image/png, image/jpeg" className='upload-image' />
 
       <button type="submit">Submit report</button>
+
+      <Link href='/' className='return-to-home-page'>return to home page</Link>
       </form>
-    </>
+    </div>
   );
 }

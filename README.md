@@ -1,8 +1,10 @@
 ## Getting Started
 
-* npm install
-* npm install @supabase/ssr
-* npm install @supabase/supabase-js
+npm install
+npm install @supabase/ssr
+npm install @supabase/supabase-js
+npm install @aws-sdk/client-s3
+npm install @aws-sdk/s3-request-presigner
 * create .env.local in the main project and add:
     * NEXT_PUBLIC_SUPABASE_URL=url
         ^ found in Project Settings > Data API

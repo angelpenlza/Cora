@@ -23,7 +23,7 @@ export default async function Upload() {
   }
 
   return (
-    <div className="upload-container">
+    <div className="upload-page">
       <UploadForm user={user} phoneVerified={phoneVerified} />
     </div>
   )

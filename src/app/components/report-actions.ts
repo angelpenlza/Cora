@@ -1,6 +1,6 @@
 'use server';
 
-/**
+/*
  * Server Actions: reporting workflow.
  *
  * `createReport` is invoked by the upload form and runs on the server. It:
@@ -20,6 +20,7 @@ import {
   REPORT_FLAG_OTHER_MAX_LEN,
 } from '@/lib/report-flag-reasons';
 import type { ReportFlagReasonCode } from '@/lib/report-flag-reasons';
+import { postImage } from './cfhelpers';
 
 /**
  * Normalize form values: coerce `null` to empty string and trim whitespace.
@@ -52,7 +53,7 @@ export async function createReport(formData: FormData) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('phone_verified')
+    .select('phone_verified, username')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -66,11 +67,17 @@ export async function createReport(formData: FormData) {
 
   const title = trim(formData.get('title'));
   const description = trim(formData.get('description'));
+  const image: File = formData.get('image') as File;
+  const category = trim(formData.get('category'));
+  const street = trim(formData.get('street'));
+  const city = trim(formData.get('city'));
+  const state = trim(formData.get('state'));
+  const country = trim(formData.get('country'));
 
-  if (!title || !description) {
+  if (!title || !description || !category) {
     redirect(
       `/pages/upload?report_err=${encodeURIComponent(
-        'Title and description are required.',
+        'Missing fields.',
       )}`,
     );
   }
@@ -80,13 +87,26 @@ export async function createReport(formData: FormData) {
     .insert({
       report_title: title,
       report_description: description,
+      report_image: image.name != 'undefined' ? image.name : null,
       // Minimal required fields for reports table / RLS
       category_id: 1, // e.g. 'Safety' from current seed data
+      category: category,
+      address: `${street}, ${city}, ${state}, ${country}`,
       created_by: user.id,
-      location: 'POINT(0 0)', // placeholder location; replace with real coordinates later
+      location: `POINT(0 0)`, // placeholder location; replace with real coordinates later
     })
-    .select('report_title')
+    .select('*')
     .single();
+
+  if(data && image) {
+    const res = await postImage({
+      image: image, 
+      database: 'cora-image-database', 
+      username: profile.username, 
+      rid: data.report_id, 
+    })
+    console.log('res: ', res)
+  }
 
   if (error || !data) {
     console.error('Error creating report', error);

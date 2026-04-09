@@ -3,7 +3,6 @@
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import { revalidate } from "./components/actions";
 
 /**
@@ -20,7 +19,6 @@ export default function Home() {
   const params = useSearchParams()
   const code = params.get('code') ?? ""
   const supabase = createClient()
-  const [test, setTest] = useState('')
 
   supabase.auth.onAuthStateChange((event, session) => {
     if(event === 'SIGNED_IN') {
@@ -44,7 +42,6 @@ export default function Home() {
         <Link href='/pages/interactive-map' className="home-button">Explore Map</Link>
       </div>
       <input type="hidden" name="code" value={code} />
-      <div>{test}</div>
     </div>
   );
 }

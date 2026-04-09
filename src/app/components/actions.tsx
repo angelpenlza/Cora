@@ -15,6 +15,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
+import { deleteImage, postImage } from './cfhelpers'
 
 /** Minimum username length enforced before attempting sign-up. */
 const USERNAME_MIN_LENGTH = 3
@@ -162,6 +163,65 @@ export async function signup(formData: FormData) {
   redirect('/pages/signup?success=Verification email sent. Check your inbox.')
 }
 
+/*-------------------------
+updateProfile()
+- update the user's information
+*/
+export async function updateProfile(formData: FormData) {
+  const pfpDatabase = 'user-avatars';
+  const supabase = await createClient();
+  console.log('updating profile...')
+  const image: File = formData.get('image') as File;
+  const oldAvatarName = trim(formData.get('oldAvatarName'));
+  const removeImage = formData.get('remove');
+  const username = trim(formData.get('Username'));
+  const name = trim(formData.get('Name'));
+  const phoneNum = trim(formData.get('Phone'));
+  const uid = trim(formData.get('uid'));
+  let url = null
+  let avatarName = null
+
+  if(!removeImage) {
+    avatarName = username + '-' + image.name;
+    console.log('uploading image to cloudflare...')
+    const uploadImageStatus = await postImage({
+      image: image, 
+      database: pfpDatabase, 
+      rid: null, 
+      username: username
+    });
+  
+    if(uploadImageStatus.status === 500) {
+      console.log('error uploading avatar: ', uploadImageStatus.message)
+    } 
+    url = uploadImageStatus?.url;
+  } else {
+    console.log('removing image: ', oldAvatarName)
+    deleteImage({image: oldAvatarName, database: 'user-avatars'})
+  }
+
+
+
+  console.log('uploading data to supabase...')
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      full_name: name,
+      username: username,
+      avatar_name: avatarName,
+      avatar_url: url,
+      phone: phoneNum
+    })
+    .eq('id', uid)
+
+
+  if(error) {
+    redirect(`/pages/account?err=${error.message}`)
+  } 
+    
+  redirect('/pages/account?success=Account updated successfully')
+}
+
 /**
  * Sign the current user out and redirect to login.
  *
@@ -304,3 +364,57 @@ export async function signInWithGoogle() {
 export async function revalidate() {
   revalidatePath('/', 'layout')
 }
+
+
+/*-------------------------------
+Delete Report
+  must be used in a form 
+
+  Input
+  - form must have 'rid' value containing a valid report ID
+  
+  Output
+  - deletes image from Cloudflare, then removes entry from Supabase
+-------------------------------*/
+export async function deleteReport(formData: FormData) {
+  const rid: any = formData.get('rid')
+  const supabase = await createClient();
+
+  const { data: report} = await supabase 
+    .from('reports')
+    .select('*')
+    .eq('report_id', rid)
+    .single()
+
+  if(!report) {
+    console.log('error: report has no value')
+    return
+  }
+
+  // delete the image from cloudflare
+  const cfRes = await deleteImage({image: `${rid}-${report.report_image}`, database: 'cora-image-database'});
+
+  if(cfRes === 200) {
+    console.log('cloudflare: image deleted successfully')
+  } else  {
+    console.log('cloudflare: failed to delete image')
+    return 
+  }
+
+  // delete the entry from supabase
+  const sbRes = await supabase
+    .from('reports')
+    .delete()
+    .eq('report_id', report.report_id)
+
+  if(sbRes.status === 204) {
+    console.log('supabase: successfully deleted')
+  } else {
+    console.log(`supabase: failed to delete report of ID ${report.report_id} due to this error: ${sbRes.error?.message}`)
+    return
+  }
+
+  console.log('deleted successfully')
+  revalidate()
+}
+

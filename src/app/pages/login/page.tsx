@@ -1,18 +1,10 @@
-/* 
-  Log in page
-  - added a toggle password button, which allows the 
-    user to change the input type from 'passord' to 
-    'text', in case they want to see their password
-  - added link to /pages/forgotpass for password support
-*/
-
 'use client'
 
 import { login, signInWithGoogle } from "@/app/components/actions";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation"
 import { useState } from "react";
-import Err from "@/app/components/err";
+import { Err } from "@/app/components/client-components";
 import Script from "next/script";
 
 /**

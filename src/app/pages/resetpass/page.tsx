@@ -1,16 +1,8 @@
-/* 
-  Reset Password page
-  - public entry point from Supabase reset email link
-  - expects a `code` query parameter in the URL, which is
-    used on the server to exchange for a session before
-    updating the user's password
-*/
-
 'use client'
 
 import { resetpass } from "@/app/components/actions";
 import { useSearchParams } from "next/navigation";
-import Err from "@/app/components/err";
+import { Err } from "@/app/components/client-components";
 
 /**
  * Reset password page.

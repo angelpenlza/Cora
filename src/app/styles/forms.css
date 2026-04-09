@@ -103,3 +103,10 @@ input:focus {
     padding: 10px 0;
     cursor: pointer;
 }
+
+.pfp {
+    border-radius: 100%;
+    border: solid;
+    border-color: black;
+    padding: 10px;
+}
