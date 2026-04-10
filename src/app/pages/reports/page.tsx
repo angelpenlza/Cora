@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { getReportCommentCounts } from '@/app/components/report-actions';
 import ExploreListClient from './report-list-client';
+import { Reports } from '@/app/components/client-components';
+import { getImages } from '@/app/components/cfhelpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +18,9 @@ export default async function Explore() {
     ? await getReportCommentCounts(reportIds)
     : {};
 
+  const images = await getImages();
+  console.log('get images: ', images)
+
   return (
     <div className="explore-page">
       <h1>Reports and complaints</h1>
@@ -25,6 +30,7 @@ export default async function Explore() {
         <ExploreListClient
           reports={reports}
           commentCounts={commentCounts}
+          images={images}
         />
       )}
     </div>

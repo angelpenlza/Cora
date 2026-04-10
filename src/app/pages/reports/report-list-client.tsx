@@ -2,6 +2,9 @@
 
 import Link from 'next/link';
 import VoteButtons from './vote-buttons';
+import { getImages } from '@/app/components/cfhelpers';
+import { useEffect, useState } from 'react';
+import { getImgProps } from 'next/dist/shared/lib/get-img-props';
 
 type ReportRow = {
   report_id: number;
@@ -17,12 +20,15 @@ type ReportRow = {
 type ExploreListClientProps = {
   reports: ReportRow[];
   commentCounts: Record<number, number>;
+  images: Record<string, string>;
 };
 
 export default function ExploreListClient({
   reports,
   commentCounts,
+  images,
 }: ExploreListClientProps) {
+  console.log('images: ', images)
   return (
     <ul className="report-list">
       {reports.map((report) => (
@@ -42,7 +48,12 @@ export default function ExploreListClient({
             </div>
             <p>{report.report_description ?? ''}</p>
             {report.report_image ? (
-              <img src={report.report_image} alt="" className="report-image" />
+              <img 
+                src={images[`${report.report_id}-${report.report_image}`]} 
+                alt="" className="report-image" 
+                width={100}
+                height={100}
+              />
             ) : (
               <div className="no-image">No image</div>
             )}

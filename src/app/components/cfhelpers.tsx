@@ -69,7 +69,7 @@ Input
 Output
 - the requested image
 --------------------------------*/
-export async function getAvatar({ image, database }: {
+export async function getImage({ image, database }: {
   image: string | null,
   database: string | null,
 }) {
@@ -79,22 +79,25 @@ export async function getAvatar({ image, database }: {
     return 'no image or database' 
   }
 
-  try {
-    const formData = new FormData();
-    formData.append('image', image)
-    formData.append('database', database)
+  // try {
+  //   const formData = new FormData();
+  //   formData.append('image', image)
+  //   formData.append('database', database)
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_HOME_PAGE}/api/cloudflare`, {
-      method: 'GET',
-      body: formData
-    })
-    const data = await res.json();
-    if(data.status === 200) {
-      return data.image
-    } else  {
-      return '/assests/user.png'
-    }
-  } catch (err) { return err }
+  //   const res = await fetch(`${process.env.NEXT_PUBLIC_HOME_PAGE}/api/cloudflare`, {
+  //     method: 'GET',
+  //     body: formData
+  //   })
+  //   const data = await res.json();
+  //   if(data.status === 200) {
+  //     return data.image
+  //   } else  {
+  //     return '/assests/user.png'
+  //   }
+  // } catch (err) { return err }
+  try {
+    
+  } catch(error) { return null }
 }
 
 /*--------------------------------
