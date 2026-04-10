@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 import { createReport } from '@/app/components/report-actions';
@@ -8,6 +8,9 @@ import PhoneVerificationModal from '@/app/components/phone-verification-modal';
 import { Dropdown } from '@/app/components/client-components';
 import Link from 'next/link';
 import { AddressForms } from '@/app/components/autocomplete';
+
+/** ~4 MiB — under Vercel’s ~4.5 MB Server Action / function body limit (multipart adds overhead). */
+const MAX_REPORT_IMAGE_BYTES = 4 * 1024 * 1024;
 
 /**
  * Upload form for creating a new report.
@@ -35,6 +38,7 @@ export default function UploadForm({
   const err = searchParams.get('err');
   const reportErr = searchParams.get('report_err');
   const [dismissedHere, setDismissedHere] = useState(false);
+  const [imageTooLarge, setImageTooLarge] = useState(false);
   const showPhoneModal =
     !!err || ((!!user && !phoneVerified) && !dismissedHere);
 
@@ -82,7 +86,34 @@ export default function UploadForm({
       <label htmlFor="description" className='upload-label'>Description</label>
       <textarea id="description" name="description" rows={3} className='upload-input' maxLength={400} required />
 
-      <input id="image" name="image" type="file" accept="image/png, image/jpeg" className='upload-image' />
+      <label htmlFor="image" className="upload-label">
+        Photo (optional, PNG or JPEG, max ~4 MB)
+      </label>
+      <input
+        id="image"
+        name="image"
+        type="file"
+        accept="image/png, image/jpeg"
+        className="upload-image"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (!f) {
+            setImageTooLarge(false);
+            return;
+          }
+          if (f.size > MAX_REPORT_IMAGE_BYTES) {
+            setImageTooLarge(true);
+            e.target.value = '';
+          } else {
+            setImageTooLarge(false);
+          }
+        }}
+      />
+      {imageTooLarge && (
+        <p className="error" role="alert">
+          That image is too large for upload. Use a file under 4 MB or compress it and try again.
+        </p>
+      )}
 
       <button type="submit">Submit report</button>
 
