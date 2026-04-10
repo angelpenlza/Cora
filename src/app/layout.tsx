@@ -44,6 +44,12 @@ export const metadata: Metadata = {
   title: "Cora",
   description: "A community reporting platform",
   manifest: "/manifest.json",
+  // iOS still requires this legacy meta for `apple-touch-startup-image` splash screens when
+  // launched from the home screen. Next may emit `mobile-web-app-capable` only; without
+  // `apple-mobile-web-app-capable`, Safari often skips startup images (Android unaffected).
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+  },
   icons: {
     icon: [
       { url: "/assets/favicon-96x96.png", sizes: "96x96", type: "image/png" },
@@ -57,11 +63,12 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Cora",
     startupImage: [
+      // iPhone 17 Pro Max (440×956 @3x → 1320×2868) — list first so it wins if queries overlap
+      { url: splash("1320x2868"), media: "(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
+      { url: splash("2868x1320"), media: "(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" },
       // Physical pixel dimensions per https://www.ios-resolution.com/ (script: scripts/generate-all-splash.mjs)
       { url: splash("1206x2622"), media: "(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
       { url: splash("2622x1206"), media: "(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" },
-      { url: splash("1320x2868"), media: "(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
-      { url: splash("2868x1320"), media: "(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" },
       { url: splash("1320x2988"), media: "(device-width: 440px) and (device-height: 996px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
       { url: splash("2988x1320"), media: "(device-width: 440px) and (device-height: 996px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" },
       { url: splash("1260x2736"), media: "(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
@@ -113,6 +120,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#ff8800",
 };
 
 export const dynamic = 'force-dynamic';
