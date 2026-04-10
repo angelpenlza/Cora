@@ -29,6 +29,15 @@ function trim(value: FormDataEntryValue | null): string {
   return (value ?? '').toString().trim();
 }
 
+function hasReportImageFile(file: unknown): file is File {
+  return (
+    file instanceof File &&
+    file.size > 0 &&
+    !!file.name &&
+    file.name !== 'undefined'
+  );
+}
+
 /**
  * Create a new report for the authenticated user.
  *
@@ -82,12 +91,14 @@ export async function createReport(formData: FormData) {
     );
   }
 
+  const reportImageName = hasReportImageFile(image) ? image.name : null;
+
   const { data, error } = await supabase
     .from('reports')
     .insert({
       report_title: title,
       report_description: description,
-      report_image: image.name != 'undefined' ? image.name : null,
+      report_image: reportImageName,
       // Minimal required fields for reports table / RLS
       category_id: 1, // e.g. 'Safety' from current seed data
       category: category,
@@ -97,16 +108,6 @@ export async function createReport(formData: FormData) {
     })
     .select('*')
     .single();
-
-  if(data && image) {
-    const res = await postImage({
-      image: image, 
-      database: 'cora-image-database', 
-      username: profile.username, 
-      rid: data.report_id, 
-    })
-    console.log('res: ', res)
-  }
 
   if (error || !data) {
     console.error('Error creating report', error);
@@ -119,8 +120,34 @@ export async function createReport(formData: FormData) {
     );
   }
 
+  let notificationImageUrl: string | null = null;
+  if (reportImageName && hasReportImageFile(image)) {
+    const res = await postImage({
+      image,
+      database: 'cora-image-database',
+      username: profile.username,
+      rid: String(data.report_id),
+    });
+    if (
+      res &&
+      typeof res === 'object' &&
+      'success' in res &&
+      res.success === true &&
+      'url' in res &&
+      typeof (res as { url: unknown }).url === 'string'
+    ) {
+      notificationImageUrl = (res as { url: string }).url;
+    }
+  }
+
   try {
-    await sendNewReportNotification(data.report_title);
+    const bodySnippet =
+      description.length > 240 ? `${description.slice(0, 237)}…` : description;
+    await sendNewReportNotification(
+      data.report_title,
+      bodySnippet,
+      notificationImageUrl,
+    );
   } catch (err) {
     console.error('Error sending new report notification', err);
   }

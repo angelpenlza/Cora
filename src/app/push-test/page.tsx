@@ -91,7 +91,7 @@ function PushNotificationManager() {
 
   async function sendTestNotification() {
     if (!subscription || !message.trim()) return;
-    await sendNotification(message.trim());
+    await sendNotification(message.trim(), message.trim());
     setMessage('');
   }
 

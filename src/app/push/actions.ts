@@ -133,9 +133,14 @@ export async function unsubscribeUser() {
  * - Any 404/410 responses indicate an expired subscription and are deleted.
  * - Other send errors are logged but do not stop the loop.
  *
- * Payload shape must match what `public/sw.js` expects (`title`, `body`, `icon`, `badge`).
+ * Payload shape must match what `public/sw.js` expects (`title`, `body`, `icon`, `badge`, optional `image`).
+ * When `image` is omitted, the service worker uses `Noti-HeroImage.png` as the large notification image.
  */
-export async function sendNotification(message: string) {
+export async function sendNotification(
+  message: string,
+  bodyMessage: string,
+  notificationImageUrl?: string | null,
+) {
   if (!publicKey || !privateKey) {
     throw new Error('VAPID keys are not configured on the server');
   }
@@ -163,12 +168,17 @@ export async function sendNotification(message: string) {
   const base = getNotificationBaseUrl();
   const iconUrl = `${base}/assets/icons/android-badge-icon.png`; //primary notification badge icon
   const badgeUrl = `${base}/assets/icons/statusBarIcon-96x96.png`;//primary notification status bar icon
-  const payload = JSON.stringify({
+  const payloadObject: Record<string, string> = {
     title: message,
-    body: 'this is where the description of the report will go',
+    body: bodyMessage,
     icon: iconUrl,
     badge: badgeUrl,
-  });
+  };
+  const trimmedImage = notificationImageUrl?.trim();
+  if (trimmedImage) {
+    payloadObject.image = trimmedImage;
+  }
+  const payload = JSON.stringify(payloadObject);
 
   for (const sub of subscriptions) {
     const pushSubscription: PushSubscription = {
@@ -200,7 +210,11 @@ export async function sendNotification(message: string) {
 /**
  * Notification text for new report created.
  */
-export async function sendNewReportNotification(title: string) {
+export async function sendNewReportNotification(
+  title: string,
+  bodyMessage: string,
+  reportImageUrl?: string | null,
+) {
   const message = `New report: ${title}`;
-  return sendNotification(message);
+  return sendNotification(message, bodyMessage, reportImageUrl);
 }
