@@ -19,8 +19,8 @@ export async function GET(request: NextRequest) {
     description: 'A community reporting platform built especially for Orange County!',//metadata description
     start_url: `${base}/`,//landing page of the app when the app is launched
     display: 'standalone' as const,//specify preferred display mode for the app
-    background_color: '#ff8800',//splash screen background color
-    theme_color: '#ff8800',// colors the statis nar
+    background_color: '#F27F0D',//splash screen background color
+    theme_color: '#F27F0D',// colors the statis nar
     orientation: 'portrait-primary' as const,
     icons: [
       { src: `${base}/assets/icons/apple-touch-icon.png`, sizes: '192x192', type: 'image/png', purpose: 'any' as const },// Apple Touch Icon
