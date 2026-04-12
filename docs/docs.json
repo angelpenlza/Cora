@@ -2,11 +2,22 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Cora",
+  "description": "Safety-first community platform for Orange County residents. Built by locals, for locals.",
   "colors": {
-  "primary": "#F27F0D",
-  "light": "#00AF54",
-  "dark": "#E07000"
-},
+    "primary": "#F27F0D",
+    "light": "#FF9A35",
+    "dark": "#DD7D00"
+  },
+  "appearance": {
+    "default": "light"
+  },
+  "fonts": {
+    "family": "Alexandria",
+    "heading": {
+      "family": "Gantari",
+      "weight": 700
+    }
+  },
   "favicon": "/favicon.svg",
   "logo": {
     "light": "/logo/light.svg",
@@ -15,8 +26,8 @@
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:corafyi@gmail.com"
+        "label": "Contact",
+        "href": "mailto:corafyi@gmail.com?subject=Cora"
       }
     ],
     "primary": {
@@ -32,10 +43,7 @@
         "groups": [
           {
             "group": "Getting started",
-            "pages": [
-              "user/introduction",
-              "user/quickstart"
-            ]
+            "pages": ["user/introduction", "user/quickstart"]
           },
           {
             "group": "Submitting reports",
@@ -47,16 +55,11 @@
           },
           {
             "group": "Your account",
-            "pages": [
-              "user/creating-an-account",
-              "user/privacy-and-data"
-            ]
+            "pages": ["user/creating-an-account", "user/privacy-and-data"]
           },
           {
             "group": "Support",
-            "pages": [
-              "user/faq"
-            ]
+            "pages": ["user/faq"]
           }
         ]
       },
@@ -65,38 +68,23 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": [
-              "dev/introduction",
-              "dev/tech-stack",
-              "dev/architecture"
-            ]
+            "pages": ["dev/introduction", "dev/tech-stack", "dev/architecture"]
           },
           {
             "group": "Setup",
-            "pages": [
-              "dev/environment-setup",
-              "dev/environment-variables"
-            ]
+            "pages": ["dev/environment-setup", "dev/environment-variables"]
           },
           {
             "group": "Database",
-            "pages": [
-              "dev/supabase-schema",
-              "dev/postgis-setup"
-            ]
+            "pages": ["dev/supabase-schema", "dev/postgis-setup"]
           },
           {
             "group": "Auth",
-            "pages": [
-              "dev/google-oauth",
-              "dev/twilio-verify"
-            ]
+            "pages": ["dev/google-oauth", "dev/twilio-verify"]
           },
           {
             "group": "Deployment",
-            "pages": [
-              "dev/deployment-guide"
-            ]
+            "pages": ["dev/deployment-guide"]
           }
         ]
       }
@@ -106,22 +94,26 @@
         {
           "anchor": "GitHub",
           "href": "https://github.com/Davidc45/Cora",
-          "icon": "github"
+          "icon": "github",
+          "color": {
+            "light": "#111827",
+            "dark": "#F27F0D"
+          }
         },
         {
           "anchor": "Report an issue",
-          "href": "mailto:corafyi@gmail.com",
-          "icon": "circle-exclamation"
+          "href": "mailto:corafyi@gmail.com?subject=Cora%20docs",
+          "icon": "circle-exclamation",
+          "color": {
+            "light": "#F27F0D",
+            "dark": "#FF9A35"
+          }
         }
       ]
     }
   },
   "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "claude"
-    ]
+    "options": ["copy", "view", "claude"]
   },
   "footer": {
     "socials": {
