@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation"
 import { useState } from "react";
 import { Err } from "@/app/components/client-components";
-import Script from "next/script";
+import TurnstileField from "@/app/components/turnstile-field";
 
 /**
  * Login page.
  *
- * - Renders an email/password form that posts to the `login` server action.
+ * - Email/password posts to `login`; Google OAuth uses a separate form posting to `signInWithGoogle`.
  * - Includes a password visibility toggle for usability.
  * - Links to the forgot-password flow and sign-up page.
  * - Displays any error message passed via `?err=` query param using `Err`.
@@ -18,6 +18,7 @@ import Script from "next/script";
 export default function Login() {
   const searchParams = useSearchParams();
   const errMessage = searchParams.get('err')
+  const nextParam = searchParams.get('next')
   const [showPass, setShowPass] = useState(false)
 
   const togglePass = () => {
@@ -26,43 +27,49 @@ export default function Login() {
   }
 
   return (
-    <form className="login-container">
-        <Script
-          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-          strategy="afterInteractive"
-          async
-          defer
-        />
-      <h2>Sign In</h2>
-      <label htmlFor="email">Email</label>
-      <input id="email" name="email" type="email" required />
+    <div className="login-container">
+      <form action={login} className="login-email-form">
+        <h2>Sign In</h2>
+        {nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') && (
+          <input type="hidden" name="next" value={nextParam} />
+        )}
 
-      <label htmlFor="password">Password</label>
-      <div className="password-block">
-        <input id="password" name="password" className="password"
-          type={ showPass ? 'text' : 'password' } required 
-        />
-        <div onClick={togglePass} className="icon">
-          { showPass ? 
-            <img src='/assets/hide.png' alt="hide" className="view-icon"/> :
-            <img src='/assets/view.png' alt="view" className="view-icon"/> 
-          }
+        <label htmlFor="email">Email</label>
+        <input id="email" name="email" type="email" required />
+
+        <label htmlFor="password">Password</label>
+        <div className="password-block">
+          <input id="password" name="password" className="password"
+            type={ showPass ? 'text' : 'password' } required 
+          />
+          <div onClick={togglePass} className="icon">
+            { showPass ? 
+              <img src='/assets/hide.png' alt="hide" className="view-icon"/> :
+              <img src='/assets/view.png' alt="view" className="view-icon"/> 
+            }
+          </div>
         </div>
-      </div>
 
-      <Link href='/pages/forgotpass'>Forgot Password?</Link>
+        <Link href='/pages/forgotpass'>Forgot Password?</Link>
 
-      <div
-          className="cf-turnstile"
-          data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-          data-theme="light"
-        />
+        <TurnstileField />
 
-      <button formAction={login} type="submit" className="login-button">Login</button>
+        <button type="submit" className="login-button">Login</button>
+      </form>
+
       <div className="or">or</div>
-      <div onClick={signInWithGoogle} className="google-login">Sign in with Google</div>
+
+      <form action={signInWithGoogle} className="login-google-form">
+        {nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') && (
+          <input type="hidden" name="next" value={nextParam} />
+        )}
+        <button type="submit" className="google-login">
+          Sign in with Google
+        </button>
+      </form>
+
       <footer>Don&apos;t have an account? <Link href='/pages/signup'>Sign-up here</Link></footer>
       { errMessage ? <Err message={errMessage}/> : <></>}
-    </form>
+    </div>
   )
 }

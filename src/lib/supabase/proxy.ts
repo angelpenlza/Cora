@@ -3,7 +3,8 @@ import { createServerClient } from '@supabase/ssr'
 const publicRoutes = ['/pages/login', '/pages/signup']
 import { NextResponse, type NextRequest } from 'next/server'
 
-const protectedRoutes = ['/pages/account', '/pages/upload', '/pages/verify-phone']
+// Upload is reachable while signed out; the page shows a sign-in modal instead of middleware redirect.
+const protectedRoutes = ['/pages/account', '/pages/verify-phone'];
 
 /**
  * Middleware-style helper for keeping Supabase auth sessions in sync with Next.

@@ -32,6 +32,14 @@ function trim(value: FormDataEntryValue | null): string {
   return (value ?? '').toString().trim()
 }
 
+/** Allow only same-origin relative paths for post-login redirects. */
+function safeInternalPath(value: string): string | null {
+  const t = value.trim()
+  if (!t || !t.startsWith('/') || t.startsWith('//')) return null
+  if (t.includes('://')) return null
+  return t
+}
+
 type TurnstileVerifyResponse = {
   success: boolean
   'error-codes'?: string[]
@@ -75,6 +83,7 @@ async function verifyTurnstileToken(token: string): Promise<TurnstileVerifyRespo
  */
 export async function login(formData: FormData) {
   const supabase = await createClient()
+  const nextSafe = safeInternalPath(trim(formData.get('next')))
   const data = {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
@@ -83,11 +92,13 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
-    redirect('/pages/login?err=Invalid Credentials')
+    const q = new URLSearchParams({ err: 'Invalid Credentials' })
+    if (nextSafe) q.set('next', nextSafe)
+    redirect(`/pages/login?${q.toString()}`)
   }
 
   revalidatePath('/', 'layout')
-  redirect('/')
+  redirect(nextSafe ?? '/')
 }
 
 /**
@@ -176,7 +187,6 @@ export async function updateProfile(formData: FormData) {
   const removeImage = formData.get('remove');
   const username = trim(formData.get('Username'));
   const name = trim(formData.get('Name'));
-  const phoneNum = trim(formData.get('Phone'));
   const uid = trim(formData.get('uid'));
   let url = null
   let avatarName = null
@@ -210,15 +220,33 @@ export async function updateProfile(formData: FormData) {
       username: username,
       avatar_name: avatarName,
       avatar_url: url,
-      phone: phoneNum
     })
     .eq('id', uid)
 
 
-  if(error) {
+  if (error) {
     redirect(`/pages/account?err=${error.message}`)
-  } 
-    
+  }
+
+  const { data: profileRow } = await supabase
+    .from('profiles')
+    .select('avatar_url')
+    .eq('id', uid)
+    .maybeSingle()
+
+  const syncedAvatar =
+    typeof profileRow?.avatar_url === 'string'
+      ? profileRow.avatar_url.trim()
+      : ''
+
+  const { error: metaErr } = await supabase.auth.updateUser({
+    data: { avatar_url: syncedAvatar },
+  })
+  if (metaErr) {
+    console.log('sync avatar to auth metadata:', metaErr.message)
+  }
+
+  revalidatePath('/', 'layout')
   redirect('/pages/account?success=Account updated successfully')
 }
 
@@ -344,18 +372,25 @@ export async function resetpass(formData: FormData) {
   )
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(formData?: FormData) {
   const origin = (await headers()).get('origin')
+  const nextSafe = formData
+    ? safeInternalPath(trim(formData.get('next')))
+    : null
+  const callback =
+    nextSafe != null
+      ? `${origin}/auth/callback?next=${encodeURIComponent(nextSafe)}`
+      : `${origin}/auth/callback`
   const supabase = await createClient()
   const { error, data } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: callback,
     },
   })
 
-  if(error) {
-    console.log(error) 
+  if (error) {
+    console.log(error)
   } else {
     return redirect(data.url)
   }

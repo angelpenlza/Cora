@@ -100,10 +100,6 @@ export function UpdateAccount({user}: {user: any}) {
           title="Name"
           value={user.full_name}
         />
-        <AccountDetail
-          title="Phone"
-          value={user.phone}
-        />
         <input type="hidden" name="uid" id="uid" value={user.id} />
         <input type="hidden" name="oldAvatarName" id="oldAvatarName" value={`${user.avatar_name}`} />
         {

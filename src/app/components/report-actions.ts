@@ -48,7 +48,9 @@ export async function createReport(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    redirect('/pages/login');
+    redirect(
+      `/pages/login?next=${encodeURIComponent('/pages/upload')}`,
+    );
   }
 
   const { data: profile } = await supabase

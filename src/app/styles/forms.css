@@ -80,18 +80,41 @@ input:focus {
     background-color: rgb(109, 109, 109);
     color: white;
     border-color: black;
+    font: inherit;
+    display: block;
+    box-sizing: border-box;
 }
 
 .google-login:hover {
     background-color: rgb(62, 62, 62);
 }
 
+.login-email-form,
+.login-google-form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
 .login-button {
+    cursor: pointer;
     border: solid;
     width: 40%;
     margin: 20px auto;
     padding: 10px;
     border-radius: 15px;
+    background-color: rgb(233, 233, 233);
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.login-button:hover {
+    background-color: rgb(200, 200, 200);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.login-button:focus-visible {
+    outline: 2px solid rgb(80, 80, 80);
+    outline-offset: 2px;
 }
 
 .or {
@@ -104,9 +127,8 @@ input:focus {
     cursor: pointer;
 }
 
+/* Account page avatar size; crop matches navbar via `.cora-user-avatar-photo` on the same img. */
 .pfp {
-    border-radius: 100%;
-    border: solid;
-    border-color: black;
-    padding: 10px;
+    width: 100px;
+    height: 100px;
 }

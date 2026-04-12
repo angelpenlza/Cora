@@ -36,28 +36,33 @@ Input
 - inAccount: boolean value, if true, will display a delete button with each report
 ---------------------*/
 export function Reports({ reports, images, inAccount }: any | null) {
-  if(reports.length <= 0) return <div className="report-container">No reports</div>
-  else if(!reports || !images) return <div className="report-container">Error getting reports</div>
-  else {
-    const ReportContainer = ({ children, rid }: { 
-      children: React.ReactNode, 
-      rid: string
-    }) => {
-      return (
-        inAccount ? 
-        <div className="report">
-          {children}
-        </div> : 
-        <Link href={`/pages/user-report?report=${rid}`} className="report">
-          {children}
-        </Link>
+  if (!reports?.length) {
+    return <div className="report-container">No reports</div>;
+  }
+  if (!images) {
+    return <div className="report-container">Error getting reports</div>;
+  }
 
-      )
-    }
-    const formattedReports = reports?.map(async (report: any) => {
-      const url = images[report.report_id + '-' + report.report_image]
-      return (
-        <ReportContainer rid={report.report_id}>
+  const ReportContainer = ({
+    children,
+    rid,
+  }: {
+    children: React.ReactNode;
+    rid: string;
+  }) => {
+    return inAccount ? (
+      <div className="report">{children}</div>
+    ) : (
+      <Link href={`/pages/user-report?report=${rid}`} className="report">
+        {children}
+      </Link>
+    );
+  };
+
+  const formattedReports = reports.map((report: any) => {
+    const url = images[report.report_id + '-' + report.report_image];
+    return (
+        <ReportContainer key={report.report_id} rid={report.report_id}>
           <div className="report-header">
             <h2 className="report-category">{report.category}</h2>
             <div className={report.status}>{report.status}</div>
@@ -98,14 +103,10 @@ export function Reports({ reports, images, inAccount }: any | null) {
             </div>
           }
         </ReportContainer>
-      )
-    });
-    return (
-      <div className="report-container">
-        {formattedReports}
-      </div>
     );
-  }
+  });
+
+  return <div className="report-container">{formattedReports}</div>;
 }
 
 /*---------------------
@@ -173,26 +174,27 @@ export function Dropdown({ options, update, category }: {
 - outputs a formatted avatar with provided src link
 - or a default user avatar if null is provided
 ---------------------*/
-export function Avatar({avatar_url}: {avatar_url: string | null}) {
-  if(avatar_url) {
+export function Avatar({ avatar_url }: { avatar_url: string | null }) {
+  const photoClass = 'pfp cora-user-avatar-photo';
+  if (avatar_url) {
     return (
-      <Image 
+      <Image
         src={avatar_url}
-        alt="usr-pfp"
+        alt=""
         width={100}
         height={100}
-        className="pfp"
+        className={photoClass}
+        unoptimized
       />
-    )
-  } else {
-    return (
-      <img
-        src='/assets/user.png'
-        alt="usr-pfp"
-        width={100}
-        height={100}
-        className="pfp"
-      />
-    )
+    );
   }
+  return (
+    <img
+      src="/assets/user.png"
+      alt=""
+      width={100}
+      height={100}
+      className={photoClass}
+    />
+  );
 }

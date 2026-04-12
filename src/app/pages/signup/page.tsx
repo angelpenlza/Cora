@@ -19,7 +19,7 @@
 import { signInWithGoogle, signup } from "@/app/components/actions";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Script from "next/script";
+import TurnstileField from "@/app/components/turnstile-field";
 import { useFormStatus } from "react-dom";
 import { useEffect, useState } from "react";
 import { Err } from "@/app/components/client-components";
@@ -69,12 +69,6 @@ export default function Signup() {
        * - Surfaces `success` / `err` messages from query params.
        */
       <form className="signup-container">
-        <Script
-          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-          strategy="afterInteractive"
-          async
-          defer
-        />
         <h2>Sign up</h2>
 
         <label htmlFor="username">Username (min 3 characters)</label>
@@ -105,10 +99,10 @@ export default function Signup() {
           onChange={handlePassUpdate}
         />
 
-        <label htmlFor="password">Confirm Password</label>
+        <label htmlFor="confirm-password">Confirm Password</label>
         <input
-          id="password"
-          name="password"
+          id="confirm-password"
+          name="confirm_password"
           type={ showPass ? 'text' : 'password'}
           autoComplete="new-password"
           required
@@ -119,11 +113,7 @@ export default function Signup() {
           { showPass ? <>hide</> : <>show</> } password
         </div>
 
-        <div
-          className="cf-turnstile"
-          data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-          data-theme="light"
-        />
+        <TurnstileField />
 
         { arePassesEqual ? <>
           <SignupButton />      
@@ -134,7 +124,22 @@ export default function Signup() {
           </div>
         </>}
 
-        <div onClick={signInWithGoogle} className="signup-with-google">Sign up with google</div>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => {
+            void signInWithGoogle();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              void signInWithGoogle();
+            }
+          }}
+          className="signup-with-google"
+        >
+          Sign up with google
+        </div>
 
 
         <footer>Already have an account? <Link href='/pages/login'>Log in here</Link></footer>

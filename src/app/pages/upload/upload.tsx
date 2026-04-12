@@ -18,9 +18,8 @@ import { AddressForms } from '@/app/components/autocomplete';
  *
  * Form:
  * - Posts to the `createReport` server action.
- * - Shows the phone verification modal as soon as the user lands on this page if they are
- *   logged in but not phone-verified (so they don't fill the form and then get blocked on submit).
- * - Also shows the modal when redirected with ?err= after a failed submit.
+ * - Guests: same modal shell with `variant="signIn"` (Not now / Sign in).
+ * - Signed-in, not phone-verified: modal on load and when redirected with ?err= after submit.
  */
 export default function UploadForm({
   user,
@@ -36,20 +35,30 @@ export default function UploadForm({
   const reportErr = searchParams.get('report_err');
   const [dismissedHere, setDismissedHere] = useState(false);
   const showPhoneModal =
-    !!err || ((!!user && !phoneVerified) && !dismissedHere);
+    !!user &&
+    (!!err || (!phoneVerified && !dismissedHere));
 
   const handleCloseModal = () => {
     setDismissedHere(true);
     router.replace('/pages/upload');
   };
 
+  const loginHref = `/pages/login?next=${encodeURIComponent('/pages/upload')}`;
+
   return (
     <div>
+      <PhoneVerificationModal
+        open={!user}
+        variant="signIn"
+        onVerifyLater={() => router.push('/')}
+        onVerifyNow={() => router.push(loginHref)}
+      />
       <PhoneVerificationModal
         open={showPhoneModal}
         onVerifyLater={handleCloseModal}
         onVerifyNow={() => router.push('/pages/verify-phone')}
       />
+      {user ? (
       <form action={createReport} className='upload-container'>
         <h1>Upload</h1>
         {reportErr && (
@@ -88,6 +97,7 @@ export default function UploadForm({
 
       <Link href='/' className='return-to-home-page'>return to home page</Link>
       </form>
+      ) : null}
     </div>
   );
 }
