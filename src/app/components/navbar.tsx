@@ -375,16 +375,6 @@ export default function NavBar({
           >
             Make a Report
           </Link>
-          {!user && (
-            <Link
-              href={LOGIN_HREF}
-              className={`site-header-drawer-signin${navHrefActive(pathname, LOGIN_HREF) ? ' is-active' : ''}`}
-              onClick={closeDrawer}
-              aria-current={navHrefActive(pathname, LOGIN_HREF) ? 'page' : undefined}
-            >
-              Sign In
-            </Link>
-          )}
         </div>
       </div>
     </header>
