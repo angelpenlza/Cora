@@ -182,46 +182,58 @@ export async function updateProfile(formData: FormData) {
   const pfpDatabase = 'user-avatars';
   const supabase = await createClient();
   console.log('updating profile...')
-  const image: File = formData.get('image') as File;
+  const imageEntry = formData.get('image');
+  const hasNewImage = imageEntry instanceof File && imageEntry.size > 0;
+  const image = hasNewImage ? imageEntry : null;
   const oldAvatarName = trim(formData.get('oldAvatarName'));
-  const removeImage = formData.get('remove');
+  const removeAvatar = formData.get('removeAvatar');
+  const wantsRemove =
+    removeAvatar === '1' ||
+    removeAvatar === 'true' ||
+    (typeof removeAvatar === 'string' && removeAvatar.toLowerCase() === 'on');
   const username = trim(formData.get('Username'));
   const name = trim(formData.get('Name'));
   const uid = trim(formData.get('uid'));
-  let url = null
-  let avatarName = null
 
-  if(!removeImage) {
-    avatarName = username + '-' + image.name;
-    console.log('uploading image to cloudflare...')
+  let nextAvatarUrl: string | null | undefined = undefined;
+  let nextAvatarName: string | null | undefined = undefined;
+
+  if (wantsRemove) {
+    console.log('removing image: ', oldAvatarName);
+    await deleteImage({ image: oldAvatarName, database: 'user-avatars' });
+    nextAvatarUrl = null;
+    nextAvatarName = null;
+  } else if (image) {
+    const avatarName = `${username}-${image.name}`;
+    console.log('uploading image to cloudflare...');
     const uploadImageStatus = await postImage({
-      image: image, 
-      database: pfpDatabase, 
-      rid: null, 
-      username: username
+      image,
+      database: pfpDatabase,
+      rid: null,
+      username: username,
     });
-  
-    if(uploadImageStatus.status === 500) {
-      console.log('error uploading avatar: ', uploadImageStatus.message)
-    } 
-    url = uploadImageStatus?.url;
-  } else {
-    console.log('removing image: ', oldAvatarName)
-    deleteImage({image: oldAvatarName, database: 'user-avatars'})
+
+    if (uploadImageStatus.status !== 200 || typeof uploadImageStatus.url !== 'string') {
+      console.log('error uploading avatar: ', uploadImageStatus.message);
+      redirect(
+        `/pages/account?err=${encodeURIComponent('Could not upload profile image. Try again.')}`,
+      );
+    }
+    nextAvatarUrl = uploadImageStatus.url;
+    nextAvatarName = avatarName;
   }
 
+  const updateRow: Record<string, unknown> = {
+    full_name: name,
+    username: username,
+  };
+  if (nextAvatarUrl !== undefined) {
+    updateRow.avatar_url = nextAvatarUrl;
+    updateRow.avatar_name = nextAvatarName;
+  }
 
-
-  console.log('uploading data to supabase...')
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      full_name: name,
-      username: username,
-      avatar_name: avatarName,
-      avatar_url: url,
-    })
-    .eq('id', uid)
+  console.log('uploading data to supabase...');
+  const { error } = await supabase.from('profiles').update(updateRow).eq('id', uid);
 
 
   if (error) {

@@ -40,14 +40,17 @@ export function UpdateAccount({user}: {user: any}) {
           editing ? 
             <div>
               <Avatar avatar_url={deleteImage ? null : pfp}/>
+              {deleteImage ? (
+                <input type="hidden" name="removeAvatar" value="1" />
+              ) : null}
               <input 
-                name={deleteImage ? "remove" : "image"}
+                name="image"
                 id="image"
                 type="file"
                 accept="image/png, image/jpeg"
                 onChange={handleImageChange}
               />
-              <button onClick={deleteAvatar}>Delete Avatar</button>
+              <button type="button" onClick={deleteAvatar}>Delete Avatar</button>
             </div> :
             <Avatar avatar_url={url}/>
         }

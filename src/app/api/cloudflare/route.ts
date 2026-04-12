@@ -1,7 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import { DeleteObjectCommand, GetObjectCommand, ListObjectsCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { error } from "console";
+
+/** SigV4 presigned GET max (~7d). Default SDK expiry is ~15m, which breaks avatars stored in the DB. */
+const PRESIGNED_GET_EXPIRES_SEC = 604800;
 
 const r2 = new S3Client({
   region: 'auto',
@@ -46,6 +48,8 @@ export async function POST(req: NextRequest) {
   const RID = formData.get('rid')
   let key = '';
 
+  const publicBase = process.env.NEXT_PUBLIC_R2_PUBLIC_AVATAR_URL?.trim();
+
   if(userImage.name === 'undefined' || !userImage) {
     return NextResponse.json({
       success: false,
@@ -73,7 +77,10 @@ export async function POST(req: NextRequest) {
       Bucket: database,
       Key: key
     })
-    const url = await getSignedUrl(r2, databaseImage);
+    const url =
+      database === 'user-avatars' && publicBase
+        ? `${publicBase.replace(/\/$/, '')}/${key}`
+        : await getSignedUrl(r2, databaseImage, { expiresIn: PRESIGNED_GET_EXPIRES_SEC });
     const res = await r2.send(putObjectCommand)
     return NextResponse.json({
       success: true,
@@ -126,7 +133,9 @@ try {
         Bucket: database,
         Key: image.name
       })
-      const url = await getSignedUrl(r2, databaseImage);
+      const url = await getSignedUrl(r2, databaseImage, {
+        expiresIn: PRESIGNED_GET_EXPIRES_SEC,
+      });
       if(url) {
         return NextResponse.json({
           success: true,
@@ -170,7 +179,9 @@ default response
           Bucket: database,
           Key: key
         });
-        const url = await getSignedUrl(r2, command);
+        const url = await getSignedUrl(r2, command, {
+          expiresIn: PRESIGNED_GET_EXPIRES_SEC,
+        });
         images.set(key!, url)
       }
 
