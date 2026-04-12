@@ -1,0 +1,246 @@
+/* Site footer — dark slate, brand orange accents (matches navbar / modals) */
+.site-footer {
+  --site-footer-bg: #1a1d23;
+  --site-footer-muted: #a8b0bd;
+  --site-footer-heading-color: #ffffff;
+  --site-footer-accent: #f27f0d;
+  --site-footer-accent-hover: #ff9a35;
+
+  flex-shrink: 0;
+  background: var(--site-footer-bg);
+  color: var(--site-footer-muted);
+  font-family: var(--font-alexandria), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Alexandria everywhere except column titles (Gantari on `.site-footer-heading` below). */
+.site-footer-tagline,
+.site-footer-links a,
+.site-footer-copy,
+.site-footer-social-btn {
+  font-family: var(--font-alexandria), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Tighter horizontal padding so brand + link cluster hug the viewport edges */
+.site-footer-inner {
+  max-width: 90%;
+  margin: 0 auto;
+  padding: clamp(2rem, 4vw, 3rem) clamp(0.75rem, 2.5vw, 1.25rem);
+  box-sizing: border-box;
+}
+
+.site-footer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    'brand brand'
+    'cluster cluster';
+  gap: 2rem 1.75rem;
+  align-items: start;
+}
+
+.site-footer-brand {
+  grid-area: brand;
+  justify-self: start;
+  min-width: 0;
+}
+
+.site-footer-nav-cluster {
+  grid-area: cluster;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* Wider track gap between Platform | Community; row gap before Connect */
+  gap: 2.5rem clamp(2rem, 6vw, 3.25rem);
+  align-items: start;
+}
+
+.site-footer-nav-cluster > .site-footer-connect {
+  grid-column: 1 / -1;
+}
+
+.site-footer-logo-link {
+  display: inline-block;
+  line-height: 0;
+  margin-bottom: 1rem;
+}
+
+.site-footer-logo-img {
+  height: auto;
+  width: min(11rem, 72vw);
+  max-width: 100%;
+}
+
+.site-footer-tagline {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--site-footer-muted);
+}
+
+/* Platform / Community / Connect titles only */
+.site-footer-heading {
+  margin: 0 0 0.85rem;
+  margin-block-start: 0;
+  font-family: var(--font-gantari), ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--site-footer-heading-color);
+}
+
+.site-footer-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.site-footer-links a {
+  color: var(--site-footer-muted);
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: color 0.15s ease;
+}
+
+.site-footer-links a:hover {
+  color: #ffffff;
+}
+
+.site-footer-links a:focus-visible {
+  outline: 2px solid var(--site-footer-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.site-footer-social-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* Bare image controls — no orange ring / fill; assets include their own art */
+.site-footer-social-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: opacity 0.15s ease, transform 0.12s ease;
+}
+
+.site-footer-social-btn:hover {
+  opacity: 0.9;
+}
+
+.site-footer-social-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.site-footer-social-btn:active {
+  transform: scale(0.97);
+}
+
+.site-footer-social-img {
+  display: block;
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: contain;
+}
+
+.site-footer-bottom {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.site-footer-copy {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
+}
+
+/* Shown only on small screens — full-width bar with divider */
+.site-footer-copy--connect {
+  display: none;
+}
+
+.site-footer-copy--mobile-bar {
+  text-align: center;
+}
+
+@media (min-width: 960px) {
+  .site-footer-inner {
+    padding-left: clamp(0.5rem, 1.5vw, 1rem);
+    padding-right: clamp(0.5rem, 1.5vw, 1rem);
+  }
+
+  .site-footer-social-img {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  /* Brand flush left; Platform + Community + Connect grouped and flush right */
+  .site-footer-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem 1.5rem;
+    width: 100%;
+  }
+
+  .site-footer-brand {
+    flex: 0 1 min(22rem, 42vw);
+    max-width: 26rem;
+    padding-top: 0;
+    align-self: flex-start;
+  }
+
+  /* Optical: raise logo to sit with uppercase column titles (tight line-height on `.site-footer-heading`) */
+  .site-footer-brand .site-footer-logo-img {
+    transform: translateY(-0.14rem);
+  }
+
+  .site-footer-nav-cluster {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: flex-start;
+    gap: 2.25rem clamp(2.5rem, 100vw, 4rem);
+    flex: 1 1 auto;
+    min-width: min(100%, 22rem);
+  }
+
+  .site-footer-nav-cluster > .site-footer-connect {
+    grid-column: unset;
+  }
+
+  .site-footer-nav-cluster .site-footer-social-row {
+    justify-content: flex-start;
+  }
+
+  .site-footer-bottom {
+    display: none;
+  }
+
+  .site-footer-copy--connect {
+    display: block;
+    margin-top: 1.35rem;
+    max-width: 16rem;
+    margin-left: auto;
+    text-align: left;
+  }
+}

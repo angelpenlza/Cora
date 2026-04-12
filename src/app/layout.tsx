@@ -3,8 +3,10 @@ import { Alexandria, Gantari, Geist, Geist_Mono } from "next/font/google";
 import NavBar from "./components/navbar";
 import PhoneVerificationWrapper from "./components/phone-verification-wrapper";
 import RegisterSw from "./components/register-sw";
+import ConditionalSiteFooter from "./components/conditional-site-footer";
 import './styles/globals.css';
 import './styles/navbar.css';
+import './styles/footer.css';
 import './styles/forms.css';
 import './styles/home.css';
 import './styles/reports.css';
@@ -168,6 +170,10 @@ export default async function RootLayout({
         <NavBar user={user} profileAvatarUrl={profileAvatarUrl} />
         <PhoneVerificationWrapper user={user} phoneVerified={phoneVerified} />
         <main className="site-main">{children}</main>
+        <ConditionalSiteFooter
+          siteOrigin={defaultUrl}
+          contactEmail={process.env.NEXT_PUBLIC_CONTACT_EMAIL}
+        />
         <Analytics />
         <SpeedInsights />
       </body>
