@@ -31,7 +31,7 @@ export default function PhoneVerificationModal({
     : 'Reminder: You must be authorized to create a report';
 
   const body = isSignIn
-    ? 'Sorry, but you must be signed in to your account to create a report. This will allow you to submit reports and interact with other user reports. You can sign in with your email or Google, or go back to explore the map without signing in.'
+    ? 'Sorry, you must be signed in to submit reports, vote, comment, and use other interactive features. Sign in with your email or Google, or go back to browse without signing in.'
     : 'Your account has not enabled authorization yet. Authorize your account in order to submit reports and interact with other user reports.';
 
   const secondaryLabel = isSignIn ? 'Not now' : 'Authorize Later';

@@ -1,9 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import type { User } from '@supabase/supabase-js';
 import PhoneVerificationModal from '@/app/components/phone-verification-modal';
 import { submitReportFlag } from '@/app/components/report-actions';
+import {
+  SIGN_IN_REQUIRED,
+  VERIFICATION_REQUIRED,
+} from '@/lib/report-auth-errors';
 import {
   REPORT_FLAG_OTHER_MAX_LEN,
   REPORT_FLAG_REASONS,
@@ -12,17 +17,26 @@ import type { ReportFlagReasonCode } from '@/lib/report-flag-reasons';
 
 type ReportFlagControlsProps = {
   reportId: number;
+  user: User | null;
+  phoneVerified: boolean;
 };
 
-export default function ReportFlagControls({ reportId }: ReportFlagControlsProps) {
+type AuthGate = 'none' | 'signIn' | 'phone';
+
+export default function ReportFlagControls({
+  reportId,
+  user,
+  phoneVerified,
+}: ReportFlagControlsProps) {
   const router = useRouter();
+  const pathname = usePathname() || `/pages/reports/${reportId}`;
   const [modalOpen, setModalOpen] = useState(false);
   const [reason, setReason] = useState<ReportFlagReasonCode>('misinformation');
   const [details, setDetails] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [authGate, setAuthGate] = useState<AuthGate>('none');
 
   const resetForm = () => {
     setReason('misinformation');
@@ -32,6 +46,14 @@ export default function ReportFlagControls({ reportId }: ReportFlagControlsProps
   };
 
   const openModal = () => {
+    if (!user) {
+      setAuthGate('signIn');
+      return;
+    }
+    if (!phoneVerified) {
+      setAuthGate('phone');
+      return;
+    }
     resetForm();
     setModalOpen(true);
   };
@@ -52,8 +74,12 @@ export default function ReportFlagControls({ reportId }: ReportFlagControlsProps
     );
     setSubmitting(false);
 
-    if (result.error === 'VERIFICATION_REQUIRED') {
-      setShowVerificationModal(true);
+    if (result.error === SIGN_IN_REQUIRED) {
+      setAuthGate('signIn');
+      return;
+    }
+    if (result.error === VERIFICATION_REQUIRED) {
+      setAuthGate('phone');
       return;
     }
     if (result.error) {
@@ -68,13 +94,23 @@ export default function ReportFlagControls({ reportId }: ReportFlagControlsProps
     }, 1800);
   };
 
+  const loginHref = `/pages/login?next=${encodeURIComponent(pathname)}`;
+
   return (
     <>
       <PhoneVerificationModal
-        open={showVerificationModal}
-        onVerifyLater={() => setShowVerificationModal(false)}
+        open={authGate === 'signIn'}
+        variant="signIn"
+        onVerifyLater={() => setAuthGate('none')}
+        onVerifyNow={() => router.push(loginHref)}
+      />
+      <PhoneVerificationModal
+        open={authGate === 'phone'}
+        onVerifyLater={() => {
+          setAuthGate('none');
+        }}
         onVerifyNow={() => {
-          setShowVerificationModal(false);
+          setAuthGate('none');
           router.push('/pages/verify-phone');
         }}
       />

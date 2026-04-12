@@ -26,6 +26,16 @@ export default async function ReportDetailPage({ params }: PageProps) {
   } = await supabase.auth.getUser();
   const userId = user?.id ?? null;
 
+  let phoneVerified = false;
+  if (userId) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('phone_verified')
+      .eq('id', userId)
+      .maybeSingle();
+    phoneVerified = profile?.phone_verified === true;
+  }
+
   let userVote = 0;
   if (userId) {
     const { data: voteRow } = await supabase
@@ -79,6 +89,8 @@ export default async function ReportDetailPage({ params }: PageProps) {
         initialUserVote={userVote}
         initialComments={comments}
         hideReportFlag={hideReportFlag}
+        user={user ?? null}
+        phoneVerified={phoneVerified}
       />
     </div>
   );

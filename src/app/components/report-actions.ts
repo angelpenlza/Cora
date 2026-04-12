@@ -19,6 +19,10 @@ import {
   isReportFlagReasonCode,
   REPORT_FLAG_OTHER_MAX_LEN,
 } from '@/lib/report-flag-reasons';
+import {
+  SIGN_IN_REQUIRED,
+  VERIFICATION_REQUIRED,
+} from '@/lib/report-auth-errors';
 import type { ReportFlagReasonCode } from '@/lib/report-flag-reasons';
 import { postImage } from './cfhelpers';
 
@@ -159,7 +163,8 @@ export async function createReport(formData: FormData) {
 }
 
 // --- Voting and comments (interactive reports) ---
-// Client code should compare action result with: result.error === 'VERIFICATION_REQUIRED'
+// Client code: result.error === SIGN_IN_REQUIRED → show sign-in gate (guest).
+// result.error === VERIFICATION_REQUIRED → show phone verification (signed in, not verified).
 
 /**
  * Get the current user's vote for a report (1 = upvote, -1 = downvote, 0 = none).
@@ -226,7 +231,7 @@ export async function getMyVotes(
 /**
  * Set, update, or remove the current user's vote.
  * value: 1 = upvote, -1 = downvote, 0 = remove my vote.
- * Returns { error: VERIFICATION_REQUIRED } if not phone-verified.
+ * Returns { error: SIGN_IN_REQUIRED } if not signed in, or { error: VERIFICATION_REQUIRED } if not phone-verified.
  */
 export async function setReportVote(
   reportId: number,
@@ -239,7 +244,7 @@ export async function setReportVote(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { error: 'VERIFICATION_REQUIRED' };
+    return { error: SIGN_IN_REQUIRED };
   }
 
   const { data: profile } = await supabase
@@ -249,7 +254,7 @@ export async function setReportVote(
     .maybeSingle();
 
   if (!profile?.phone_verified) {
-    return { error: 'VERIFICATION_REQUIRED' };
+    return { error: VERIFICATION_REQUIRED };
   }
 
   const { error: rpcError } = await supabase.rpc('set_vote', {
@@ -259,7 +264,7 @@ export async function setReportVote(
 
   if (rpcError) {
     if (rpcError.code === '42501' || rpcError.message?.includes('permission')) {
-      return { error: 'VERIFICATION_REQUIRED' };
+      return { error: VERIFICATION_REQUIRED };
     }
     console.error('set_vote RPC error', rpcError);
     return { error: `Failed to record vote: ${rpcError.message}` };
@@ -334,7 +339,7 @@ export async function getReportComments(
 }
 
 /**
- * Create a comment on a report. Returns { error: VERIFICATION_REQUIRED } if not phone-verified.
+ * Create a comment on a report. Returns SIGN_IN_REQUIRED or VERIFICATION_REQUIRED when applicable.
  */
 export async function createReportComment(
   reportId: number,
@@ -350,7 +355,7 @@ export async function createReportComment(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { error: 'VERIFICATION_REQUIRED' };
+    return { error: SIGN_IN_REQUIRED };
   }
 
   const { data: profile } = await supabase
@@ -360,7 +365,7 @@ export async function createReportComment(
     .maybeSingle();
 
   if (!profile?.phone_verified) {
-    return { error: 'VERIFICATION_REQUIRED' };
+    return { error: VERIFICATION_REQUIRED };
   }
 
   const { error: insertError } = await supabase.from('report_comments').insert({
@@ -380,7 +385,7 @@ export async function createReportComment(
 
 /**
  * Submit a moderation flag on a report. Requires phone-verified user.
- * Returns { error: 'VERIFICATION_REQUIRED' } when not signed in or not verified.
+ * Returns SIGN_IN_REQUIRED or VERIFICATION_REQUIRED when applicable.
  */
 export async function submitReportFlag(
   reportId: number,
@@ -414,7 +419,7 @@ export async function submitReportFlag(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { error: 'VERIFICATION_REQUIRED' };
+    return { error: SIGN_IN_REQUIRED };
   }
 
   const { data: profile } = await supabase
@@ -424,7 +429,7 @@ export async function submitReportFlag(
     .maybeSingle();
 
   if (!profile?.phone_verified) {
-    return { error: 'VERIFICATION_REQUIRED' };
+    return { error: VERIFICATION_REQUIRED };
   }
 
   const { data: reportRow } = await supabase

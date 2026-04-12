@@ -1,9 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import PhoneVerificationModal from '@/app/components/phone-verification-modal';
 import { useVotes } from './vote-context';
+import {
+  SIGN_IN_REQUIRED,
+  VERIFICATION_REQUIRED,
+} from '@/lib/report-auth-errors';
+
+type AuthGate = 'none' | 'signIn' | 'phone';
 
 type VoteButtonsProps = {
   reportId: number;
@@ -28,8 +34,9 @@ export default function VoteButtons({
   compact = false,
 }: VoteButtonsProps) {
   const router = useRouter();
+  const pathname = usePathname() || '/pages/reports';
   const { getVoteEntry, castVote, registerReport } = useVotes();
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [authGate, setAuthGate] = useState<AuthGate>('none');
 
   useEffect(() => {
     registerReport(reportId, initialUpvotes, initialDownvotes);
@@ -46,16 +53,26 @@ export default function VoteButtons({
       e.stopPropagation();
     }
     const result = await castVote(reportId, value, upvotes, downvotes);
-    if (result.error === 'VERIFICATION_REQUIRED') {
-      setShowVerificationModal(true);
+    if (result.error === SIGN_IN_REQUIRED) {
+      setAuthGate('signIn');
+    } else if (result.error === VERIFICATION_REQUIRED) {
+      setAuthGate('phone');
     }
   };
+
+  const loginHref = `/pages/login?next=${encodeURIComponent(pathname)}`;
 
   return (
     <>
       <PhoneVerificationModal
-        open={showVerificationModal}
-        onVerifyLater={() => setShowVerificationModal(false)}
+        open={authGate === 'signIn'}
+        variant="signIn"
+        onVerifyLater={() => setAuthGate('none')}
+        onVerifyNow={() => router.push(loginHref)}
+      />
+      <PhoneVerificationModal
+        open={authGate === 'phone'}
+        onVerifyLater={() => setAuthGate('none')}
         onVerifyNow={() => router.push('/pages/verify-phone')}
       />
       <div

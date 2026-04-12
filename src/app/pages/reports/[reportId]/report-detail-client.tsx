@@ -1,15 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import type { User } from '@supabase/supabase-js';
 import PhoneVerificationModal from '@/app/components/phone-verification-modal';
 import {
   createReportComment,
   type ReportCommentRow,
 } from '@/app/components/report-actions';
+import {
+  SIGN_IN_REQUIRED,
+  VERIFICATION_REQUIRED,
+} from '@/lib/report-auth-errors';
 import { formatDistanceToNow } from 'date-fns';
 import VoteButtons from '../vote-buttons';
 import ReportFlagControls from './report-flag-controls';
+
+type AuthGate = 'none' | 'signIn' | 'phone';
 
 type ReportDetailClientProps = {
   reportId: number;
@@ -18,6 +25,8 @@ type ReportDetailClientProps = {
   initialUserVote: number;
   initialComments: ReportCommentRow[];
   hideReportFlag?: boolean;
+  user: User | null;
+  phoneVerified: boolean;
 };
 
 export default function ReportDetailClient({
@@ -27,12 +36,20 @@ export default function ReportDetailClient({
   initialUserVote,
   initialComments,
   hideReportFlag = false,
+  user,
+  phoneVerified,
 }: ReportDetailClientProps) {
   const router = useRouter();
   const [comments, setComments] = useState(initialComments);
   const [commentBody, setCommentBody] = useState('');
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [authGate, setAuthGate] = useState<AuthGate>('none');
   const [submittingComment, setSubmittingComment] = useState(false);
+
+  useEffect(() => {
+    setComments(initialComments);
+  }, [initialComments]);
+
+  const loginHref = `/pages/login?next=${encodeURIComponent(`/pages/reports/${reportId}`)}`;
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,8 +57,12 @@ export default function ReportDetailClient({
     setSubmittingComment(true);
     const result = await createReportComment(reportId, commentBody.trim());
     setSubmittingComment(false);
-    if (result.error === 'VERIFICATION_REQUIRED') {
-      setShowVerificationModal(true);
+    if (result.error === SIGN_IN_REQUIRED) {
+      setAuthGate('signIn');
+      return;
+    }
+    if (result.error === VERIFICATION_REQUIRED) {
+      setAuthGate('phone');
       return;
     }
     if (result.error) return;
@@ -49,36 +70,21 @@ export default function ReportDetailClient({
     router.refresh();
   };
 
-  return (
-    <>
-      <PhoneVerificationModal
-        open={showVerificationModal}
-        onVerifyLater={() => setShowVerificationModal(false)}
-        onVerifyNow={() => router.push('/pages/verify-phone')}
-      />
-
-      <VoteButtons
-        reportId={reportId}
-        initialUpvotes={initialUpvotes}
-        initialDownvotes={initialDownvotes}
-        initialUserVote={initialUserVote}
-      />
-
-      {!hideReportFlag && <ReportFlagControls reportId={reportId} />}
-
-      <section className="report-comments" aria-label={`Comments (${comments.length})`}>
-        <h3>Comments ({comments.length})</h3>
-        <ul className="comment-list">
-          {comments.map((c) => (
-            <li key={c.id} className="comment-item">
-              <span className="comment-author">{c.username}</span>
-              <span className="comment-time">
-                {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
-              </span>
-              <p className="comment-body">{c.body}</p>
-            </li>
-          ))}
-        </ul>
+  const commentsSection = (
+    <section className="report-comments" aria-label={`Comments (${comments.length})`}>
+      <h3>Comments ({comments.length})</h3>
+      <ul className="comment-list">
+        {comments.map((c) => (
+          <li key={c.id} className="comment-item">
+            <span className="comment-author">{c.username}</span>
+            <span className="comment-time">
+              {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+            </span>
+            <p className="comment-body">{c.body}</p>
+          </li>
+        ))}
+      </ul>
+      {user ? (
         <form onSubmit={handleSubmitComment} className="comment-form">
           <label htmlFor="comment-body">Add a comment</label>
           <textarea
@@ -93,7 +99,40 @@ export default function ReportDetailClient({
             {submittingComment ? 'Posting...' : 'Post comment'}
           </button>
         </form>
-      </section>
+      ) : null}
+    </section>
+  );
+
+  return (
+    <>
+      <PhoneVerificationModal
+        open={authGate === 'signIn'}
+        variant="signIn"
+        onVerifyLater={() => setAuthGate('none')}
+        onVerifyNow={() => router.push(loginHref)}
+      />
+      <PhoneVerificationModal
+        open={authGate === 'phone'}
+        onVerifyLater={() => setAuthGate('none')}
+        onVerifyNow={() => router.push('/pages/verify-phone')}
+      />
+
+      <VoteButtons
+        reportId={reportId}
+        initialUpvotes={initialUpvotes}
+        initialDownvotes={initialDownvotes}
+        initialUserVote={initialUserVote}
+      />
+
+      {!hideReportFlag && (
+        <ReportFlagControls
+          reportId={reportId}
+          user={user}
+          phoneVerified={phoneVerified}
+        />
+      )}
+
+      {commentsSection}
     </>
   );
 }
