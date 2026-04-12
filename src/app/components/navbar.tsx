@@ -193,13 +193,15 @@ function UserAvatarButton({
       onClick={onToggle}
     >
       {showRemote && preferred ? (
-        <Image
+        // Native <img>: avatar URLs may use R2 public domains (e.g. *.r2.dev) that are not
+        // in next/image remotePatterns; Next/Image would fail and force the glyph fallback.
+        <img
           src={preferred}
           alt=""
           width={40}
           height={40}
           className="cora-user-avatar-photo"
-          unoptimized
+          referrerPolicy="no-referrer"
           onError={() => setRemoteFailed(true)}
         />
       ) : (

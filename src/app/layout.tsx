@@ -166,8 +166,11 @@ export default async function RootLayout({
       .eq('id', user.id)
       .maybeSingle();
     phoneVerified = profile?.phone_verified === true;
+    const rawAvatar = profile?.avatar_url;
     profileAvatarUrl =
-      typeof profile?.avatar_url === 'string' ? profile.avatar_url : null;
+      typeof rawAvatar === 'string' && rawAvatar.trim()
+        ? rawAvatar.trim()
+        : null;
   }
 
   return (

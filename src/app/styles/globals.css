@@ -31,6 +31,38 @@ body {
   border: 1px solid rgba(17, 24, 39, 0.12);
 }
 
+/* Report detail: comment box when not signed in or not phone-verified */
+.report-comments-gate {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.06);
+  border: 1px solid rgba(30, 41, 59, 0.1);
+}
+
+.report-comments-gate__text {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #334155;
+}
+
+.report-comments-gate__btn {
+  display: inline-block;
+  padding: 0.45rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  background: #f27f0d;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.report-comments-gate__btn:hover {
+  background: #dd7d00;
+}
+
 /* Full-bleed map: fills area below navbar (flex chain from body → main → this). */
 .interactive-map-page {
   flex: 1 1 auto;

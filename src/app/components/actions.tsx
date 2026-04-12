@@ -251,11 +251,16 @@ export async function updateProfile(formData: FormData) {
       ? profileRow.avatar_url.trim()
       : ''
 
-  const { error: metaErr } = await supabase.auth.updateUser({
-    data: { avatar_url: syncedAvatar },
-  })
-  if (metaErr) {
-    console.log('sync avatar to auth metadata:', metaErr.message)
+  // Only sync non-empty URLs into JWT metadata. Writing '' can clear a good DB URL from
+  // being reflected in clients that read metadata before the next profile fetch, and is
+  // unnecessary when the profile row already stores the canonical `avatar_url`.
+  if (syncedAvatar.length > 0) {
+    const { error: metaErr } = await supabase.auth.updateUser({
+      data: { avatar_url: syncedAvatar },
+    })
+    if (metaErr) {
+      console.log('sync avatar to auth metadata:', metaErr.message)
+    }
   }
 
   revalidatePath('/', 'layout')

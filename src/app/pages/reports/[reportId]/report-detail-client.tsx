@@ -84,7 +84,7 @@ export default function ReportDetailClient({
           </li>
         ))}
       </ul>
-      {user ? (
+      {user && phoneVerified ? (
         <form onSubmit={handleSubmitComment} className="comment-form">
           <label htmlFor="comment-body">Add a comment</label>
           <textarea
@@ -99,7 +99,31 @@ export default function ReportDetailClient({
             {submittingComment ? 'Posting...' : 'Post comment'}
           </button>
         </form>
-      ) : null}
+      ) : user && !phoneVerified ? (
+        <div className="report-comments-gate" role="note">
+          <p className="report-comments-gate__text">
+            You must authorize your account (verify your phone) before you can post comments.
+          </p>
+          <button
+            type="button"
+            className="report-comments-gate__btn"
+            onClick={() => setAuthGate('phone')}
+          >
+            Authorize now
+          </button>
+        </div>
+      ) : (
+        <div className="report-comments-gate" role="note">
+          <p className="report-comments-gate__text">Sign in to post comments on this report.</p>
+          <button
+            type="button"
+            className="report-comments-gate__btn"
+            onClick={() => setAuthGate('signIn')}
+          >
+            Sign in
+          </button>
+        </div>
+      )}
     </section>
   );
 

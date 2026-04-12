@@ -178,13 +178,13 @@ export function Avatar({ avatar_url }: { avatar_url: string | null }) {
   const photoClass = 'pfp cora-user-avatar-photo';
   if (avatar_url) {
     return (
-      <Image
+      <img
         src={avatar_url}
         alt=""
         width={100}
         height={100}
         className={photoClass}
-        unoptimized
+        referrerPolicy="no-referrer"
       />
     );
   }
