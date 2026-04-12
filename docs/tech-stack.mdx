@@ -1,0 +1,105 @@
+---
+title: "Technology stack"
+description: "Third-party services and libraries Cora uses, and how each fits into the Next.js application."
+---
+
+This page complements [Development](/development) (clone, env, run). It is a **high-level map** of integrations as implemented under `src/`. For exact env variable names, search the repo or read `.env.example` if your team maintains one.
+
+## Application core
+
+| Piece | Role in Cora |
+| --- | --- |
+| **Next.js** (~16) | App Router, React Server Components, and **Server Actions** for auth, reports, votes, comments, flags, phone OTP, and profile updates. Internal APIs live under `src/app/api/`. |
+| **React** (~19) | Client UI: maps, forms, modals, and interactive report flows. |
+| **TypeScript** | Typed app and server code throughout `src/`. |
+| **Tailwind CSS** (v4) | Utility-first styling (`src/app/styles/`). |
+| **PostCSS** (`@tailwindcss/postcss`) | Wires Tailwind v4 into the Next.js build via root `postcss.config.mjs`. |
+
+## Build & developer tooling
+
+These ship in `package.json` but are not “runtime product” integrations — they support type-checking, linting, and editor experience.
+
+| Piece | Role |
+| --- | --- |
+| **TypeScript** | Listed above; also appears under `devDependencies` for the compiler and `tsc` alignment. |
+| **ESLint** + **`eslint-config-next`** | `npm run lint` — Next.js–aware rules for the `src/` tree. |
+| **`@types/node`**, **`@types/react`**, **`@types/react-dom`**, **`@types/google.maps`**, **`@types/web-push`** | Type definitions only; no runtime behavior. |
+| **Repo script** | `scripts/generate-badge.mjs` (`npm run generate:badge`) — uses **Sharp** locally to build monochrome **web push badge** PNGs for Android; not part of the deployed request path. |
+
+## Supabase (auth, database, server patterns)
+
+**Packages:** `@supabase/ssr`, `@supabase/supabase-js`.
+
+| Use | Where it shows up |
+| --- | --- |
+| **Authentication** | Email/password, **Google OAuth** (`signInWithOAuth`), password reset, and session refresh. Cookie-aware server client in `src/lib/supabase/server.ts`; OAuth callback in `src/app/auth/callback/route.ts`. |
+| **Postgres data** | Reports, profiles, comments, flags, map metadata, and RPCs such as **`set_vote`** for voting logic (`report-actions.ts` and related pages). |
+| **Phone verification (SMS OTP)** | `sendPhoneOtp` / `verifyPhoneOtp` in `phone-verification-actions.ts` use **`supabase.auth.updateUser({ phone })`** and **`supabase.auth.verifyOtp`** with type **`phone_change`**. The app never calls Twilio’s REST API directly; **Supabase Auth** sends the SMS using whatever **SMS provider** you configure in the [Supabase dashboard](https://supabase.com/docs/guides/auth/phone-login) (commonly **Twilio** in production). |
+| **Service role** | `src/lib/supabase/admin.ts` — used for privileged operations such as **web push** fan-out (`push/actions.ts`) where the anon key is not enough. |
+
+<Note>
+  **Twilio in this repo:** Twilio is the **typical** SMS backend when you enable phone auth in Supabase. Cora depends on **Supabase’s phone APIs**; configure Twilio (or another supported provider) in Supabase so OTP messages actually deliver.
+</Note>
+
+## Cloudflare
+
+### Turnstile (bot protection)
+
+**Env:** `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`.
+
+The widget is rendered from `turnstile-field` on **sign-up** and **login** pages. **Server-side verification** against `https://challenges.cloudflare.com/turnstile/v0/siteverify` runs in the **`signup`** server action (`actions.tsx`) before creating the account. The **`login`** action currently authenticates with Supabase only (no Turnstile token check in that action).
+
+### R2 (object storage for images)
+
+**Env:** `S3_ENDPOINT`, `S3_KEY_ID`, `S3_SECRET_KEY`, bucket names passed as `database` in form data, plus optional `NEXT_PUBLIC_R2_PUBLIC_AVATAR_URL` for public avatar URLs.
+
+The route **`/api/cloudflare`** (`src/app/api/cloudflare/route.ts`) uses the **AWS SDK for JavaScript v3** modules **`@aws-sdk/client-s3`** and **`@aws-sdk/s3-request-presigner`** against an **R2-compatible S3 endpoint** (`auto` region in the client config). It **uploads**, **lists/fetches**, and **deletes** objects (report images and avatars). Client-side helpers live in `cfhelpers.tsx` (POST/GET/DELETE via `fetch` to that API).
+
+<Note>
+  The path is named `cloudflare` because storage is **Cloudflare R2**; implementation is **S3-compatible**, not the Cloudflare Images product.
+</Note>
+
+## Google
+
+| Product | Use in Cora |
+| --- | --- |
+| **Maps JavaScript API** | Interactive map (`interactive-map` page), `@react-google-maps/api`, `@googlemaps/js-api-loader`, **marker clustering** (`@googlemaps/markerclusterer`). |
+| **Places / Autocomplete** | Address entry (e.g. `react-google-autocomplete` on upload). |
+| **Sign in with Google** | Implemented through **Supabase Auth** OAuth (`actions.tsx`); Google client IDs/secrets are configured in the Supabase project, not hard-coded in the app beyond redirect URLs. |
+
+**Env:** `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (and any keys your Places/autocomplete setup requires).
+
+## Vercel (hosting & observability)
+
+| Piece | Role |
+| --- | --- |
+| **Deployment** | The app is commonly run on Vercel; `layout.tsx` uses `VERCEL_URL` when building absolute URLs in some server paths. |
+| **Analytics / Speed Insights** | `@vercel/analytics` and `@vercel/speed-insights` are included in the root layout for production traffic and performance metrics. |
+
+## Web Push & PWA
+
+| Piece | Role |
+| --- | --- |
+| **`web-push`** | Server-side push sending in `push/actions.ts` (VAPID keys from env). |
+| **`public/sw.js`** | Service worker: PWA installability, **push** and **notificationclick** handling for report-related notifications. |
+| **Supabase** | Stores subscription rows; **admin client** loads subscribers and updates delivery state. |
+
+## Other dependencies (lighter touch)
+
+| Package | Notes |
+| --- | --- |
+| **`date-fns`** | Date formatting/parsing in UI and server code where used. |
+| **`sharp`** | Dev dependency; used by the Next.js toolchain for image optimization where applicable. |
+| **`axios` / `react-google-recaptcha-v3` / `resend`** | Present in `package.json`; **no active imports** in `src/` at the time of writing. Legacy **reCAPTCHA** verification appears commented or alternate in `src/app/api/captcha/route.ts`. Auth **transactional email** may be fully handled inside **Supabase** (per root `README.md`). |
+| **`react-dom`** | React’s DOM renderer; required by Next.js; no separate “feature” beyond hosting the component tree. |
+| **Duplicate `@googlemaps/js-api-loader` entry** | `package.json` lists it twice; the app uses that loader (see also [Google](#google)). Safe to dedupe in a future cleanup. |
+
+## This documentation site (Mintlify)
+
+The **`docs/`** folder is a separate **Mintlify** site. Branding and navigation are controlled only by **`docs/docs.json`**. It does not change how the Next.js app runs.
+
+---
+
+<Card title="Run the app locally" icon="terminal" href="/development">
+  Install dependencies, configure `.env.local`, and `npm run dev`.
+</Card>

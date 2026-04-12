@@ -77,7 +77,7 @@
         "groups": [
           {
             "group": "Cora app & repo",
-            "pages": ["development"]
+            "pages": ["development", "tech-stack"]
           },
           {
             "group": "Mintlify (this site)",
