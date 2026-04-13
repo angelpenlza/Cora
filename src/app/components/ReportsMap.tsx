@@ -14,7 +14,6 @@ import {
   resolveMapStatus,
   statusToColor,
 } from "./mapHelpers";
-import { styles } from "./mapStyles"; //! keep here for now 
 import { ensureGoogleMapsReady } from "@/lib/googleMapsLoader";
 
 const KNOWN_CATEGORY_IDS = new Set(CATEGORY_OPTIONS.map((c) => c.id));
@@ -284,59 +283,40 @@ export default function ReportsMap({
       )}
 
       <div
-        style={{
-          ...styles.filterPanel,
-          width: filtersOpen ? "280px" : "220px",
-        }}
+        className={`filter-panel ${filtersOpen ? "filter-panel-open" : "filter-panel-closed"}`}
       >
         <button
           onClick={() => setFiltersOpen((prev) => !prev)}
-          style={styles.filterHeaderButton}
+          className="filter-header-button"
         >
           <span>Filters</span>
-          <span style={{ fontSize: "22px", lineHeight: 1 }}>
+          <span className="filter-chevron">
             {filtersOpen ? "⌃" : "⌄"}
           </span>
         </button>
 
         {filtersOpen && (
-          <div style={styles.filterBody}>
-            <div style={{ marginBottom: "22px" }}>
-              <div style={styles.sectionTitle}>
-                <span
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    background: "#F59E0B",
-                    display: "inline-block",
-                  }}
-                />
+          <div className="filter-body">
+            <div className="filter-section">
+              <div className="section-title">
+                <span className="section-dot section-dot-timeframe" />
                 Timeframe
               </div>
 
-              <div style={styles.optionGrid}>
+              <div className="option-grid">
                 <label><input type="radio" name="timeframe" disabled /> Daily</label>
                 <label><input type="radio" name="timeframe" disabled defaultChecked /> Weekly</label>
                 <label><input type="radio" name="timeframe" disabled /> Monthly</label>
               </div>
             </div>
 
-            <div style={{ marginBottom: "22px" }}>
-              <div style={styles.sectionTitle}>
-                <span
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    background: "#16A34A",
-                    display: "inline-block",
-                  }}
-                />
+            <div className="filter-section">
+              <div className="section-title">
+                <span className="section-dot section-dot-status" />
                 Report Status
               </div>
 
-              <div style={styles.optionGrid}>
+              <div className="option-grid">
                 <label>
                   <input
                     type="checkbox"
@@ -366,25 +346,17 @@ export default function ReportsMap({
               </div>
             </div>
 
-            <div style={{ marginBottom: "26px" }}>
-              <div style={styles.sectionTitle}>
-                <span
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    background: "#6F8F9F",
-                    display: "inline-block",
-                  }}
-                />
+            <div className="filter-section-last">
+              <div className="section-title">
+                <span className="section-dot section-dot-category" />
                 Category
               </div>
 
-              <div style={styles.categoryGrid}>
+              <div className="category-grid">
                 {CATEGORY_OPTIONS.map((category) => (
                   <label
                     key={category.id}
-                    style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
+                    className="category-label"
                   >
                     <input
                       type="checkbox"
@@ -397,15 +369,15 @@ export default function ReportsMap({
               </div>
             </div>
 
-            <button onClick={resetAllFilters} style={styles.resetButton}>
+            <button onClick={resetAllFilters} className="reset-button">
               RESET ALL FILTERS
             </button>
           </div>
         )}
       </div>
 
-      <div style={styles.searchWrapper}>
-        <div style={styles.searchBar}>
+      <div className="search-wrapper">
+        <div className="search-bar">
           <input
             type="text"
             value={searchQuery}
@@ -414,21 +386,21 @@ export default function ReportsMap({
               if (e.key === "Enter") handleSearchLocation();
             }}
             placeholder="Search by location..."
-            style={styles.searchInput}
+            className="search-input"
           />
-          <button onClick={handleSearchLocation} style={styles.searchButton}>
+          <button onClick={handleSearchLocation} className="search-button">
             Search
           </button>
         </div>
       </div>
 
-      <div style={styles.currentLocationWrapper}>
-        <button onClick={handleUseCurrentLocation} style={styles.currentLocationButton}>
+      <div className="current-location-wrapper">
+        <button onClick={handleUseCurrentLocation} className="current-location-button">
           Use My Current Location
         </button>
       </div>
 
-      {locationError ? <div style={styles.errorToast}>{locationError}</div> : null}
+      {locationError ? <div className="error-toast">{locationError}</div> : null}
     </div>
   );
 }
