@@ -6,7 +6,11 @@ import { memo, useCallback, useEffect, useRef } from 'react';
 type TurnstileApi = {
   render: (
     container: HTMLElement | string,
-    options: { sitekey: string; theme?: 'light' | 'dark' | 'auto' },
+    options: {
+      sitekey: string;
+      theme?: 'light' | 'dark' | 'auto';
+      size?: 'normal' | 'compact' | 'flexible';
+    },
   ) => string;
   remove: (widgetId: string) => void;
 };
@@ -23,7 +27,12 @@ declare global {
  * only runs on the script’s first load). Wrapped in `memo` so frequent parent
  * state updates (e.g. signup password fields) do not reconcile away the iframe.
  */
-function TurnstileField() {
+type TurnstileFieldProps = {
+  /** Widget footprint; `flexible` stretches to the container width (e.g. full-width forms). */
+  size?: 'normal' | 'compact' | 'flexible';
+};
+
+function TurnstileField({ size = 'normal' }: TurnstileFieldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
@@ -35,8 +44,9 @@ function TurnstileField() {
     widgetIdRef.current = window.turnstile.render(el, {
       sitekey: siteKey,
       theme: 'light',
+      size,
     });
-  }, [siteKey]);
+  }, [siteKey, size]);
 
   useEffect(() => {
     mountWidget();
