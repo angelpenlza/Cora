@@ -1,0 +1,47 @@
+.reports-map-wrapper {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.reports-map-wrapper.fill-viewport {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.reports-map-canvas {
+    width: 100%;
+    height: 700px;
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.reports-map-canvas.fill-viewport {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    border-radius: 0;
+}
+
+.reports-map-unavailable {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e5e5e5;
+}
+
+.reports-map-unavailable-message {
+    padding: 24px;
+    text-align: center;
+    max-width: 440px;
+    margin: 0;
+    line-height: 1.5;
+    color: #333;
+}
