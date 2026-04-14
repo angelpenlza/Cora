@@ -261,3 +261,31 @@
     object-fit: contain;
     display: block;
 }
+
+.search-predictions {
+    margin-top: 8px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+}
+
+.search-prediction-item {
+    width: 100%;
+    border: none;
+    background: white;
+    text-align: left;
+    padding: 12px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #334155;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.search-prediction-item:last-child {
+    border-bottom: none;
+}
+
+.search-prediction-item:hover {
+    background: #f3f4f6;
+}

@@ -32,6 +32,9 @@ export default function ReportsMap({
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
+  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+  const searchWrapperRef = useRef<HTMLDivElement | null>(null);
 
   const googleMapsApiKey = (
     process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ""
@@ -42,6 +45,8 @@ export default function ReportsMap({
 
   const [locationError, setLocationError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [showPredictions, setShowPredictions] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
 
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
@@ -109,6 +114,8 @@ export default function ReportsMap({
 
       mapInstanceRef.current = map;
       geocoderRef.current = new gmaps.maps.Geocoder();
+      autocompleteServiceRef.current = new gmaps.maps.places.AutocompleteService();
+      placesServiceRef.current = new gmaps.maps.places.PlacesService(map);
       infoWindow = new gmaps.maps.InfoWindow();
       hoverWindow = new gmaps.maps.InfoWindow();
 
@@ -265,6 +272,70 @@ export default function ReportsMap({
       disputed: true,
     });
   }
+  function handleSearchInput(value: string) {
+    setSearchQuery(value);
+
+    const service = autocompleteServiceRef.current;
+    if (!service || !value.trim()) {
+      setPredictions([]);
+      setShowPredictions(false);
+      return;
+    }
+
+    service.getPlacePredictions(
+      {
+        input: value,
+        componentRestrictions: { country: "us" },
+      },
+      (results) => {
+        const matches = results ?? [];
+        setPredictions(matches);
+        setShowPredictions(matches.length > 0);
+      }
+    );
+  }
+
+  function handlePredictionSelect(prediction: google.maps.places.AutocompletePrediction) {
+    const placesService = placesServiceRef.current;
+    const map = mapInstanceRef.current;
+
+    if (!placesService || !map) return;
+
+    placesService.getDetails(
+      {
+        placeId: prediction.place_id,
+        fields: ["geometry", "formatted_address", "name"],
+      },
+      (place, status) => {
+        if (
+          status === google.maps.places.PlacesServiceStatus.OK &&
+          place?.geometry?.location
+        ) {
+          map.panTo(place.geometry.location);
+          map.setZoom(14);
+
+          setSearchQuery(prediction.description);
+          setPredictions([]);
+          setShowPredictions(false);
+        }
+      }
+    );
+  }
+  useEffect(() => {
+  function handleClickOutside(event: MouseEvent) {
+    if (
+      searchWrapperRef.current &&
+      !searchWrapperRef.current.contains(event.target as Node)
+    ) {
+      setShowPredictions(false);
+    }
+  }
+
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
 
   return (
     <div className={`reports-map-wrapper ${fillViewport ? "fill-viewport" : ""}`}>
@@ -375,14 +446,14 @@ export default function ReportsMap({
         )}
       </div>
 
-      <div className="search-wrapper">
+      <div className="search-wrapper" ref={searchWrapperRef}>
         <div className="search-bar">
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSearchLocation();
+            onChange={(e) => handleSearchInput(e.target.value)}
+            onFocus={() => {
+              if (predictions.length > 0) setShowPredictions(true);
             }}
             placeholder="Search by location..."
             className="search-input"
@@ -391,6 +462,21 @@ export default function ReportsMap({
             Search
           </button>
         </div>
+        
+        {showPredictions && predictions.length > 0 && (
+          <div className="search-predictions">
+            {predictions.map((prediction) => (
+              <button
+                key={prediction.place_id}
+                type="button"
+                className="search-prediction-item"
+                onClick={() => handlePredictionSelect(prediction)}
+              >
+                {prediction.description}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="current-location-wrapper">
