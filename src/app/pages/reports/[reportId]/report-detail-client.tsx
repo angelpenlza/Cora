@@ -57,16 +57,9 @@ export default function ReportDetailClient({
         onVerifyNow={() => router.push('/pages/verify-phone')}
       />
 
-      <VoteButtons
-        reportId={reportId}
-        initialUpvotes={initialUpvotes}
-        initialDownvotes={initialDownvotes}
-        initialUserVote={initialUserVote}
-      />
-
       {!hideReportFlag && <ReportFlagControls reportId={reportId} />}
 
-      <section className="report-comments" aria-label={`Comments (${comments.length})`}>
+      <section className="comments-container" aria-label={`Comments (${comments.length})`}>
         <h3>Comments ({comments.length})</h3>
         <ul className="comment-list">
           {comments.map((c) => (
@@ -80,8 +73,8 @@ export default function ReportDetailClient({
           ))}
         </ul>
         <form onSubmit={handleSubmitComment} className="comment-form">
-          <label htmlFor="comment-body">Add a comment</label>
           <textarea
+            className='comment-box'
             id="comment-body"
             value={commentBody}
             onChange={(e) => setCommentBody(e.target.value)}
@@ -89,8 +82,12 @@ export default function ReportDetailClient({
             rows={3}
             disabled={submittingComment}
           />
-          <button type="submit" disabled={submittingComment || !commentBody.trim()}>
-            {submittingComment ? 'Posting...' : 'Post comment'}
+          <button 
+            type="submit" 
+            disabled={submittingComment || !commentBody.trim()}
+            className='comment-button'
+          >
+            &#8593;
           </button>
         </form>
       </section>

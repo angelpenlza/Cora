@@ -69,7 +69,7 @@ export default function UploadForm({
           'Robbery', 
           'Traffic', 
           'Assault', 
-          'Suspicious Activity',
+          'Suspicious',
           'Hazard', 
           'Other',
         ]}

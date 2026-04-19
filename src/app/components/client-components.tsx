@@ -173,7 +173,11 @@ export function Dropdown({ options, update, category }: {
 - outputs a formatted avatar with provided src link
 - or a default user avatar if null is provided
 ---------------------*/
-export function Avatar({avatar_url}: {avatar_url: string | null}) {
+export function Avatar({avatar_url, className}: {
+    avatar_url: string | null,
+    className: string | undefined
+    
+  }) {
   if(avatar_url) {
     return (
       <Image 
@@ -181,7 +185,7 @@ export function Avatar({avatar_url}: {avatar_url: string | null}) {
         alt="usr-pfp"
         width={100}
         height={100}
-        className="pfp"
+        className={className}
       />
     )
   } else {
@@ -191,7 +195,7 @@ export function Avatar({avatar_url}: {avatar_url: string | null}) {
         alt="usr-pfp"
         width={100}
         height={100}
-        className="pfp"
+        className={className}
       />
     )
   }

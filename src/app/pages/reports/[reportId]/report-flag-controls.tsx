@@ -79,11 +79,11 @@ export default function ReportFlagControls({ reportId }: ReportFlagControlsProps
         }}
       />
 
-      <div className="report-flag-actions">
+      {/* <div className="report-flag-actions"> */}
         <button type="button" className="report-flag-open-btn" onClick={openModal}>
-          Report
+          &#9873;
         </button>
-      </div>
+      {/* </div> */}
 
       {modalOpen && (
         <div

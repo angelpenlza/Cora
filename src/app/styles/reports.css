@@ -1,67 +1,242 @@
+:root {
+    --title-font-size: 14px;
+    --status-font-size: 10px;
+    --body-font-size: 12px;
+}
+
+.report-page {
+    display: flex;
+    align-items: stretch;
+}
+
+.filter-container, .hide-filter-container {
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(238, 231, 214);
+    border: none;
+    flex-grow: 1;
+    padding: 20px 40px;
+    margin: 0;
+}
+
+.show-filter-button {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    height: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.filter-exit {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    border-width: 1.5px;
+    gap: 10px;
+}
+
+.option-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+
+}
+
+.option-container-selected input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.option-container, .option-container-selected {
+    padding: 10px 40px;
+    border-radius: 10px;
+}
+
+.option-container {
+    background-color:none;
+}
+
+.option-container-selected {
+    background-color: rgb(255, 255, 255);
+    color: rgb(227, 147, 0);
+}
+
+.option-container:hover,
+.option-container-selected:hover {
+    background-color: rgb(210, 210, 210);
+}
+
+.filter-option-selected {
+    background-color: green;
+}
+
 .report-container {
-    background-color: rgb(237, 255, 255);
+    background-color: rgb(255, 250, 245);
     display: flex;
     flex-wrap: wrap;
-    width: 80%;
-    max-width: 850px;
+    gap: 30;
     margin: auto;
+    flex-grow: 4;
+}
+
+.report-container-title {
+    width: 100%;
+    text-align: center;    
+    margin: 0;
 }
 
 .report {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    border: solid;
-    width: 400px;
-    margin: 10px;
+    box-shadow: 2px 2px 2px 2px rgb(157, 157, 157);
+    padding: 0;
+    margin: 0 auto;
+    border-radius: 20px;
+}
+
+.report:hover {
+    transform: scale(1.02);
+}
+
+.report-card {
+    display: flex;
+    flex-direction: column;
+    border: none;
+    width: 300px;
+    margin: auto;
+    height: 170px;
     background-color: rgb(255, 255, 255);
     color: black;
     gap: 20px;
     text-decoration: none;
+    padding: 20px;
+    border-radius: inherit;
 }
 
-.report-header {
+.report-card:hover {
+    background-color: rgb(250, 250, 250);
+}
+
+.report-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    padding-bottom: 14px;
+}
+
+.category-image-title {
+    display: flex;
+    align-items: center;
+    gap: 15;
+    font-size: var(--title-font-size);
+}
+
+.cat-img {
+    border: solid;   
+    border-radius: 100%; 
+    padding: 5px;
+    height: 15px;
+    width: 15px;
+    background-color: rgb(237, 255, 255);
+
 }
 
 .report-category {
-    padding: 10px 40px;
+    margin: 0;
+}
+
+.space {
+    width: 15%;
+}
+
+.unconfirmed, .community-supported, .disputed {
+    border: solid;
+    font-size: var(--status-font-size);
+    border-radius: 20px;
+    padding: 4px 15px ;
+}
+
+.disputed {
+    background-color: rgb(252, 172, 172);
+    color: rgb(177, 0, 0);
+}
+
+.community-supported {
+    background-color: rgb(207, 255, 207);
+    color: rgb(0, 100, 0);
+}
+
+.unconfirmed {
+    background-color: rgb(255, 255, 201);
+    color: rgb(184, 184, 0);
 }
 
 .report-title {
-    border-bottom: solid;
-    padding-bottom: 10px;
     margin: 0;
     width: 100%;
-    text-align: center;
+    font-size: var(--title-font-size);
 }
 
 .report-desc {
     margin: 0;
-    padding: 20px;
+    font-size: var(--body-font-size);
+    font-weight: 300;
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .report-image {
-    border: solid;
-    border-color: black;
-    padding: 10px;
+    width: 200px;
 }
 
 .report-details {
     width: 100%;
+
+}
+
+.time-date {
+    display: flex;
+    justify-content: space-between;
+}
+
+.time {
+    font-size: var(--status-font-size);
+    color: rgb(112, 112, 112);
+    font-weight: 250;
 }
 
 .votes {
     display: flex;
+    align-items: center;
     justify-content: space-evenly;
+    border-bottom-right-radius: inherit;
+    border-bottom-left-radius: inherit;
     width: 100%;
     background-color: rgb(0, 0, 70);
     color: white;
     margin: 0;
-    padding: 10px 0;
+    padding: 2px 0;
+    font-size: var(--body-font-size);
+}
+
+.empty {
+    width: 20%;
 }
 
 .report-delete {
@@ -80,25 +255,69 @@
     background-color: rgb(122, 0, 0);
 }
 
-.Unconfirmed, .Community-Supported, .Disputed {
-    border: solid;
-    font-size: 12px;
-    border-radius: 20px;
-    padding: 8px 20px ;
-    margin-right: 30px;
+.comment-buttons {
+    background-color: white;
 }
 
-.Disputed {
-    background-color: rgb(252, 172, 172);
-    color: rgb(177, 0, 0);
-}
+@media screen and (max-width: 600px) {
+    .report-page {
+        display: flex;
+        flex-direction: column;
+    }
 
-.Community-Supported {
-    background-color: rgb(207, 255, 207);
-    color: rgb(0, 100, 0);
-}
+    .navbar-container {
+        top: 0;
+        position: sticky;
+    }
 
-.Unconfirmed {
-    background-color: rgb(255, 255, 201);
-    color: rgb(184, 184, 0);
+    .filter-container {
+        display: flex;
+        align-self: flex-end;
+        position: fixed;
+        z-index: 1;
+        width: 50%;
+        height: 100vh;
+    }
+
+    .hide-filter-container {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+        height: 0;
+        width: 0;
+        padding: 0;
+    }
+
+    .show-filter-button {
+        display: block;
+        opacity: 100;
+        height: auto;
+        visibility: visible;
+        pointer-events: all;
+        text-align: center;
+        margin: auto;
+        padding: 15px 20px;
+        background-color: rgb(140,140, 168);
+        color: white;
+        border-radius: 20px;
+        cursor: pointer;
+        width: 300px;
+    }
+
+    .show-filter-button:hover {
+        background-color: rgb(94, 94, 122);
+        cursor: pointer;
+    }
+
+    .filter-exit {
+        display: flex;
+        align-self: flex-end;
+        opacity: 100;
+        visibility: visible;
+        pointer-events: all;
+        text-align: center;
+        height: 10px;
+        width: 10px;    
+        cursor: pointer;
+    }
 }

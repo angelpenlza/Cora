@@ -39,7 +39,10 @@ export function UpdateAccount({user}: {user: any}) {
         {
           editing ? 
             <div>
-              <Avatar avatar_url={deleteImage ? null : pfp}/>
+              <Avatar 
+                avatar_url={deleteImage ? null : pfp}
+                className="pfp"
+              />
               <input 
                 name={deleteImage ? "remove" : "image"}
                 id="image"
@@ -49,7 +52,7 @@ export function UpdateAccount({user}: {user: any}) {
               />
               <button onClick={deleteAvatar}>Delete Avatar</button>
             </div> :
-            <Avatar avatar_url={url}/>
+            <Avatar avatar_url={url} className="pfp"/>
         }
       </>
     )

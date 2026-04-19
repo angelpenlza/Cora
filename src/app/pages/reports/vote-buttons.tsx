@@ -58,29 +58,31 @@ export default function VoteButtons({
         onVerifyLater={() => setShowVerificationModal(false)}
         onVerifyNow={() => router.push('/pages/verify-phone')}
       />
-      <div
+      {/* <div
         className={compact ? 'explore-vote-block' : 'report-vote-block'}
         onClick={compact ? (e) => e.stopPropagation() : undefined}
-      >
-        <button
-          type="button"
-          onClick={(e) => handleVote(e, 1)}
-          aria-pressed={userVote === 1}
-          className={`vote-button ${userVote === 1 ? 'vote-button--active' : ''}`}
-        >
-          {compact ? '↑' : '↑ Upvote'}
-        </button>
+      > */}
+        <div className='vote-block'>
+          <button
+            type="button"
+            onClick={(e) => handleVote(e, 1)}
+            aria-pressed={userVote === 1}
+            className={`upvote-button ${userVote === 1 ? 'vote-button--active' : ''}`}
+          >
+            {compact ? <>&#10145;</> : '↑ Upvote'}
+          </button>
+          {upvotes}
+        </div>
+
         {compact ? (
-          <span className="report-vote-counts" aria-live="polite">
-            {upvotes} up · {downvotes} down
-          </span>
+          <></>
         ) : (
           <>
             <button
               type="button"
               onClick={(e) => handleVote(e, -1)}
               aria-pressed={userVote === -1}
-              className={`vote-button ${userVote === -1 ? 'vote-button--active' : ''}`}
+              className={`upvote-button ${userVote === -1 ? 'vote-button--active' : ''}`}
             >
               ↓ Downvote
             </button>
@@ -90,16 +92,20 @@ export default function VoteButtons({
           </>
         )}
         {compact && (
-          <button
-            type="button"
-            onClick={(e) => handleVote(e, -1)}
-            aria-pressed={userVote === -1}
-            className={`vote-button ${userVote === -1 ? 'vote-button--active' : ''}`}
-          >
-            ↓
-          </button>
+          <div className='vote-block'>
+            <button
+              type="button"
+              onClick={(e) => handleVote(e, -1)}
+              aria-pressed={userVote === -1}
+              className={`downvote-button ${userVote === -1 ? 'vote-button--active' : ''}`}
+            >
+              &#10145;
+            </button>
+            <div>{downvotes}</div>
+          </div>
+
         )}
-      </div>
+      {/* </div> */}
     </>
   );
 }
