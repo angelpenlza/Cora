@@ -17,16 +17,16 @@ import type { ReportFlagReasonCode } from '@/lib/report-flag-reasons';
 
 type ReportFlagControlsProps = {
   reportId: number;
-  user: User | null;
-  phoneVerified: boolean;
+  user?: User | null;
+  phoneVerified?: boolean;
 };
 
 type AuthGate = 'none' | 'signIn' | 'phone';
 
 export default function ReportFlagControls({
   reportId,
-  user,
-  phoneVerified,
+  user = null,
+  phoneVerified = false,
 }: ReportFlagControlsProps) {
   const router = useRouter();
   const pathname = usePathname() || `/pages/reports/${reportId}`;

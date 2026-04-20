@@ -163,7 +163,11 @@ export default async function ReportDetailPage({ params }: PageProps) {
             compact
           />
           <div className='empty'></div>
-          <ReportFlagControls reportId={report.report_id}/>
+          <ReportFlagControls
+            reportId={report.report_id}
+            user={user ?? null}
+            phoneVerified={phoneVerified}
+          />
         </div>
       </div>
     )
