@@ -19,6 +19,9 @@ type ReportFlagControlsProps = {
   reportId: number;
   user?: User | null;
   phoneVerified?: boolean;
+  /** When set, replaces the default flag glyph (e.g. dashboard PNG). */
+  flagIconSrc?: string;
+  buttonClassName?: string;
 };
 
 type AuthGate = 'none' | 'signIn' | 'phone';
@@ -27,6 +30,8 @@ export default function ReportFlagControls({
   reportId,
   user = null,
   phoneVerified = false,
+  flagIconSrc,
+  buttonClassName = '',
 }: ReportFlagControlsProps) {
   const router = useRouter();
   const pathname = usePathname() || `/pages/reports/${reportId}`;
@@ -116,8 +121,16 @@ export default function ReportFlagControls({
       />
 
       {/* <div className="report-flag-actions"> */}
-        <button type="button" className="report-flag-open-btn" onClick={openModal}>
-          &#9873;
+        <button
+          type="button"
+          className={`report-flag-open-btn ${buttonClassName}`.trim()}
+          onClick={openModal}
+        >
+          {flagIconSrc ? (
+            <img src={flagIconSrc} alt="" width={22} height={22} />
+          ) : (
+            <>&#9873;</>
+          )}
         </button>
       {/* </div> */}
 

@@ -17,6 +17,8 @@ type VoteButtonsProps = {
   initialDownvotes: number;
   initialUserVote: number;
   compact?: boolean;
+  /** Use PNG arrows and compact counts for the report dashboard card footer. */
+  dashboardIcons?: boolean;
 };
 
 /**
@@ -32,6 +34,7 @@ export default function VoteButtons({
   initialDownvotes,
   initialUserVote,
   compact = false,
+  dashboardIcons = false,
 }: VoteButtonsProps) {
   const router = useRouter();
   const pathname = usePathname() || '/pages/reports';
@@ -62,6 +65,15 @@ export default function VoteButtons({
 
   const loginHref = `/pages/login?next=${encodeURIComponent(pathname)}`;
 
+  const upIcon =
+    userVote === 1
+      ? '/assets/report-active-upvote.png'
+      : '/assets/report-inactive-upvote.png';
+  const downIcon =
+    userVote === -1
+      ? '/assets/report-active-downvote.png'
+      : '/assets/report-inactive-downvote.png';
+
   return (
     <>
       <PhoneVerificationModal
@@ -79,14 +91,34 @@ export default function VoteButtons({
         className={compact ? 'explore-vote-block' : 'report-vote-block'}
         onClick={compact ? (e) => e.stopPropagation() : undefined}
       > */}
-        <div className='vote-block'>
+        <div
+          className={
+            dashboardIcons && compact
+              ? 'vote-block vote-block--dashboard'
+              : 'vote-block'
+          }
+        >
           <button
             type="button"
             onClick={(e) => handleVote(e, 1)}
             aria-pressed={userVote === 1}
-            className={`upvote-button ${userVote === 1 ? 'vote-button--active' : ''}`}
+            className={`upvote-button ${userVote === 1 ? 'vote-button--active' : ''} ${dashboardIcons && compact ? 'vote-button--dashboard' : ''}`}
           >
-            {compact ? <>&#10145;</> : '↑ Upvote'}
+            {compact ? (
+              dashboardIcons ? (
+                <img
+                  className="vote-dashboard-icon vote-dashboard-icon--up"
+                  src={upIcon}
+                  alt=""
+                  width={16}
+                  height={16}
+                />
+              ) : (
+                <>&#10145;</>
+              )
+            ) : (
+              '↑ Upvote'
+            )}
           </button>
           {upvotes}
         </div>
@@ -109,14 +141,30 @@ export default function VoteButtons({
           </>
         )}
         {compact && (
-          <div className='vote-block'>
+          <div
+            className={
+              dashboardIcons
+                ? 'vote-block vote-block--dashboard'
+                : 'vote-block'
+            }
+          >
             <button
               type="button"
               onClick={(e) => handleVote(e, -1)}
               aria-pressed={userVote === -1}
-              className={`downvote-button ${userVote === -1 ? 'vote-button--active' : ''}`}
+              className={`downvote-button ${userVote === -1 ? 'vote-button--active' : ''} ${dashboardIcons ? 'vote-button--dashboard' : ''}`}
             >
-              &#10145;
+              {dashboardIcons ? (
+                <img
+                  className="vote-dashboard-icon vote-dashboard-icon--down"
+                  src={downIcon}
+                  alt=""
+                  width={16}
+                  height={16}
+                />
+              ) : (
+                <>&#10145;</>
+              )}
             </button>
             <div>{downvotes}</div>
           </div>
