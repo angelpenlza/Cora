@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import { deleteReport } from "./actions"
 import Link from "next/link"
+import { isPresignedUrl } from "@/lib/presigned-url";
 
 /**
  * Small dismissible error banner component.
@@ -181,26 +182,42 @@ export function Avatar({
   avatar_url: string | null;
   className?: string;
 }) {
+  const DEFAULT_AVATAR_URL =
+    'https://pub-2cb33e70d73b4e729e9246e178904e40.r2.dev/default-pfp.png';
+  const LOCAL_FALLBACK_URL = '/assets/user.png';
+  const normalized =
+    typeof avatar_url === 'string'
+      ? avatar_url.trim()
+      : '';
+  const safeAvatarUrl =
+    normalized &&
+    normalized !== 'null' &&
+    normalized !== 'undefined' &&
+    !isPresignedUrl(normalized)
+      ? normalized
+      : null;
   const photoClass = `pfp cora-user-avatar-photo${className ? ` ${className}` : ""}`;
-  if (avatar_url) {
-    return (
-      <img
-        src={avatar_url}
-        alt=""
-        width={100}
-        height={100}
-        className={photoClass}
-        referrerPolicy="no-referrer"
-      />
-    );
-  }
+
+  const [src, setSrc] = useState<string>(safeAvatarUrl ?? DEFAULT_AVATAR_URL);
+  useEffect(() => {
+    setSrc(safeAvatarUrl ?? DEFAULT_AVATAR_URL);
+  }, [safeAvatarUrl]);
+
   return (
     <img
-      src="/assets/user.png"
+      src={src}
       alt=""
       width={100}
       height={100}
       className={photoClass}
+      referrerPolicy="no-referrer"
+      onError={() => {
+        setSrc((prev) => {
+          if (prev !== DEFAULT_AVATAR_URL) return DEFAULT_AVATAR_URL;
+          if (prev === DEFAULT_AVATAR_URL) return LOCAL_FALLBACK_URL;
+          return prev;
+        });
+      }}
     />
   );
 }

@@ -317,7 +317,7 @@ export async function getReportComments(
     .from('report_comments')
     .select('id, body, created_at, user_id')
     .eq('report_id', reportId)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false });
 
   if (!comments?.length) return [];
 

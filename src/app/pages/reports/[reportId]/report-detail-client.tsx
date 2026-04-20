@@ -13,29 +13,19 @@ import {
   VERIFICATION_REQUIRED,
 } from '@/lib/report-auth-errors';
 import { formatDistanceToNow } from 'date-fns';
-import VoteButtons from '../vote-buttons';
-import ReportFlagControls from './report-flag-controls';
 
 type AuthGate = 'none' | 'signIn' | 'phone';
 
 type ReportDetailClientProps = {
   reportId: number;
-  initialUpvotes: number;
-  initialDownvotes: number;
-  initialUserVote: number;
   initialComments: ReportCommentRow[];
-  hideReportFlag?: boolean;
   user: User | null;
   phoneVerified: boolean;
 };
 
 export default function ReportDetailClient({
   reportId,
-  initialUpvotes,
-  initialDownvotes,
-  initialUserVote,
   initialComments,
-  hideReportFlag = false,
   user,
   phoneVerified,
 }: ReportDetailClientProps) {
@@ -72,18 +62,7 @@ export default function ReportDetailClient({
 
   const commentsSection = (
     <section className="report-comments" aria-label={`Comments (${comments.length})`}>
-      <h3>Comments ({comments.length})</h3>
-      <ul className="comment-list">
-        {comments.map((c) => (
-          <li key={c.id} className="comment-item">
-            <span className="comment-author">{c.username}</span>
-            <span className="comment-time">
-              {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
-            </span>
-            <p className="comment-body">{c.body}</p>
-          </li>
-        ))}
-      </ul>
+      <h3>Comments</h3>
       {user && phoneVerified ? (
         <form onSubmit={handleSubmitComment} className="comment-form">
           <textarea
@@ -91,12 +70,12 @@ export default function ReportDetailClient({
             id="comment-body"
             value={commentBody}
             onChange={(e) => setCommentBody(e.target.value)}
-            placeholder="Write a comment..."
-            rows={3}
+            placeholder="leave a comment"
+            rows={1}
             disabled={submittingComment}
           />
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={submittingComment || !commentBody.trim()}
             className='comment-button'
           >
@@ -128,6 +107,17 @@ export default function ReportDetailClient({
           </button>
         </div>
       )}
+      <ul className="comment-list">
+        {comments.map((c) => (
+          <li key={c.id} className="comment-item">
+            <span className="comment-author">{c.username}</span>
+            <span className="comment-time">
+              {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+            </span>
+            <p className="comment-body">{c.body}</p>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 
@@ -144,21 +134,6 @@ export default function ReportDetailClient({
         onVerifyLater={() => setAuthGate('none')}
         onVerifyNow={() => router.push('/pages/verify-phone')}
       />
-
-      <VoteButtons
-        reportId={reportId}
-        initialUpvotes={initialUpvotes}
-        initialDownvotes={initialDownvotes}
-        initialUserVote={initialUserVote}
-      />
-
-      {!hideReportFlag && (
-        <ReportFlagControls
-          reportId={reportId}
-          user={user}
-          phoneVerified={phoneVerified}
-        />
-      )}
 
       {commentsSection}
     </>

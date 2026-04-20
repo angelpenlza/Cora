@@ -16,6 +16,7 @@ import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { deleteImage, postImage } from './cfhelpers'
+import { isPresignedUrl } from '@/lib/presigned-url'
 
 /** Minimum username length enforced before attempting sign-up. */
 const USERNAME_MIN_LENGTH = 3
@@ -219,7 +220,10 @@ export async function updateProfile(formData: FormData) {
         `/pages/account?err=${encodeURIComponent('Could not upload profile image. Try again.')}`,
       );
     }
-    nextAvatarUrl = uploadImageStatus.url;
+    nextAvatarUrl =
+      typeof uploadImageStatus.url === 'string' && !isPresignedUrl(uploadImageStatus.url)
+        ? uploadImageStatus.url
+        : null;
     nextAvatarName = avatarName;
   }
 

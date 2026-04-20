@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { signout } from './actions';
+import { isPresignedUrl } from '@/lib/presigned-url';
 
 const MAP_HREF = '/pages/interactive-map';
 const REPORTS_HREF = '/pages/reports';
@@ -14,6 +15,8 @@ const UPLOAD_HREF = '/pages/upload';
 const LOGIN_HREF = '/pages/login';
 const ACCOUNT_HREF = '/pages/account';
 const PERSON_GLYPH_FILL = '#F27F0D';
+const DEFAULT_AVATAR_URL =
+  'https://pub-2cb33e70d73b4e729e9246e178904e40.r2.dev/default-pfp.png';
 
 /** First non-empty avatar URL from Supabase / OAuth metadata, or null. */
 function readAvatarUrlFromMeta(
@@ -37,7 +40,13 @@ function readPreferredAvatarUrl(
 ): string | null {
   if (typeof profileAvatarUrl === 'string') {
     const t = profileAvatarUrl.trim();
-    if (t && t !== 'null' && t !== 'undefined') return t;
+    if (t && t !== 'null' && t !== 'undefined') {
+      // Legacy default shipped from /public; migrate display to R2 default.
+      if (t === '/assets/user.png') return DEFAULT_AVATAR_URL;
+      // Do not render expiring presigned URLs; fall back to default.
+      if (isPresignedUrl(t)) return null;
+      return t;
+    }
   }
   return readAvatarUrlFromMeta(meta);
 }
@@ -174,13 +183,14 @@ function UserAvatarButton({
 }) {
   const meta = user.user_metadata as Record<string, unknown> | undefined;
   const preferred = readPreferredAvatarUrl(profileAvatarUrl, meta);
+  const avatarSrc = preferred || DEFAULT_AVATAR_URL;
   const [remoteFailed, setRemoteFailed] = useState(false);
 
   useEffect(() => {
     setRemoteFailed(false);
   }, [preferred, user.id]);
 
-  const showRemote = Boolean(preferred) && !remoteFailed;
+  const showRemote = Boolean(avatarSrc) && !remoteFailed;
 
   return (
     <button
@@ -192,11 +202,11 @@ function UserAvatarButton({
       aria-label="Account menu"
       onClick={onToggle}
     >
-      {showRemote && preferred ? (
+      {showRemote ? (
         // Native <img>: avatar URLs may use R2 public domains (e.g. *.r2.dev) that are not
         // in next/image remotePatterns; Next/Image would fail and force the glyph fallback.
         <img
-          src={preferred}
+          src={avatarSrc}
           alt=""
           width={40}
           height={40}

@@ -6,6 +6,8 @@ import { getImages } from '@/app/components/cfhelpers';
 import { Avatar } from '@/app/components/client-components';
 import VoteButtons from '../vote-buttons';
 import ReportFlagControls from './report-flag-controls';
+import Link from 'next/link';
+import { categoryIconPath, categoryHeadline } from '@/lib/report-dashboard';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +56,7 @@ export default async function ReportDetailPage({ params }: PageProps) {
   }
 
   const comments = await getReportComments(reportId);
+  const commentCount = comments?.length ?? 0;
 
   const upvotes = report.upvotes ?? 0;
   const downvotes = report.downvotes ?? 0;
@@ -80,24 +83,24 @@ export default async function ReportDetailPage({ params }: PageProps) {
     username: string | null,
     avatar: string | null,
   }) => {
+    const iconSrc = categoryIconPath(report.category_name);
     return (
       <div className='report-page-header-container'>
         <div className='header-title'>
-          <img
-            src='/assets/user.png'
-            alt='category-image'
-            height={20}
-            width={20}
-            className='header-category-image'
-          />
-          <h2>{title}</h2>
+          <span className='header-category-image'>
+            <img src={iconSrc} alt="" width={20} height={20} />
+          </span>
+          <h2 className='report-page-title'>{title}</h2>
         </div>
         <div className='header-profile'>
-          <Avatar 
+          <Avatar
             avatar_url={avatar}
             className='report-page-avatar'
           />
-          <h3 className='report-page-username'>{username}</h3>
+          <div className='report-page-author-line'>
+            <span className='report-page-author-label'>Author:</span>{' '}
+            <span className='report-page-username'>{username ?? 'Unknown'}</span>
+          </div>
         </div>
       </div>
     )
@@ -106,7 +109,7 @@ export default async function ReportDetailPage({ params }: PageProps) {
   const Image = () => {
     return (
       <div className='report-page-image-container'>
-        <h4>Image:</h4>
+        <h4 className='report-detail-section-title'>Images:</h4>
         {
           report.report_image ? 
           <img 
@@ -130,69 +133,86 @@ export default async function ReportDetailPage({ params }: PageProps) {
     }).format(createdAt)
     return (
       <div className='info-container'>
-        <section className='info'>
-          <h5 className='info-label'>Category: {report.category_name}</h5>
+        <section className='info info--inline info--category'>
+          <span className='info-label'>Category:</span>{' '}
+          <span className='info-data'>{categoryHeadline(report.category_name)}</span>
         </section>
-        <section className='info'>
-          <h5 className='info-label'>Status: {report.status}</h5>
+        <section className='info info--inline info--status'>
+          <span className='info-label'>Status:</span>{' '}
+          <span className='info-data'>{report.status ?? 'Unconfirmed'}</span>
         </section>
-        <section className='info-location'>
-          <h5 className='info-label'>Location</h5>
-          <p className='info-data'>123 N example location, with city, CA 88888</p>
+        <section className='info info--inline info-location'>
+          <span className='info-label'>Location:</span>{' '}
+          <span className='info-data'>{report.address ?? '—'}</span>
         </section>
-        <section className='info'>
-          <h5 className='info-label'>Date</h5>
-          <p className='info-data'>{date}</p>
+        <section className='info info--inline info--date'>
+          <span className='info-label'>Date:</span>{' '}
+          <span className='info-data'>{date}</span>
         </section>
-        {/* <section className='info-space'></section> */}
-
-        <section className='info'>
-          <h5 className='info-label'>Time</h5>
-          <p className='info-data'>{time}</p>
+        <section className='info info--inline info--time'>
+          <span className='info-label'>Time:</span>{' '}
+          <span className='info-data'>{time}</span>
         </section>
         <section className='info-description'>
-          <h5 className='info-label'>Description</h5>
+          <h3 className='info-description-title'>Description</h3>
           <p className='info-data-description'>{report.report_description}</p>
         </section>
-        <div className='info-user-actions'>
-          <VoteButtons
-            reportId={reportId}
-            initialUpvotes={upvotes}
-            initialDownvotes={downvotes}
-            initialUserVote={userVote}
-            compact
-          />
-          <div className='empty'></div>
-          <ReportFlagControls
-            reportId={report.report_id}
-            user={user ?? null}
-            phoneVerified={phoneVerified}
-          />
-        </div>
       </div>
     )
   }
 
   return (
     <>
+      <div className="report-detail-topbar">
+        <Link href="/pages/reports" className="report-detail-back">
+          ← Go back
+        </Link>
+      </div>
       <div className='report-page-container'>
         <Header
           title={report.report_title}
           username={profile?.username}
           avatar={profile?.avatar_url}
         />
-        <div className='report-page-body-container'> 
+        <div className='report-page-body-container'>
           <Image />
+          <div className='report-page-body-divider' aria-hidden="true" />
           <Info />
+        </div>
+        <div className="report-detail-footer">
+          <div className="report-detail-footer-inner">
+            <div className="report-detail-footer-actions">
+              <VoteButtons
+                reportId={reportId}
+                initialUpvotes={upvotes}
+                initialDownvotes={downvotes}
+                initialUserVote={userVote}
+                compact
+                detailIcons
+              />
+              <span className="report-detail-comment-count" aria-label={`${commentCount} comments`}>
+                <img src="/assets/report-details-comment-icon.png" alt="" width={18} height={18} />
+                {commentCount}
+              </span>
+            </div>
+            {!hideReportFlag && (
+              <div className="report-detail-footer-flag">
+                <ReportFlagControls
+                  reportId={report.report_id}
+                  user={user ?? null}
+                  phoneVerified={phoneVerified}
+                  flagIconSrc="/assets/report-details-flag-icon.png"
+                  buttonClassName="report-detail-flag-btn"
+                />
+                <span className="report-detail-flag-label">Report</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <ReportDetailClient
         reportId={reportId}
-        initialUpvotes={upvotes}
-        initialDownvotes={downvotes}
-        initialUserVote={userVote}
         initialComments={comments}
-        hideReportFlag={hideReportFlag}
         user={user ?? null}
         phoneVerified={phoneVerified}
       />

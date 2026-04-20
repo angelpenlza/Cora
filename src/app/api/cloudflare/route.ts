@@ -77,11 +77,25 @@ export async function POST(req: NextRequest) {
       Bucket: database,
       Key: key
     })
-    const url =
-      database === 'user-avatars' && publicBase
-        ? `${publicBase.replace(/\/$/, '')}/${key}`
-        : await getSignedUrl(r2, databaseImage, { expiresIn: PRESIGNED_GET_EXPIRES_SEC });
     const res = await r2.send(putObjectCommand)
+    if (database === 'user-avatars') {
+      if (!publicBase) {
+        return NextResponse.json({
+          success: false,
+          message: 'Missing NEXT_PUBLIC_R2_PUBLIC_AVATAR_URL (required for public avatar URLs).',
+          status: 500,
+        });
+      }
+      const url = `${publicBase.replace(/\/$/, '')}/${key}`;
+      return NextResponse.json({
+        success: true,
+        message: res,
+        url: url,
+        status: 200
+      })
+    }
+
+    const url = await getSignedUrl(r2, databaseImage, { expiresIn: PRESIGNED_GET_EXPIRES_SEC });
     return NextResponse.json({
       success: true,
       message: res,

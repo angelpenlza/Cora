@@ -15,6 +15,7 @@ import './styles/report-page.css';
 import { createClient } from "@/lib/supabase/server";
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { buildPublicR2Url, isPresignedUrl } from "@/lib/presigned-url";
 
 /**
  * Root layout: defines global HTML shell, fonts, navigation, analytics,
@@ -164,15 +165,22 @@ export default async function RootLayout({
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('phone_verified, avatar_url')
+      .select('phone_verified, avatar_url, avatar_name')
       .eq('id', user.id)
       .maybeSingle();
     phoneVerified = profile?.phone_verified === true;
     const rawAvatar = profile?.avatar_url;
-    profileAvatarUrl =
+    const trimmed =
       typeof rawAvatar === 'string' && rawAvatar.trim()
         ? rawAvatar.trim()
         : null;
+    if (trimmed && !isPresignedUrl(trimmed)) {
+      profileAvatarUrl = trimmed;
+    } else {
+      // If we have an old presigned URL stored, rebuild a stable public URL from avatar_name.
+      const rebuilt = buildPublicR2Url(process.env.NEXT_PUBLIC_R2_PUBLIC_AVATAR_URL, profile?.avatar_name);
+      profileAvatarUrl = rebuilt;
+    }
   }
 
   return (

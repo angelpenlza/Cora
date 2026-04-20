@@ -19,6 +19,8 @@ type VoteButtonsProps = {
   compact?: boolean;
   /** Use PNG arrows and compact counts for the report dashboard card footer. */
   dashboardIcons?: boolean;
+  /** Use detail-page icon set (report-details-*.png) when compact. */
+  detailIcons?: boolean;
 };
 
 /**
@@ -35,6 +37,7 @@ export default function VoteButtons({
   initialUserVote,
   compact = false,
   dashboardIcons = false,
+  detailIcons = false,
 }: VoteButtonsProps) {
   const router = useRouter();
   const pathname = usePathname() || '/pages/reports';
@@ -73,6 +76,7 @@ export default function VoteButtons({
     userVote === -1
       ? '/assets/report-active-downvote.png'
       : '/assets/report-inactive-downvote.png';
+  const detailArrow = '/assets/report-details-inactive-icon.png';
 
   return (
     <>
@@ -105,7 +109,15 @@ export default function VoteButtons({
             className={`upvote-button ${userVote === 1 ? 'vote-button--active' : ''} ${dashboardIcons && compact ? 'vote-button--dashboard' : ''}`}
           >
             {compact ? (
-              dashboardIcons ? (
+              detailIcons ? (
+                <img
+                  className={`vote-detail-icon vote-detail-icon--up${userVote === 1 ? ' is-active' : ''}`}
+                  src={detailArrow}
+                  alt=""
+                  width={16}
+                  height={16}
+                />
+              ) : dashboardIcons ? (
                 <img
                   className="vote-dashboard-icon vote-dashboard-icon--up"
                   src={upIcon}
@@ -154,7 +166,15 @@ export default function VoteButtons({
               aria-pressed={userVote === -1}
               className={`downvote-button ${userVote === -1 ? 'vote-button--active' : ''} ${dashboardIcons ? 'vote-button--dashboard' : ''}`}
             >
-              {dashboardIcons ? (
+              {detailIcons ? (
+                <img
+                  className={`vote-detail-icon vote-detail-icon--down${userVote === -1 ? ' is-active' : ''}`}
+                  src={detailArrow}
+                  alt=""
+                  width={16}
+                  height={16}
+                />
+              ) : dashboardIcons ? (
                 <img
                   className="vote-dashboard-icon vote-dashboard-icon--down"
                   src={downIcon}
