@@ -1,122 +1,140 @@
 :root {
-    --accent-orange: #f97316;
-    --accent-green: #16a34a;
-    --text-dark: #1f2937;
-    --text-muted: #6b7280;
-    --card-bg: #ffffff;
-    --page-bg: #f9fafb;
+  --orange: #f97316;
+  --green: #16a34a;
+  --text-dark: #1f2937;
+  --text-muted: #6b7280;
+  --bg: #f9fafb;
+  --card: #ffffff;
 }
 
-/* PAGE WRAPPER */
+/* PAGE */
 .account-page {
-    min-height: 100vh;
-    padding: 80px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: var(--page-bg);
+  min-height: 100vh;
+  padding: 80px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg);
 }
 
 /* BACK BUTTON */
 .account-page__back {
-    width: 100%;
-    max-width: 700px;
-    margin-bottom: 20px;
+  width: 100%;
+  max-width: 700px;
+  margin-bottom: 20px;
 }
 
 .account-page__back-btn {
-    display: inline-block;
-    background-color: var(--accent-green);
-    color: white;
-    padding: 10px 18px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 500;
+  background: var(--green);
+  color: white;
+  padding: 10px 18px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
 }
 
-/* MAIN CARD */
+/* CARD */
 .account-page__card {
-    width: 100%;
-    max-width: 700px;
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 30px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 700px;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
 }
 
 /* TITLE */
 .account-page__title {
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--text-dark);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-dark);
 }
 
 .account-page__subtitle {
-    margin-top: 6px;
-    color: var(--text-muted);
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 4px;
 }
 
-/* PROFILE SECTION */
+/* PROFILE */
 .account-page__profile {
-    margin-top: 30px;
-    text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 25px 0;
 }
 
 .account-page__avatar {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    background-color: var(--accent-orange);
-    margin: 0 auto;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--orange);
 }
 
 .account-page__username {
-    margin-top: 10px;
-    font-size: 18px;
-    font-weight: 600;
+  margin-top: 10px;
+  font-weight: 600;
 }
 
-/* SECTION BLOCKS */
+/* SECTION */
 .account-page__section {
-    margin-top: 25px;
+  margin-top: 20px;
 }
 
 .account-page__label {
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 8px;
-    display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
 }
 
-/* ALERT TOGGLE ROW */
+/* TOGGLE ROW */
 .account-page__toggle {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #f3f4f6;
-    padding: 12px 16px;
-    border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f3f4f6;
+  padding: 14px;
+  border-radius: 12px;
+}
+
+.account-page__toggle-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.account-page__toggle-title {
+  font-weight: 600;
+}
+
+.account-page__toggle-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 /* ACTIONS */
 .account-page__actions {
-    margin-top: 30px;
-    text-align: center;
+  margin-top: 25px;
+  text-align: center;
 }
 
 .account-page__signout {
-    display: inline-block;
-    background-color: var(--accent-orange);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: 600;
+  background: var(--orange);
+  color: white;
+  padding: 12px 22px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
 }
 
-/* REPORTS SECTION (below card) */
+/* REPORTS */
 .account-page__reports {
-    margin-top: 40px;
-    width: 100%;
-    max-width: 900px;
+  margin-top: 40px;
+  width: 100%;
+  max-width: 900px;
+}
+
+.account-page__reports-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
 }
