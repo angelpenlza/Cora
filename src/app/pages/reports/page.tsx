@@ -39,7 +39,7 @@ async function fetchLocationsByReportId(
 export default async function Explore() {
   const supabase = await createClient();
   const { data: reports } = await supabase
-    .from('reports_with_meta')
+    .from('reports_with_meta_updated')
     .select('*')
     .order('report_id', { ascending: false });
 

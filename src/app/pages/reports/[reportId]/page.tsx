@@ -22,7 +22,7 @@ export default async function ReportDetailPage({ params }: PageProps) {
 
   const supabase = await createClient();
   const { data: report, error: reportError } = await supabase
-    .from('reports_with_meta')
+    .from('reports_with_meta_updated')
     .select('*')
     .eq('report_id', reportId)
     .maybeSingle();
@@ -83,7 +83,7 @@ export default async function ReportDetailPage({ params }: PageProps) {
     username: string | null,
     avatar: string | null,
   }) => {
-    const iconSrc = categoryIconPath(report.category_name);
+    const iconSrc = categoryIconPath(report.category);
     return (
       <div className='report-page-header-container'>
         <div className='header-title'>
@@ -135,7 +135,7 @@ export default async function ReportDetailPage({ params }: PageProps) {
       <div className='info-container'>
         <section className='info info--inline info--category'>
           <span className='info-label'>Category:</span>{' '}
-          <span className='info-data'>{categoryHeadline(report.category_name)}</span>
+          <span className='info-data'>{categoryHeadline(report.category)}</span>
         </section>
         <section className='info info--inline info--status'>
           <span className='info-label'>Status:</span>{' '}

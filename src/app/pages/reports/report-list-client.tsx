@@ -29,7 +29,7 @@ type ReportRow = {
   upvotes: number | null;
   downvotes: number | null;
   created_at: string;
-  category_name: string | null;
+  category: string | null;
   address?: string | null;
   city?: string | null;
 };
@@ -138,7 +138,7 @@ export default function ExploreListClient({
       }
 
       if (categoryActive) {
-        const name = (report.category_name ?? '').trim();
+        const name = (report.category ?? '').trim();
         const ok = DASHBOARD_CATEGORY_FILTERS.some(
           (f) =>
             categoryFilters[f.key] && f.key.toLowerCase() === name.toLowerCase(),
@@ -298,7 +298,7 @@ export default function ExploreListClient({
         <div className="report-dashboard__grid">
           {filteredReports.map((report) => {
             const badge = statusBadgeMeta(report.status);
-            const catIcon = categoryIconPath(report.category_name);
+            const catIcon = categoryIconPath(report.category);
             const loc =
               report.city?.trim() ||
               shortLocationFromAddress(report.address ?? null);
@@ -325,7 +325,7 @@ export default function ExploreListClient({
                         />
                       </span>
                       <span className="report-dashboard-card__category-text">
-                        {categoryHeadline(report.category_name)}
+                        {categoryHeadline(report.category)}
                       </span>
                     </div>
                     <span
