@@ -58,6 +58,7 @@ export default function ReportsMap({
   const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [timeFilter, setTimeFilter] = useState<"daily" | "weekly" | "monthly">("weekly");
 
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
     CATEGORY_OPTIONS.map((c) => c.id)
@@ -92,9 +93,21 @@ export default function ReportsMap({
       if (status === "unconfirmed" && !statusFilters.unconfirmed) return false;
       if (status === "disputed" && !statusFilters.disputed) return false;
 
+      if (!r.created_at) return false;
+
+      const createdAt = new Date(r.created_at);
+      const now = new Date();
+
+      const diffMs = now.getTime() - createdAt.getTime();
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+      if (timeFilter === "daily" && diffDays > 1) return false;
+      if (timeFilter === "weekly" && diffDays > 7) return false;
+      if (timeFilter === "monthly" && diffDays > 30) return false;
+
       return true;
     });
-  }, [reports, selectedCategories, statusFilters]);
+  }, [reports, selectedCategories, statusFilters, timeFilter]);
 
   useEffect(() => {
     if (!googleMapsApiKey) return;
@@ -281,6 +294,7 @@ export default function ReportsMap({
       unconfirmed: true,
       disputed: true,
     });
+    setTimeFilter("weekly");
   }
   function handleSearchInput(value: string) {
     setSearchQuery(value);
@@ -386,17 +400,29 @@ console.log("CATEGORY_OPTIONS", CATEGORY_OPTIONS);
             </div>
 
             <div className="option-grid">
-              <button type="button" className="filter-chip selected" disabled>
-                <img src="/icons/timeline.png" alt="" className="filter-row-icon" />
-                <span>Past Week</span>
-              </button>
-
-              <button type="button" className="filter-chip" disabled>
+              <button
+                type="button"
+                className={`filter-chip ${timeFilter === "weekly" ? "selected" : ""}`}
+                onClick={() => setTimeFilter("weekly")}
+              >
                 <img src="/icons/timeline.png" alt="" className="filter-row-icon" />
                 <span>Today</span>
               </button>
 
-              <button type="button" className="filter-chip" disabled>
+              <button
+                type="button"
+                className={`filter-chip ${timeFilter === "daily" ? "selected" : ""}`}
+                onClick={() => setTimeFilter("daily")}
+              >
+                <img src="/icons/timeline.png" alt="" className="filter-row-icon" />
+                <span>Past Week</span>
+              </button>
+
+              <button
+                type="button"
+                className={`filter-chip ${timeFilter === "monthly" ? "selected" : ""}`}
+                onClick={() => setTimeFilter("monthly")}
+              >
                 <img src="/icons/timeline.png" alt="" className="filter-row-icon" />
                 <span>Past Month</span>
               </button>
