@@ -154,7 +154,7 @@ export function Dropdown({ options, update, category }: {
         {
           category.length <= 0 ? 
           <div className="pre-select">Select a category.</div> :
-          <div>{category}</div>
+          <div className="post pre-select">{category}</div>
         } 
       </div>
       {

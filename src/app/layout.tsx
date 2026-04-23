@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Alexandria, Gantari, Geist, Geist_Mono } from "next/font/google";
+import { Alexandria, Gantari, Geist, Geist_Mono, Inter } from "next/font/google";
 import NavBar from "./components/navbar";
 import PhoneVerificationWrapper from "./components/phone-verification-wrapper";
 import RegisterSw from "./components/register-sw";
@@ -44,6 +44,11 @@ const alexandria = Alexandria({
   variable: "--font-alexandria",
   subsets: ["latin"],
 });
+
+const inter = Inter({
+  variable: '--font-inter',
+  subsets: ['latin']
+})
 
 const gantari = Gantari({
   variable: "--font-gantari",

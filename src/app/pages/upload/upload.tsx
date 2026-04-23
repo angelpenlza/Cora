@@ -42,6 +42,7 @@ export default function UploadForm({
     !!user &&
     (!!err || (!phoneVerified && !dismissedHere));
 
+
   const handleCloseModal = () => {
     setDismissedHere(true);
     router.replace('/pages/upload');
@@ -50,7 +51,7 @@ export default function UploadForm({
   const loginHref = `/pages/login?next=${encodeURIComponent('/pages/upload')}`;
 
   return (
-    <div>
+    <>
       <PhoneVerificationModal
         open={!user}
         variant="signIn"
@@ -62,73 +63,140 @@ export default function UploadForm({
         onVerifyLater={handleCloseModal}
         onVerifyNow={() => router.push('/pages/verify-phone')}
       />
-      {user ? (
-      <form action={createReport} className='upload-container'>
-        <h1>Upload</h1>
-        {reportErr && (
+      <div className='upload-card'>
+        <div className='upload-container-header'>
+          <img 
+            src='/assets/report-megaphone.png'
+            alt=''
+            width={30}
+          />
+          &ensp;
+          Report Incident
+        </div>
+        {user ? (
+        <form action={createReport} className='upload-container'>
+          {reportErr && (
+            <p className="error" role="alert">
+              {reportErr}
+            </p>
+          )}
+
+        <label className="upload-label">
+          <img 
+            src='/assets/report-category-icon.png' 
+            alt=''
+            width={12}
+          />
+          &ensp;
+          Category
+        </label>
+        <input id="category" name="category" type='hidden' value={category} required/>
+        <Dropdown 
+          options={[
+            'Robbery', 
+            'Traffic', 
+            'Assault', 
+            'Suspicious',
+            'Hazard', 
+            'Other',
+          ]}
+          update={setCategory}
+          category={category}
+        />
+
+        <label htmlFor="title" className='upload-label'>
+          <img 
+            src='/assets/report-title-icon.png' 
+            alt=''
+            width={12}
+          />
+          &ensp;
+          Title
+        </label>
+        <input 
+          placeholder='Enter brief title.'
+          id="title" 
+          name="title" 
+          type="text" 
+          className='upload-input' 
+          maxLength={50} 
+          required 
+        />
+
+        <label className='upload-label'>
+          <img 
+            src='/assets/report-location-icon.png' 
+            alt=''
+            width={12}
+          />
+          &ensp;
+          Address
+        </label>
+        <AddressForms />
+
+        <label htmlFor="description" className='upload-label'>
+        <img 
+            src='/assets/report-description-icon.png' 
+            alt=''
+            width={12}
+          />
+          &ensp;
+          Description
+        </label>
+        <textarea 
+          placeholder='Provide a detailed account of what happened...'
+          id="description" 
+          name="description" 
+          rows={3} 
+          className='upload-input' 
+          maxLength={400} 
+          required 
+        />
+
+        <label htmlFor="image" className="upload-label">
+          Photo (optional, PNG or JPEG, max ~4 MB)
+        </label>
+        <div className='upload-image'>
+          <img 
+            src='/assets/cloudflare-icon.png' 
+            alt=''
+            width={40}
+            className='cloudflare-icon'
+          />
+          <p>Click to upload images.</p>
+          <input
+            id="image"
+            name="image"
+            type="file"
+            accept="image/png, image/jpeg"
+            className="file-type"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (!f) {
+                setImageTooLarge(false);
+                return;
+              }
+              if (f.size > MAX_REPORT_IMAGE_BYTES) {
+                setImageTooLarge(true);
+                e.target.value = '';
+              } else {
+                setImageTooLarge(false);
+              }
+            }}
+          />
+        </div>
+        {imageTooLarge && (
           <p className="error" role="alert">
-            {reportErr}
+            That image is too large for upload. Use a file under 4 MB or compress it and try again.
           </p>
         )}
 
-      <label className="upload-label">Category</label>
-      <input id="category" name="category" type='hidden' value={category} required/>
-      <Dropdown 
-        options={[
-          'Robbery', 
-          'Traffic', 
-          'Assault', 
-          'Suspicious',
-          'Hazard', 
-          'Other',
-        ]}
-        update={setCategory}
-        category={category}
-        />
+        <button type="submit" className='upload-button'>Submit</button>
 
-      <label htmlFor="title" className='upload-label'>Title</label>
-      <input id="title" name="title" type="text" className='upload-input' maxLength={50} required />
-
-      <label className='upload-label'>Address</label>
-      <AddressForms />
-
-      <label htmlFor="description" className='upload-label'>Description</label>
-      <textarea id="description" name="description" rows={3} className='upload-input' maxLength={400} required />
-
-      <label htmlFor="image" className="upload-label">
-        Photo (optional, PNG or JPEG, max ~4 MB)
-      </label>
-      <input
-        id="image"
-        name="image"
-        type="file"
-        accept="image/png, image/jpeg"
-        className="upload-image"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (!f) {
-            setImageTooLarge(false);
-            return;
-          }
-          if (f.size > MAX_REPORT_IMAGE_BYTES) {
-            setImageTooLarge(true);
-            e.target.value = '';
-          } else {
-            setImageTooLarge(false);
-          }
-        }}
-      />
-      {imageTooLarge && (
-        <p className="error" role="alert">
-          That image is too large for upload. Use a file under 4 MB or compress it and try again.
-        </p>
-      )}
-
-      <button type="submit">Submit report</button>
-
-      <Link href='/' className='return-to-home-page'>return to home page</Link>
-      </form>
-      ) : null}
-    </div>
+        <Link href='/' className='return-to-home-page'>return to home page</Link>
+        </form>
+        ) : null}
+      </div>
+    </>
   );
 }
