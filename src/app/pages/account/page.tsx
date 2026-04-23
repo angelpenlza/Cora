@@ -44,13 +44,75 @@ export default async function Account() {
     'there';
 
   return (
-    <div className="account-container">
+    <div className="account-page">
+
       <VerifiedToast />
-      <h1>Welcome, {username}!!!</h1>
-      <NotificationToggle />
-      <h3>Your Reports</h3>
-      <Reports reports={report} images={images} inAccount={true}/>
-      <UpdateAccount user={profile} />
+
+    {/* Go back button */}
+      <div className="account-page__back">
+        <a href="/" className="account-page__back-btn">
+          ← Go back
+        </a>
+      </div>
+
+    {/* MAIN CARD */}
+      <div className="account-page__card">
+
+        <h2 className="account-page__title">Account Details</h2>
+        <p className="account-page__subtitle">
+          Update your profile information and notification preference.
+        </p>
+
+      {/* Avatar section */}
+        <div className="account-page__profile">
+          <div className="account-page__avatar-wrapper">
+            <div className="account-page__avatar" />
+          </div>
+          <h3 className="account-page__username">
+            {username}
+          </h3>
+        </div>
+
+      {/* Username update */}
+        <div className="account-page__section">
+          <label className="account-page__label">Username</label>
+          <div className="account-page__input-row">
+            <UpdateAccount user={profile} />
+          </div>
+        </div>
+
+      {/* Alert preferences */}
+        <div className="account-page__section">
+          <label className="account-page__label">Alert Preferences</label>
+
+          <div className="account-page__toggle">
+            <div className="account-page__toggle-text">
+              <span className="account-page__toggle-title">
+                Push Notifications
+              </span>
+              <span className="account-page__toggle-subtitle">
+                Get instant community safety alerts
+              </span>
+            </div>
+
+            <NotificationToggle />
+          </div>
+        </div>
+
+    {/* Sign out */}
+        <div className="account-page__actions">
+          <a href="/pages/login" className="account-page__signout">
+            Sign Out
+          </a>
+        </div>
+      </div>
+
+    {/* Reports section */}
+      <div className="account-page__reports">
+        <h3 className="account-page__reports-title">Your Reports</h3>
+        <Reports reports={report} images={images} inAccount={true} />
+      </div>
+
     </div>
   );
 }
