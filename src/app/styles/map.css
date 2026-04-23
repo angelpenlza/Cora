@@ -770,9 +770,20 @@ img, video, canvas {
 /* phone / small screens: search below Filters (600+ uses row + center rules above) */
 @media (max-width: 599px) {
     .popup {
-        width: min(260px, 80vw);
-        max-width: 80vw;
+        width: min(320px, 92vw);
+        max-width: 92vw;
         padding: 10px 12px;
+    }
+
+    .popup-header {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        row-gap: 0;
+    }
+
+    .popup-header-actions {
+        justify-content: flex-end;
+        width: auto;
     }
 
     .reports-map-canvas,
@@ -784,7 +795,7 @@ img, video, canvas {
     
     .popup-category {
         font-weight: 700;
-        font-size: 15px;
+        font-size: 16px;
         letter-spacing: 0.5px;
         color: #1E293B;
         white-space: nowrap;
@@ -797,6 +808,9 @@ img, video, canvas {
     .popup-title {
         font-size: 16px;
         line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .popup-description {
@@ -810,6 +824,22 @@ img, video, canvas {
     .popup-link-disabled {
         font-size: 10px;
         padding: 3px 8px;
+    }
+
+    .popup-icon-wrap {
+        width: 30px;
+        height: 30px;
+    }
+
+    .popup-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .popup-close {
+        width: 24px;
+        height: 24px;
+        font-size: 20px;
     }
 
     .search-wrapper {
