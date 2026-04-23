@@ -2,6 +2,10 @@
     --primary-color: rgb(70, 70, 70);
     --primary-hover: rgb(50, 50, 50);
     --secondary-color: rgb(220, 220, 220);
+    --accent-orange: #f97316;
+    --accent-green: #16a34a;
+    --text-dark: #1f2937;
+    --text-muted: #6b7280; 
 }
 
 .home-container {
