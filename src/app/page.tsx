@@ -1,47 +1,42 @@
-'use client'
-
-import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { revalidate } from "./components/actions";
-
-/**
- * Home page: list of existing reports/complaints.
- *
- * Data:
- * - Fetches all rows from the `reports` table using the Supabase server client.
- *
- * Rendering:
- * - Simple list of report title + description.
- * - Placeholder element rendered when an image is not yet available.
- */
+ 
 export default function Home() {
-  const params = useSearchParams()
-  const code = params.get('code') ?? ""
-  const supabase = createClient()
-
-  supabase.auth.onAuthStateChange((event, session) => {
-    if(event === 'SIGNED_IN') {
-      console.log('SIGNED_IN', session)
-      revalidate()
-    }
-  })
 
   return (
-    <div className="home-container">
-      <h2 className="home-message">
-        Help keep everyone in your community alert and informed. Be the voice of your community
-        </h2>
-        <h1 className="home-title">CORA</h1>
-        <p className="home-mission-statement">
-          Mission statement is in progress.
-        </p>
-      <div className="home-buttons">
-        <Link href='/pages/reports' className="home-button"> Reports Page</Link>
-        <Link href='/pages/signup' className="home-button">Sign Up</Link>
-        <Link href='/pages/interactive-map' className="home-button">Explore Map</Link>
+    <section className="home-landing" aria-labelledby="home-landing-title">
+      <div className="home-landing__inner">
+        <div className="home-landing__content">
+          <h1 id="home-landing-title" className="home-landing__title">
+            Help keep everyone in your community
+            <span className="home-landing__title--accent"> alert and informed.</span>
+          </h1>
+          <p className="home-landing__description">
+            Our mission is to empower Orange County residents with real-time safety updates and a
+            collaborative platform to protect our neighborhoods together.
+          </p>
+
+          <div className="home-landing__actions">
+            <Link href="/pages/signup" className="home-landing__button home-landing__button--signup">
+              Sign Up
+            </Link>
+            <Link href="/pages/interactive-map" className="home-landing__button home-landing__button--explore">
+              Explore Map
+            </Link>
+          </div>
+        </div>
+
+        <div className="home-landing__media">
+          <Image
+            src="/assets/landing-page-hero.png"
+            alt="Aerial neighborhood view"
+            width={960}
+            height={640}
+            className="home-landing__image"
+            priority
+          />
+        </div>
       </div>
-      <input type="hidden" name="code" value={code} />
-    </div>
+    </section>
   );
 }

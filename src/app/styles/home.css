@@ -1,46 +1,234 @@
-:root {
-    --primary-color: rgb(70, 70, 70);
-    --primary-hover: rgb(50, 50, 50);
-    --secondary-color: rgb(220, 220, 220);
+.home-landing {
+    width: 100%;
+    background: #fbf8f2;
 }
 
-.home-container {
-    width: 500px;
-    height: auto;
-    margin: 70px 50px;
-}
-
-.home-message {
-    color: var(--primary-color);
-}
-
-.home-title {
-    font-size: 50px;
-    margin: 30px 0;
-}
-
-.home-mission-statement {
-    background-color: var(--secondary-color);
-    color: var(--primary-color);
-    padding: 20px;
-}
-
-.home-buttons {
+/*
+ * Home layout: the global flex chain is  body(column) → .site-main(grow) → children.
+ * We let .site-main keep its default flex:1 so it pushes the footer to the viewport
+ * bottom.  .home-landing also grows so any extra height gets the hero background
+ * colour — no white/dark strip below the footer or between hero and footer.
+ */
+body:has(.home-landing) .site-main {
     display: flex;
-    width: 70%;
-    justify-content: space-between;
-
+    flex-direction: column;
 }
 
-.home-button {
+body:has(.home-landing) .home-landing {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.home-landing__inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem) clamp(3rem, 6vw, 5rem);
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: clamp(2rem, 4vw, 3rem);
+    align-items: center;
+    min-height: 100%;
+    flex: 1;
+}
+
+.home-landing__content {
+    min-width: 0;
+    font-weight: 400;
+}
+
+.home-landing__title {
+    margin: 0;
+    font-family: var(--font-gantari), ui-sans-serif, system-ui, sans-serif;
+    font-size: 2.9em;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: #18223a;
+    font-weight: 1000;
+    overflow-wrap: anywhere;
+}
+
+.home-landing__title--accent {
+    color: #f27f0d;
+    white-space: nowrap;
+}
+
+.home-landing__description {
+    margin: clamp(1.1rem, 2.6vw, 1.6rem) 0 0;
+    max-width: 36rem;
+    font-family: var(--font-alexandria), ui-sans-serif, system-ui, sans-serif;
+    font-size: clamp(1rem, 1.4vw, 1.55rem);
+    line-height: 1.45;
+    color: #273654;
+    font-weight: 600;
+}
+
+.home-landing__actions {
+    margin-top: clamp(1.6rem, 3vw, 2.4rem);
+    display: flex;
+    gap: clamp(0.8rem, 1.7vw, 1.2rem);
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.home-landing__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 10.25rem;
+    padding: 0.95rem 1.5rem;
+    border-radius: 14px;
     text-decoration: none;
-    color: white;
-    background-color: var(--primary-color);
-    padding: 15px 45px;
+    font-family: var(--font-alexandria), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+    font-size: clamp(1rem, 1.5vw, 1.35rem);
+    line-height: 1;
+    white-space: nowrap;
+    transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+}
+
+.home-landing__button:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.02);
+}
+
+.home-landing__button--signup {
+    background: #06c167;
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(6, 193, 103, 0.35);
+}
+
+.home-landing__button--signup:hover {
+    box-shadow: 0 14px 28px rgba(6, 193, 103, 0.45);
+}
+
+.home-landing__button--explore {
+    background: #f27f0d;
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(242, 127, 13, 0.35);
+}
+
+.home-landing__button--explore:hover {
+    box-shadow: 0 14px 28px rgba(242, 127, 13, 0.45);
+}
+
+.home-landing__media {
+    min-width: 0;
+}
+
+.home-landing__image {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
     border-radius: 10px;
+    display: block;
 }
 
-.home-button:hover {
-    background-color: var(--primary-hover);
+@media (min-width: 900px) and (max-width: 1200px) {
+    .home-landing__inner {
+        grid-template-columns: 1fr 1fr;
+        gap: 1.75rem;
+        align-items: start;
+    }
+
+    .home-landing__title {
+       font-size: 1.8rem;
+    }
+
+    .home-landing__description {
+        font-size: clamp(1rem, 1.25vw, 1.25rem);
+        max-width: 30rem;
+    }
+
+    .home-landing__button {
+        min-width: 9.25rem;
+        padding: 0.85rem 1.2rem;
+        font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+    }
 }
 
+@media (max-width: 899px) {
+    .home-landing {
+        background: #ffffff;
+    }
+
+    .home-landing__inner {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 1.4rem 1rem 2rem;
+    }
+
+    .home-landing__content {
+        padding: 0 0.45rem;
+    }
+
+    .home-landing__title {
+        font-size: clamp(2rem, 8.3vw, 2.9rem);
+        line-height: 1.02;
+
+    }
+
+    .home-landing__title--accent {
+        /* Allow wrap on small screens to prevent clipping at right edge */
+        white-space: normal;
+    }
+
+    .home-landing__description {
+        margin-top: 0.85rem;
+        max-width: none;
+        width: 100%;
+        font-size: clamp(1rem, 4.35vw, 1.42rem);
+        line-height: 1.35;
+    }
+
+    .home-landing__actions {
+        margin-top: 1.25rem;
+        flex-direction: column;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 0.9rem;
+    }
+
+    .home-landing__button {
+        width: min(13.5rem, 100%);
+        min-width: 0;
+        border-radius: 12px;
+        font-size: clamp(1.05rem, 4.1vw, 1.28rem);
+        padding: 1rem 1.3rem;
+    }
+
+    .home-landing__media {
+        margin-top: 0.35rem;
+        padding: 0 0.45rem;
+    }
+
+    .home-landing__image {
+        border-radius: 20px;
+        aspect-ratio: 16 / 9;
+    }
+}
+
+/* Larger mobile / small tablet: keep stacked layout but let copy breathe across the row */
+@media (min-width: 600px) and (max-width: 899px) {
+    .home-landing__inner {
+        padding: 1.7rem 1.4rem 2.2rem;
+    }
+
+    .home-landing__content {
+        max-width: none;
+        padding: 0;
+    }
+
+    .home-landing__title {
+        max-width: none;
+        font-size: 2rem;
+    }
+
+    .home-landing__description {
+        max-width: none;
+        width: 100%;
+        font-size: clamp(1.15rem, 2.3vw, 1.55rem);
+        line-height: 1.38;
+    }
+}
