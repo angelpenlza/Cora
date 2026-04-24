@@ -9,6 +9,7 @@ import './styles/navbar.css';
 import './styles/footer.css';
 import './styles/forms.css';
 import './styles/reports.css';
+import './styles/reset-password.css'
 import { createClient } from "@/lib/supabase/server";
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
