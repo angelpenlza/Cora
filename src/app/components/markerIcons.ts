@@ -1,12 +1,12 @@
 // src/app/components/markerIcons.ts
 
 export const categoryIconMap: Record<number, string> = {
-    1: "/icons/assault.png",
-    2: "/icons/robbery.png",
-    3: "/icons/vandalism.png",
+    1: "/icons/robbery.png",
+    2: "/icons/traffic.png",
+    3: "/icons/assault.png",
     4: "/icons/suspicious.png",
-    5: "/icons/traffic.png",
-    6: "/icons/haz.png",
+    5: "/icons/vandalism.png",
+    6: "/icons/hazard.png",
     7: "/icons/other.png",
 };
 

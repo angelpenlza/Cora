@@ -108,6 +108,7 @@ export default function UploadForm({
             'Traffic', 
             'Assault', 
             'Suspicious',
+            'Vandalism',
             'Hazard', 
             'Other',
           ]}

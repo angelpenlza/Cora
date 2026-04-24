@@ -45,6 +45,19 @@ function hasReportImageFile(file: unknown): file is File {
   );
 }
 
+function categoryLabelToId(label: string): number | null {
+  const key = (label ?? '').toString().trim().toLowerCase();
+  if (!key) return null;
+  if (key === 'robbery') return 1;
+  if (key === 'traffic') return 2;
+  if (key === 'assault') return 3;
+  if (key === 'suspicious') return 4;
+  if (key === 'vandalism') return 5;
+  if (key === 'hazard') return 6;
+  if (key === 'other') return 7;
+  return null;
+}
+
 /**
  * Create a new report for the authenticated user.
  *
@@ -112,6 +125,7 @@ export async function createReport(formData: FormData) {
   }
 
   const reportImageName = hasReportImageFile(image) ? image.name : null;
+  const categoryId = categoryLabelToId(category);
 
   const { data, error } = await supabase
     .from('reports')
@@ -120,7 +134,7 @@ export async function createReport(formData: FormData) {
       report_description: description,
       report_image: reportImageName,
       // Minimal required fields for reports table / RLS
-      category_id: 1, // e.g. 'Safety' from current seed data
+      category_id: categoryId ?? 7,
       category: category,
       address: `${street}, ${city}, ${state}, ${country}`,
       created_by: user.id,

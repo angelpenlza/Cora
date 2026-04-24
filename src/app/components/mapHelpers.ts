@@ -54,9 +54,13 @@ export function statusToColor(status: string) {
 
 export function categoryToIcon(categoryId: number | null) {
     if (categoryId === 1) return "/icons/robbery.png";
-    if (categoryId === 2) return "/icons/assault.png";
-    if (categoryId === 4) return "/icons/traffic.png";
-    return null;
+    if (categoryId === 2) return "/icons/traffic.png";
+    if (categoryId === 3) return "/icons/assault.png";
+    if (categoryId === 4) return "/icons/suspicious.png";
+    if (categoryId === 5) return "/icons/vandalism.png";
+    if (categoryId === 6) return "/icons/hazard.png";
+    if (categoryId === 7) return "/icons/other.png";
+    return "/icons/other.png";
 }
 
 export function categoryToLabel(categoryId: number | null) {
