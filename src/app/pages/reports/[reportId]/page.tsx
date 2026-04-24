@@ -11,7 +11,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { categoryIconPath, categoryHeadline } from '@/lib/report-dashboard';
 import LocalDateTime from './local-datetime';
-import { getCachedReport, getCachedImages, getCachedReportComments } from '@/lib/data-cache';
+import { getCachedReport, getCachedReportComments } from '@/lib/data-cache';
 
 type PageProps = { params: Promise<{ reportId: string }> };
 
@@ -24,19 +24,18 @@ export default async function ReportDetailPage({ params }: PageProps) {
 
   // Round 1: fire cached + auth queries simultaneously.
   const [
-    cachedImages,
+    images,
     cachedReport,
     { data: { user } },
     cachedComments,
   ] = await Promise.all([
-    getCachedImages(),
+    getImages(),
     getCachedReport(reportId),
     supabase.auth.getUser(),
     getCachedReportComments(reportId),
   ]);
 
   // Fall back to uncached queries if admin client wasn't available.
-  const images = cachedImages ?? await getImages();
   const report = cachedReport ?? (
     await supabase.from('reports_with_meta_updated').select('*').eq('report_id', reportId).maybeSingle()
   ).data;
