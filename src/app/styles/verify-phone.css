@@ -1,0 +1,304 @@
+/* Verify phone / Finish profile — Figma-aligned */
+
+body:has(.verify-phone-page) {
+    background: #faf7f2;
+}
+
+.verify-phone-page {
+    flex: 1 0 auto;
+    width: 100%;
+    min-height: 100%;
+    /* Tighter vertical padding so card fits above the fold with navbar + footer */
+    padding: clamp(0.65rem, 2.5dvh, 1.1rem) clamp(0.65rem, 3vw, 1.25rem);
+    background: radial-gradient(
+        120% 80% at 10% 0%,
+        rgba(242, 127, 13, 0.12) 0%,
+        transparent 55%
+    ),
+        #faf7f2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.verify-phone-card {
+    width: 100%;
+    max-width: 400px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: clamp(0.85rem, 2.2dvh, 1.25rem) clamp(0.95rem, 2.5vw, 1.35rem) clamp(0.95rem, 2.2dvh, 1.35rem);
+    box-shadow: 0 8px 32px rgba(24, 34, 58, 0.08), 0 2px 8px rgba(24, 34, 58, 0.04);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.verify-phone-hero {
+    margin: 0 auto 0.55rem;
+    max-width: min(200px, 52vw);
+    width: 100%;
+}
+
+.verify-phone-hero img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.verify-phone-title {
+    margin: 0 0 0.4rem;
+    font-family: var(--font-gantari), ui-sans-serif, system-ui, sans-serif;
+    font-size: clamp(1.05rem, 3.2vw, 1.28rem);
+    font-weight: 800;
+    color: #18223a;
+    letter-spacing: -0.02em;
+    line-height: 1.22;
+}
+
+.verify-phone-lead {
+    margin: 0 0 0.85rem;
+    font-family: var(--font-alexandria), ui-sans-serif, system-ui, sans-serif;
+    font-size: clamp(0.78rem, 2.4vw, 0.82rem);
+    line-height: 1.45;
+    color: #64748b;
+    font-weight: 500;
+    max-width: 34rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.verify-phone-error {
+    color: #991b1b;
+    background: #fef2f2;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    margin: 0 0 0.65rem;
+    font-size: 0.78rem;
+    text-align: center;
+}
+
+.verify-phone-form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left;
+    margin-bottom: 0;
+}
+
+.verify-phone-label {
+    margin: 0 0 0.3rem;
+    font-family: var(--font-gantari), ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #18223a;
+}
+
+.verify-phone-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    box-sizing: border-box;
+    margin-bottom: 0.65rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.verify-phone-input-wrap:focus-within {
+    border-color: #f27f0d;
+    box-shadow: 0 0 0 3px rgba(242, 127, 13, 0.15);
+}
+
+.verify-phone-input-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+}
+
+.verify-phone-input-icon img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+.verify-phone-input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    font-family: var(--font-alexandria), ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.9rem;
+    color: #18223a;
+    outline: none;
+    padding: 0;
+}
+
+.verify-phone-input::placeholder {
+    color: #94a3b8;
+}
+
+.verify-phone-actions {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0;
+}
+
+.verify-phone-btn {
+    cursor: pointer;
+    width: 100%;
+    max-width: 100%;
+    padding: 0.58rem 1.1rem;
+    border: none;
+    border-radius: 999px;
+    background: #f27f0d;
+    color: #fff;
+    font-family: var(--font-gantari), ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.86rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    box-shadow: 0 3px 10px rgba(242, 127, 13, 0.32);
+    transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.verify-phone-btn:hover:not(:disabled) {
+    background: #e67300;
+    box-shadow: 0 6px 18px rgba(242, 127, 13, 0.4);
+}
+
+.verify-phone-btn:active:not(:disabled) {
+    transform: scale(0.99);
+}
+
+.verify-phone-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* OTP panel */
+.verify-phone-otp-panel {
+    margin-top: 0.75rem;
+    padding: 0.75rem 0.7rem 0.8rem;
+    background: #e8f4fc;
+    border: 1px solid #bae6fd;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.verify-phone-instruction {
+    margin: 0 0 0.65rem;
+    font-family: var(--font-alexandria), ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.76rem;
+    line-height: 1.45;
+    color: #1e3a5f;
+    font-weight: 600;
+}
+
+.verify-phone-otp-form {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.verify-phone-otp-row {
+    display: flex;
+    justify-content: center;
+    gap: clamp(0.28rem, 1.5vw, 0.4rem);
+    margin-bottom: 0.55rem;
+    flex-wrap: nowrap;
+}
+
+.verify-phone-otp-digit {
+    width: clamp(2rem, 9.5vw, 2.35rem);
+    height: clamp(2.2rem, 10vw, 2.55rem);
+    padding: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    font-family: var(--font-gantari), ui-sans-serif, system-ui, sans-serif;
+    font-size: clamp(0.95rem, 3.5vw, 1.15rem);
+    font-weight: 800;
+    color: #18223a;
+    text-align: center;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.verify-phone-otp-digit:focus {
+    outline: none;
+    border-color: #f27f0d;
+    box-shadow: 0 0 0 2px rgba(242, 127, 13, 0.2);
+}
+
+.verify-phone-resend {
+    margin: 0 0 0.65rem;
+    font-size: 0.76rem;
+}
+
+.verify-phone-cooldown {
+    color: #64748b;
+    font-family: var(--font-alexandria), ui-sans-serif, system-ui, sans-serif;
+}
+
+.verify-phone-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #1e40af;
+    font-family: var(--font-alexandria), ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.76rem;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.verify-phone-link:hover:not(:disabled) {
+    color: #1d4ed8;
+}
+
+.verify-phone-link:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.verify-phone-footer {
+    margin-top: 0.85rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.verify-phone-home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-alexandria), ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #18223a;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.verify-phone-home-link:hover {
+    color: #f27f0d;
+}
+
+@media (min-width: 600px) {
+    .verify-phone-card {
+        max-width: 420px;
+        padding: 1.1rem 1.35rem 1.2rem;
+    }
+
+    .verify-phone-hero {
+        max-width: 220px;
+    }
+}

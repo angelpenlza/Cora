@@ -16,6 +16,7 @@ export function AccountCard({
   const [editing, setEditing] = useState(false);
   const [deleteImage, setDeleteImage] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -47,7 +48,7 @@ export function AccountCard({
         </p>
       </div>
 
-      <form>
+      <form onSubmit={(e) => { if (!saving) e.preventDefault(); }}>
         <input type="hidden" name="uid" value={profile?.id ?? ''} />
         <input
           type="hidden"
@@ -110,7 +111,11 @@ export function AccountCard({
               placeholder="New Username"
             />
             {editing ? (
-              <button formAction={updateProfile} className="acct-save-btn">
+              <button
+                formAction={updateProfile}
+                className="acct-save-btn"
+                onClick={() => setSaving(true)}
+              >
                 Save
               </button>
             ) : (

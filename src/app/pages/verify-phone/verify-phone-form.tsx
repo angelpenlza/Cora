@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   sendPhoneOtp,
   verifyPhoneOtp,
@@ -20,15 +21,16 @@ function formatPhone(raw: string): string {
 }
 
 /**
- * Two-step form: phone + Send Code at top; when code sent, OTP section extends below
- * with 6 single-digit inputs, "send code again", Submit, and "return to homepage".
+ * Phone verification: Figma layout with hero art, phone row + icon,
+ * Send Code, optional OTP panel (light blue), Submit, return link.
  */
 export default function VerifyPhoneForm() {
   const router = useRouter();
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phone, setPhone] = useState('');
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
-  const [loading, setLoading] = useState(false);
+  const [loadingSend, setLoadingSend] = useState(false);
+  const [loadingVerify, setLoadingVerify] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -50,12 +52,12 @@ export default function VerifyPhoneForm() {
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading || cooldown > 0) return;
-    setLoading(true);
+    if (loadingSend || loadingVerify || (step === 'otp' && cooldown > 0)) return;
+    setLoadingSend(true);
     setError(null);
     const e164 = formatPhone(phone);
     const result = await sendPhoneOtp(e164);
-    setLoading(false);
+    setLoadingSend(false);
     if (result.error) {
       setError(result.error);
       return;
@@ -67,12 +69,12 @@ export default function VerifyPhoneForm() {
 
   const handleSendCodeAgain = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (loading || cooldown > 0) return;
-    setLoading(true);
+    if (loadingSend || loadingVerify || cooldown > 0) return;
+    setLoadingSend(true);
     setError(null);
     const e164 = formatPhone(phone);
     const result = await sendPhoneOtp(e164);
-    setLoading(false);
+    setLoadingSend(false);
     if (result.error) {
       setError(result.error);
       return;
@@ -84,12 +86,12 @@ export default function VerifyPhoneForm() {
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading || otp.length !== OTP_LENGTH) return;
-    setLoading(true);
+    if (loadingSend || loadingVerify || otp.length !== OTP_LENGTH) return;
+    setLoadingVerify(true);
     setError(null);
     const e164 = formatPhone(phone);
     const result = await verifyPhoneOtp(e164, otp);
-    setLoading(false);
+    setLoadingVerify(false);
     if (result.error) {
       setError(result.error);
       return;
@@ -125,58 +127,85 @@ export default function VerifyPhoneForm() {
     }
   };
 
-  return (
-    <div className="verify-phone-wrapper">
-      <div className="verify-phone-card">
-        <h1 className="verify-phone-title">Verify your Account</h1>
+  const sendDisabled =
+    loadingSend || loadingVerify || (step === 'otp' && cooldown > 0);
 
-        {error && (
+  return (
+    <div className="verify-phone-page">
+      <div className="verify-phone-card">
+        <div className="verify-phone-hero">
+          <Image
+            src="/assets/verify-account-image.png"
+            alt=""
+            width={440}
+            height={250}
+            sizes="(max-width: 480px) 52vw, 220px"
+            priority
+            style={{ width: '100%', height: 'auto' }}
+          />
+        </div>
+
+        <h1 className="verify-phone-title">Finish Setting Up Your Profile</h1>
+        <p className="verify-phone-lead">
+          Verification helps us ensure that every member of the Cora community is a
+          real person and limited to one account.
+        </p>
+
+        {error ? (
           <p className="verify-phone-error" role="alert">
             {error}
           </p>
-        )}
+        ) : null}
 
         <form onSubmit={handleSendCode} className="verify-phone-form">
           <label htmlFor="verify-phone-number" className="verify-phone-label">
             Phone Number
           </label>
-          <input
-            id="verify-phone-number"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="(XXX)-XXX-XXXX"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required
-            className="verify-phone-input"
-          />
+          <div className="verify-phone-input-wrap">
+            <span className="verify-phone-input-icon" aria-hidden>
+              <Image
+                src="/assets/verify-account-phone-icon.png"
+                alt=""
+                width={18}
+                height={18}
+              />
+            </span>
+            <input
+              id="verify-phone-number"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="(###) ### - ####"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              className="verify-phone-input"
+            />
+          </div>
           <div className="verify-phone-actions">
-            <button
-              type="submit"
-              className="verify-phone-btn"
-              disabled={loading || cooldown > 0}
-            >
-              {loading ? 'Sending...' : 'Send Code'}
+            <button type="submit" className="verify-phone-btn" disabled={sendDisabled}>
+              {loadingSend ? 'Sending...' : 'Send Code'}
             </button>
           </div>
         </form>
 
-        {step === 'otp' && (
-          <>
+        {step === 'otp' ? (
+          <div className="verify-phone-otp-panel">
             <p className="verify-phone-instruction">
-              A verification code has been sent to your phone. Please enter the
-              code below.
+              A verification code has been sent to your phone. Please enter the code
+              below.
             </p>
-            <form onSubmit={handleVerify} className="verify-phone-form verify-phone-otp-form">
+            <form onSubmit={handleVerify} className="verify-phone-otp-form">
               <div className="verify-phone-otp-row" role="group" aria-label="Verification code">
                 {otpDigits.map((d, i) => (
                   <input
                     key={i}
-                    ref={(el) => { otpInputRefs.current[i] = el; }}
+                    ref={(el) => {
+                      otpInputRefs.current[i] = el;
+                    }}
                     type="text"
                     inputMode="numeric"
-                    maxLength={6}
+                    maxLength={1}
                     value={d}
                     onChange={(e) => handleOtpChange(i, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(i, e)}
@@ -195,7 +224,7 @@ export default function VerifyPhoneForm() {
                     type="button"
                     onClick={handleSendCodeAgain}
                     className="verify-phone-link"
-                    disabled={loading}
+                    disabled={loadingSend || loadingVerify}
                   >
                     send code again
                   </button>
@@ -205,20 +234,20 @@ export default function VerifyPhoneForm() {
                 <button
                   type="submit"
                   className="verify-phone-btn"
-                  disabled={loading || otp.length !== OTP_LENGTH}
+                  disabled={loadingSend || loadingVerify || otp.length !== OTP_LENGTH}
                 >
-                  {loading ? 'Submitting...' : 'Submit'}
+                  {loadingVerify ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
             </form>
-          </>
-        )}
+          </div>
+        ) : null}
 
-        <p className="verify-phone-home">
-          <Link href="/" className="verify-phone-link">
-            return to homepage
+        <div className="verify-phone-footer">
+          <Link href="/" className="verify-phone-home-link">
+            ← return to homepage
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   );
