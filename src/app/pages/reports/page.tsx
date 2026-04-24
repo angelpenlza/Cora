@@ -38,32 +38,29 @@ async function fetchLocationsByReportId(
 
 export default async function Explore() {
   const supabase = await createClient();
-  const { data: reports } = await supabase
-    .from('reports_with_meta_updated')
-    .select('*')
-    .order('report_id', { ascending: false });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Fetch reports and auth user concurrently — neither depends on the other.
+  const [{ data: reports }, { data: { user } }] = await Promise.all([
+    supabase
+      .from('reports_with_meta_updated')
+      .select('*')
+      .order('report_id', { ascending: false }),
+    supabase.auth.getUser(),
+  ]);
+
   const userId = user?.id ?? null;
-
-  let phoneVerified = false;
-  if (userId) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('phone_verified')
-      .eq('id', userId)
-      .maybeSingle();
-    phoneVerified = profile?.phone_verified === true;
-  }
-
   const reportIds = reports?.map((r) => r.report_id) ?? [];
-  const commentCounts = reportIds.length
-    ? await getReportCommentCounts(reportIds)
-    : {};
 
-  // Best-effort city labels from coordinates.
+  // Fetch phone verification and comment counts concurrently.
+  const [profileResult, commentCounts] = await Promise.all([
+    userId
+      ? supabase.from('profiles').select('phone_verified').eq('id', userId).maybeSingle()
+      : Promise.resolve({ data: null }),
+    reportIds.length ? getReportCommentCounts(reportIds) : Promise.resolve({}),
+  ]);
+
+  const phoneVerified = profileResult.data?.phone_verified === true;
+
   const locationById = await fetchLocationsByReportId(reportIds, supabase);
   const cityById = new Map<number, string>();
   // Nominatim is rate-limited; keep this conservative.

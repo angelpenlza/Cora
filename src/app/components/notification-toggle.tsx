@@ -52,9 +52,6 @@ export default function NotificationToggle() {
 
     if ('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window) {
       setIsSupported(true);
-      if (!('serviceWorker' in navigator)) console.warn('No serviceWorker support');
-      if (!('PushManager' in window)) console.warn('No PushManager support');
-      if (!('Notification' in window)) console.warn('No Notification API');
       void hydrateExistingSubscription();
     }
   }, []);

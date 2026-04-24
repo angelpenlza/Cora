@@ -79,13 +79,16 @@ async function fetchGeoByReportId(
   if (reportIds.length === 0) return map;
 
   const db = adminClient ?? sessionClient;
+  const chunks = chunkIds(reportIds, GEO_IN_CHUNK);
 
-  for (const ids of chunkIds(reportIds, GEO_IN_CHUNK)) {
-    const { data, error } = await db
-      .from('reports')
-      .select('report_id, category_id, created_at, location')
-      .in('report_id', ids);
+  // Fetch all chunks in parallel instead of sequentially.
+  const results = await Promise.all(
+    chunks.map((ids) =>
+      db.from('reports').select('report_id, category_id, created_at, location').in('report_id', ids)
+    )
+  );
 
+  for (const { data, error } of results) {
     if (error) {
       console.error('interactive-map: reports geometry', error.message, error.code);
       continue;

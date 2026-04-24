@@ -44,7 +44,7 @@ export default function Signup() {
         <div className="signup-page__hero-inner">
           <h1 id="signup-welcome-heading" className="signup-page__welcome-title">
             <span className="signup-page__welcome-line">
-              Welcome to Cora<Image src="/favicon.ico" alt="" width={32} height={32} className="signup-page__welcome-period" unoptimized />
+              Welcome to Cora<Image src="/favicon.ico" alt="" width={32} height={32} className="signup-page__welcome-period" />
             </span>
           </h1>
           <p className="signup-page__welcome-lede">
@@ -60,7 +60,6 @@ export default function Signup() {
                   width={96}
                   height={96}
                   className="signup-page__feature-icon-img"
-                  unoptimized
                 />
               </div>
               <div>
@@ -78,7 +77,6 @@ export default function Signup() {
                   width={96}
                   height={96}
                   className="signup-page__feature-icon-img"
-                  unoptimized
                 />
               </div>
               <div>
@@ -96,7 +94,6 @@ export default function Signup() {
                   width={96}
                   height={96}
                   className="signup-page__feature-icon-img"
-                  unoptimized
                 />
               </div>
               <div>
@@ -116,7 +113,6 @@ export default function Signup() {
               height={320}
               className="signup-page__hero-img"
               priority
-              unoptimized
             />
           </div>
         </div>
@@ -182,9 +178,9 @@ export default function Signup() {
                 aria-label={showPass ? 'Hide password' : 'Show password'}
               >
                 {showPass ? (
-                  <img src="/assets/hide.png" alt="" className="signup-page__eye-img" />
+                  <Image src="/assets/hide.png" alt="" width={20} height={20} className="signup-page__eye-img" />
                 ) : (
-                  <img src="/assets/view.png" alt="" className="signup-page__eye-img" />
+                  <Image src="/assets/view.png" alt="" width={20} height={20} className="signup-page__eye-img" />
                 )}
               </button>
             </div>
@@ -212,9 +208,9 @@ export default function Signup() {
                 aria-label={showPass ? 'Hide confirm password' : 'Show confirm password'}
               >
                 {showPass ? (
-                  <img src="/assets/hide.png" alt="" className="signup-page__eye-img" />
+                  <Image src="/assets/hide.png" alt="" width={20} height={20} className="signup-page__eye-img" />
                 ) : (
-                  <img src="/assets/view.png" alt="" className="signup-page__eye-img" />
+                  <Image src="/assets/view.png" alt="" width={20} height={20} className="signup-page__eye-img" />
                 )}
               </button>
             </div>

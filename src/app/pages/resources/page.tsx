@@ -1,4 +1,5 @@
 import { ResourceCard } from './resource-card';
+import '@/app/styles/resources-page.css';
 import { COMMUNITY_RESOURCES } from './resources-data';
 
 /**

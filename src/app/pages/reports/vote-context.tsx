@@ -41,6 +41,10 @@ type VoteProviderProps = {
 
 export function VoteProvider({ children }: VoteProviderProps) {
   const [entries, setEntries] = useState<Record<number, VoteEntry>>({});
+  // Always-current mirror of entries used in castVote so it doesn't need entries as a dep.
+  const entriesRef = useRef<Record<number, VoteEntry>>({});
+  entriesRef.current = entries;
+
   const pendingIds = useRef<Set<number>>(new Set());
   const hydratedIds = useRef<Set<number>>(new Set());
   const hydrationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -99,8 +103,8 @@ export function VoteProvider({ children }: VoteProviderProps) {
       currentUpvotes: number,
       currentDownvotes: number,
     ): Promise<{ error?: string }> => {
-      const prev = entries[reportId];
-      const prevVote = prev?.userVote ?? 0;
+      // Read current vote from the ref so this callback stays stable (no entries dep).
+      const prevVote = entriesRef.current[reportId]?.userVote ?? 0;
       const nextValue = value === prevVote ? 0 : value;
 
       const result = await setReportVote(reportId, nextValue);
@@ -121,7 +125,9 @@ export function VoteProvider({ children }: VoteProviderProps) {
 
       return {};
     },
-    [entries],
+    // entriesRef is a stable ref — no need to list entries as a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
   );
 
   return (

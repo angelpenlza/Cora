@@ -37,7 +37,6 @@ export default function Login() {
               height={540}
               className="login-page__hero-img"
               priority
-              unoptimized
             />
           </div>
         </div>
@@ -87,9 +86,9 @@ export default function Login() {
                 aria-label={showPass ? 'Hide password' : 'Show password'}
               >
                 {showPass ? (
-                  <img src="/assets/hide.png" alt="" className="login-page__eye-img" />
+                  <Image src="/assets/hide.png" alt="" width={20} height={20} className="login-page__eye-img" />
                 ) : (
-                  <img src="/assets/view.png" alt="" className="login-page__eye-img" />
+                  <Image src="/assets/view.png" alt="" width={20} height={20} className="login-page__eye-img" />
                 )}
               </button>
             </div>

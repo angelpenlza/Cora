@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import NextImage from "next/image";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import type { Report } from "./mapTypes";
 import { generateReportPopup } from "./mapHelpers";
@@ -34,6 +35,8 @@ type ReportsMapProps = {
   fillViewport?: boolean;
 };
 
+type GoogleMapsWindow = { google: typeof google };
+
 export default function ReportsMap({
   reports,
   fillViewport = false,
@@ -45,6 +48,12 @@ export default function ReportsMap({
   const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
   const searchWrapperRef = useRef<HTMLDivElement | null>(null);
+  const clustererRef = useRef<MarkerClusterer | null>(null);
+  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
+  const hoverWindowRef = useRef<google.maps.InfoWindow | null>(null);
+  const markerUpdateTokenRef = useRef(0);
+  const predictionsDebounceRef = useRef<number | null>(null);
 
   const googleMapsApiKey = (
     process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ""
@@ -115,25 +124,20 @@ export default function ReportsMap({
     const key = googleMapsApiKey;
     const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID?.trim() || undefined;
 
-    let markers: google.maps.marker.AdvancedMarkerElement[] = [];
-    let clusterer: MarkerClusterer | null = null;
-    let infoWindow: google.maps.InfoWindow | null = null;
-    let hoverWindow: google.maps.InfoWindow | null = null;
-
     function handlePopupCloseClick(e: MouseEvent) {
       const t = e.target as HTMLElement | null;
       if (!t?.closest(".popup-close")) return;
       e.preventDefault();
       e.stopPropagation();
-      infoWindow?.close();
-      hoverWindow?.close();
+      infoWindowRef.current?.close();
+      hoverWindowRef.current?.close();
     }
 
     async function init() {
       await ensureGoogleMapsReady(key, mapId);
       if (!mapRef.current) return;
 
-      const gmaps = (window as unknown as { google: typeof google }).google;
+      const gmaps = (window as unknown as GoogleMapsWindow).google;
 
       const map = new gmaps.maps.Map(mapRef.current, {
         center: { lat: 33.7175, lng: -117.8311 },
@@ -148,59 +152,10 @@ export default function ReportsMap({
       geocoderRef.current = new gmaps.maps.Geocoder();
       autocompleteServiceRef.current = new gmaps.maps.places.AutocompleteService();
       placesServiceRef.current = new gmaps.maps.places.PlacesService(map);
-      infoWindow = new gmaps.maps.InfoWindow({ headerDisabled: true });
-      hoverWindow = new gmaps.maps.InfoWindow({ headerDisabled: true });
+      infoWindowRef.current = new gmaps.maps.InfoWindow({ headerDisabled: true });
+      hoverWindowRef.current = new gmaps.maps.InfoWindow({ headerDisabled: true });
       map.getDiv().addEventListener("click", handlePopupCloseClick);
-
-      markers = filteredReports.map((r) => {
-        const [lng, lat] = r.location_geojson!.coordinates;
-        const status = resolveMapStatus(r.score, r.status);
-        const color = statusToColor(status);
-        const iconUrl = getCategoryIcon(r.category_id);
-        const content = createMarkerContent(iconUrl, color);
-
-        const marker = new gmaps.maps.marker.AdvancedMarkerElement({
-        map,
-        position: { lat, lng },
-        title: r.report_title ?? undefined,
-        content,
-      });
-
-        
-
-      const openHover = () => {
-        hoverWindow!.setContent(
-          generateReportPopup(
-            r,
-            iconUrl,
-            categoryToLabel(r.category_id),
-            status,
-            formatReportDate(r.created_at)
-          )
-        );
-        hoverWindow!.open({ map, anchor: marker });
-      };
-
-      content.addEventListener("mouseenter", openHover);
-      content.addEventListener("mouseleave", () => hoverWindow!.close());
-
-      marker.addListener("click", () => {
-        infoWindow!.setContent(
-          generateReportPopup(
-            r,
-            iconUrl,
-            categoryToLabel(r.category_id),
-            status,
-            formatReportDate(r.created_at)
-          )
-        );
-        infoWindow!.open({ map, anchor: marker });
-      });
-
-      return marker;
-    });
-
-      clusterer = new MarkerClusterer({ map, markers });
+      clustererRef.current = new MarkerClusterer({ map, markers: [] });
 
       if (fillViewport) {
         const resize = () => gmaps.maps.event.trigger(map, 'resize');
@@ -212,15 +167,122 @@ export default function ReportsMap({
 
     return () => {
       mapRef.current?.removeEventListener("click", handlePopupCloseClick);
-      if (clusterer) clusterer.setMap(null);
-      if (infoWindow) infoWindow.close();
-      if (hoverWindow) hoverWindow.close();
-      markers.forEach((m) => {
+      markerUpdateTokenRef.current += 1;
+      clustererRef.current?.setMap(null);
+      clustererRef.current = null;
+      infoWindowRef.current?.close();
+      infoWindowRef.current = null;
+      hoverWindowRef.current?.close();
+      hoverWindowRef.current = null;
+      markersRef.current.forEach((m) => {
         m.map = null;
       });
-      markers = [];
+      markersRef.current = [];
     };
-  }, [filteredReports, googleMapsApiKey, fillViewport]);
+  }, [googleMapsApiKey, fillViewport]);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    const clusterer = clustererRef.current;
+    if (!map || !clusterer) return;
+
+    const gmaps = (window as unknown as GoogleMapsWindow).google;
+
+    // Invalidate any in-flight marker rebuild and batch marker creation
+    const token = (markerUpdateTokenRef.current += 1);
+
+    // Clear existing markers quickly.
+    infoWindowRef.current?.close();
+    hoverWindowRef.current?.close();
+    clusterer.clearMarkers();
+    markersRef.current.forEach((m) => {
+      m.map = null;
+    });
+    markersRef.current = [];
+
+    const reportsToRender = filteredReports.slice();
+    const CHUNK_SIZE = 250;
+    let idx = 0;
+
+    const buildChunk = () => {
+      if (markerUpdateTokenRef.current !== token) return; // cancelled
+      const end = Math.min(idx + CHUNK_SIZE, reportsToRender.length);
+      const nextMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
+
+      for (; idx < end; idx += 1) {
+        const r = reportsToRender[idx];
+        const coords = r.location_geojson?.coordinates;
+        if (!coords || coords.length !== 2) continue;
+        const [lng, lat] = coords;
+        if (!Number.isFinite(lng) || !Number.isFinite(lat)) continue;
+
+        const status = resolveMapStatus(r.score, r.status);
+        const color = statusToColor(status);
+        const iconUrl = getCategoryIcon(r.category_id);
+        const content = createMarkerContent(iconUrl, color);
+
+        const marker = new gmaps.maps.marker.AdvancedMarkerElement({
+          map,
+          position: { lat, lng },
+          title: r.report_title ?? undefined,
+          content,
+        });
+
+        const openHover = () => {
+          const hoverWindow = hoverWindowRef.current;
+          if (!hoverWindow) return;
+          hoverWindow.setContent(
+            generateReportPopup(
+              r,
+              iconUrl,
+              categoryToLabel(r.category_id),
+              status,
+              formatReportDate(r.created_at)
+            )
+          );
+          hoverWindow.open({ map, anchor: marker });
+        };
+
+        content.addEventListener("mouseenter", openHover);
+        content.addEventListener("mouseleave", () => hoverWindowRef.current?.close());
+
+        marker.addListener("click", () => {
+          const infoWindow = infoWindowRef.current;
+          if (!infoWindow) return;
+          infoWindow.setContent(
+            generateReportPopup(
+              r,
+              iconUrl,
+              categoryToLabel(r.category_id),
+              status,
+              formatReportDate(r.created_at)
+            )
+          );
+          infoWindow.open({ map, anchor: marker });
+        });
+
+        nextMarkers.push(marker);
+      }
+
+      if (markerUpdateTokenRef.current !== token) {
+        nextMarkers.forEach((m) => {
+          m.map = null;
+        });
+        return;
+      }
+
+      markersRef.current.push(...nextMarkers);
+      clusterer.addMarkers(nextMarkers, false);
+
+      if (idx < reportsToRender.length) {
+        requestAnimationFrame(buildChunk);
+      } else {
+        clusterer.repaint();
+      }
+    };
+
+    requestAnimationFrame(buildChunk);
+  }, [filteredReports]);
 
   function handleUseCurrentLocation() {
     setLocationError("");
@@ -232,7 +294,7 @@ export default function ReportsMap({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const gmaps = (window as unknown as { google: typeof google }).google;
+        const gmaps = (window as unknown as GoogleMapsWindow).google;
         const map = mapInstanceRef.current;
         if (!map || !gmaps) return;
 
@@ -317,17 +379,22 @@ export default function ReportsMap({
       return;
     }
 
-    service.getPlacePredictions(
-      {
-        input: value,
-        componentRestrictions: { country: "us" },
-      },
-      (results) => {
-        const matches = results ?? [];
-        setPredictions(matches);
-        setShowPredictions(matches.length > 0);
-      }
-    );
+    if (predictionsDebounceRef.current != null) {
+      window.clearTimeout(predictionsDebounceRef.current);
+    }
+    predictionsDebounceRef.current = window.setTimeout(() => {
+      service.getPlacePredictions(
+        {
+          input: value,
+          componentRestrictions: { country: "us" },
+        },
+        (results) => {
+          const matches = results ?? [];
+          setPredictions(matches);
+          setShowPredictions(matches.length > 0);
+        }
+      );
+    }, 180);
   }
 
   function handlePredictionSelect(prediction: google.maps.places.AutocompletePrediction) {
@@ -372,8 +439,6 @@ export default function ReportsMap({
   };
 }, []);
 
-//! temporary log to debug category icons - remove later
-console.log("CATEGORY_OPTIONS", CATEGORY_OPTIONS);
   return (
     <div className={`reports-map-wrapper ${fillViewport ? "fill-viewport" : ""}`}>
       {mapsUnavailableMessage ? (
@@ -416,7 +481,7 @@ console.log("CATEGORY_OPTIONS", CATEGORY_OPTIONS);
                 className={`filter-chip ${timeFilter === "weekly" ? "selected" : ""}`}
                 onClick={() => setTimeFilter("weekly")}
               >
-                <img src="/icons/timeline.png" alt="" className="filter-row-icon" />
+                <NextImage src="/icons/timeline.png" alt="" width={18} height={18} className="filter-row-icon" />
                 <span>Today</span>
               </button>
 
@@ -425,7 +490,7 @@ console.log("CATEGORY_OPTIONS", CATEGORY_OPTIONS);
                 className={`filter-chip ${timeFilter === "daily" ? "selected" : ""}`}
                 onClick={() => setTimeFilter("daily")}
               >
-                <img src="/icons/timeline.png" alt="" className="filter-row-icon" />
+                <NextImage src="/icons/timeline.png" alt="" width={18} height={18} className="filter-row-icon" />
                 <span>Past Week</span>
               </button>
 
@@ -434,7 +499,7 @@ console.log("CATEGORY_OPTIONS", CATEGORY_OPTIONS);
                 className={`filter-chip ${timeFilter === "monthly" ? "selected" : ""}`}
                 onClick={() => setTimeFilter("monthly")}
               >
-                <img src="/icons/timeline.png" alt="" className="filter-row-icon" />
+                <NextImage src="/icons/timeline.png" alt="" width={18} height={18} className="filter-row-icon" />
                 <span>Past Month</span>
               </button>
             </div>
@@ -452,7 +517,7 @@ console.log("CATEGORY_OPTIONS", CATEGORY_OPTIONS);
                 className={`filter-chip ${statusFilters.supported ? "selected" : ""}`}
                 onClick={() => toggleStatus("supported")}
               >
-                <img src="/icons/communitySupported.png" alt="" className="filter-row-icon" />
+                <NextImage src="/icons/communitySupported.png" alt="" width={18} height={18} className="filter-row-icon" />
                 <span>Supported</span>
               </button>
 
@@ -461,7 +526,7 @@ console.log("CATEGORY_OPTIONS", CATEGORY_OPTIONS);
                 className={`filter-chip ${statusFilters.unconfirmed ? "selected" : ""}`}
                 onClick={() => toggleStatus("unconfirmed")}
               >
-                <img src="/icons/unconfirmed.png" alt="" className="filter-row-icon" />
+                <NextImage src="/icons/unconfirmed.png" alt="" width={18} height={18} className="filter-row-icon" />
                 <span>Unconfirmed</span>
               </button>
 
@@ -470,7 +535,7 @@ console.log("CATEGORY_OPTIONS", CATEGORY_OPTIONS);
                 className={`filter-chip ${statusFilters.disputed ? "selected" : ""}`}
                 onClick={() => toggleStatus("disputed")}
               >
-                <img src="/icons/disputed.png" alt="" className="filter-row-icon" />
+                <NextImage src="/icons/disputed.png" alt="" width={18} height={18} className="filter-row-icon" />
                 <span>Disputed</span>
               </button>
             </div>
@@ -493,9 +558,11 @@ console.log("CATEGORY_OPTIONS", CATEGORY_OPTIONS);
                     className={`filter-chip ${isSelected ? "selected" : ""}`}
                     onClick={() => toggleCategory(category.id)}
                   >
-                    <img
+                    <NextImage
                       src={categorySidebarIconMapById[category.id] ?? "/icons/other.png"}
                       alt=""
+                      width={18}
+                      height={18}
                       className="filter-row-icon"
                     />
                     <span>{category.label}</span>
@@ -520,9 +587,11 @@ console.log("CATEGORY_OPTIONS", CATEGORY_OPTIONS);
               onClick={handleSearchLocation}
               aria-label="Search"
             >
-              <img
+              <NextImage
                 src="/assets/search-magnifying-glass.png"
                 alt=""
+                width={20}
+                height={20}
                 className="search-icon"
               />
             </button>

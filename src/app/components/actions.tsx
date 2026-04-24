@@ -182,7 +182,6 @@ updateProfile()
 export async function updateProfile(formData: FormData) {
   const pfpDatabase = 'user-avatars';
   const supabase = await createClient();
-  console.log('updating profile...')
   const imageEntry = formData.get('image');
   const hasNewImage = imageEntry instanceof File && imageEntry.size > 0;
   const image = hasNewImage ? imageEntry : null;
@@ -200,13 +199,11 @@ export async function updateProfile(formData: FormData) {
   let nextAvatarName: string | null | undefined = undefined;
 
   if (wantsRemove) {
-    console.log('removing image: ', oldAvatarName);
     await deleteImage({ image: oldAvatarName, database: 'user-avatars' });
     nextAvatarUrl = null;
     nextAvatarName = null;
   } else if (image) {
     const avatarName = `${username}-${image.name}`;
-    console.log('uploading image to cloudflare...');
     const uploadImageStatus = await postImage({
       image,
       database: pfpDatabase,
@@ -215,7 +212,6 @@ export async function updateProfile(formData: FormData) {
     });
 
     if (uploadImageStatus.status !== 200 || typeof uploadImageStatus.url !== 'string') {
-      console.log('error uploading avatar: ', uploadImageStatus.message);
       redirect(
         `/pages/account?err=${encodeURIComponent('Could not upload profile image. Try again.')}`,
       );
@@ -236,7 +232,6 @@ export async function updateProfile(formData: FormData) {
     updateRow.avatar_name = nextAvatarName;
   }
 
-  console.log('uploading data to supabase...');
   const { error } = await supabase.from('profiles').update(updateRow).eq('id', uid);
 
 
@@ -263,7 +258,7 @@ export async function updateProfile(formData: FormData) {
       data: { avatar_url: syncedAvatar },
     })
     if (metaErr) {
-      console.log('sync avatar to auth metadata:', metaErr.message)
+      console.error('sync avatar to auth metadata:', metaErr.message)
     }
   }
 
@@ -450,27 +445,21 @@ export async function deleteReport(formData: FormData) {
   // delete the image from cloudflare
   const cfRes = await deleteImage({image: `${rid}-${report.report_image}`, database: 'cora-image-database'});
 
-  if(cfRes === 200) {
-    console.log('cloudflare: image deleted successfully')
-  } else  {
-    console.log('cloudflare: failed to delete image')
-    return 
+  if (cfRes !== 200) {
+    console.error('cloudflare: failed to delete image')
+    return
   }
 
-  // delete the entry from supabase
   const sbRes = await supabase
     .from('reports')
     .delete()
     .eq('report_id', report.report_id)
 
-  if(sbRes.status === 204) {
-    console.log('supabase: successfully deleted')
-  } else {
-    console.log(`supabase: failed to delete report of ID ${report.report_id} due to this error: ${sbRes.error?.message}`)
+  if (sbRes.status !== 204) {
+    console.error(`supabase: failed to delete report ${report.report_id}: ${sbRes.error?.message}`)
     return
   }
 
-  console.log('deleted successfully')
   revalidate()
 }
 

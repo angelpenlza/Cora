@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import PhoneVerificationModal from '@/app/components/phone-verification-modal';
@@ -144,7 +145,7 @@ export default function ReportFlagControls({
             </span>
           ) : null}
           {flagIconSrc ? (
-            <img src={flagIconSrc} alt="" width={22} height={22} />
+            <Image src={flagIconSrc} alt="" width={22} height={22} />
           ) : (
             <>&#9873;</>
           )}

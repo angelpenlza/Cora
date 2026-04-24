@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import '@/app/styles/verify-phone.css';
 import { redirect } from 'next/navigation';
 import VerifyPhoneForm from './verify-phone-form';
 

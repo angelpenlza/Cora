@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import {
   subscribeUser,
   unsubscribeUser,
@@ -119,9 +120,11 @@ export default function AccountNotificationToggle() {
     return (
       <div className="acct-notif">
         <div className="acct-notif__label">
-          <img
+          <Image
             src="/assets/account-page-notification-icon.png"
             alt=""
+            width={18}
+            height={18}
             className="acct-notif__label-icon"
           />
           Alert Preferences
@@ -136,9 +139,11 @@ export default function AccountNotificationToggle() {
   return (
     <div className="acct-notif">
       <div className="acct-notif__label">
-        <img
+        <Image
           src="/assets/account-page-notification-icon.png"
           alt=""
+          width={18}
+          height={18}
           className="acct-notif__label-icon"
         />
         Alert Preferences

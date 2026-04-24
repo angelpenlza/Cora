@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
+import { memo, useEffect, useMemo, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import VoteButtons from './vote-buttons';
 import ReportFlagControls from './[reportId]/report-flag-controls';
@@ -70,6 +71,13 @@ type ExploreListClientProps = {
   phoneVerified: boolean;
 };
 
+type ReportCardProps = {
+  report: ReportRow;
+  commentCount: number;
+  user: User | null;
+  phoneVerified: boolean;
+};
+
 function CardMeta({
   dateCreated,
   location,
@@ -88,20 +96,110 @@ function CardMeta({
   return (
     <div className="report-dashboard-card__meta">
       <span className="report-dashboard-card__meta-item">
-        <img src="/assets/report-date-icon.png" alt="" width={14} height={14} />
+        <Image src="/assets/report-date-icon.png" alt="" width={14} height={14} />
         {date}
       </span>
       <span className="report-dashboard-card__meta-item">
-        <img src="/assets/report-time-icon.png" alt="" width={14} height={14} />
+        <Image src="/assets/report-time-icon.png" alt="" width={14} height={14} />
         {time}
       </span>
       <span className="report-dashboard-card__meta-item">
-        <img src="/assets/report-location-icon.png" alt="" width={14} height={14} />
+        <Image src="/assets/report-location-icon.png" alt="" width={14} height={14} />
         {location}
       </span>
     </div>
   );
 }
+
+const ReportCard = memo(function ReportCard({
+  report,
+  commentCount,
+  user,
+  phoneVerified,
+}: ReportCardProps) {
+  const badge = statusBadgeMeta(report.status);
+  const catIcon = categoryIconPath(report.category);
+  const loc =
+    report.city?.trim() ||
+    shortLocationFromAddress(report.address ?? null);
+
+  return (
+    <article className="report-dashboard-card">
+      <Link
+        href={`/pages/reports/${report.report_id}`}
+        className="report-dashboard-card__body"
+        prefetch={false}
+      >
+        <div className="report-dashboard-card__head">
+          <div className="report-dashboard-card__category">
+            <span className="report-dashboard-card__category-icon-wrap">
+              <Image
+                src={catIcon}
+                alt=""
+                width={16}
+                height={16}
+                className="report-dashboard-card__category-icon"
+              />
+            </span>
+            <span className="report-dashboard-card__category-text">
+              {categoryHeadline(report.category)}
+            </span>
+          </div>
+          <span
+            className={`report-dashboard-card__badge report-dashboard-card__badge--${badge.modifier}`}
+          >
+            <Image src={badge.iconSrc} alt="" width={13} height={13} />
+            {badge.label}
+          </span>
+        </div>
+        <div className="report-dashboard-card__text">
+          <h2 className="report-dashboard-card__title">
+            {report.report_title ?? 'Untitled'}
+          </h2>
+          <p className="report-dashboard-card__desc">
+            {report.report_description ?? ''}
+          </p>
+        </div>
+        <CardMeta dateCreated={report.created_at} location={loc} />
+      </Link>
+      <div className="report-dashboard-card__footer">
+        <div className="report-dashboard-card__footer-actions">
+          <VoteButtons
+            reportId={report.report_id}
+            initialUpvotes={report.upvotes ?? 0}
+            initialDownvotes={report.downvotes ?? 0}
+            initialUserVote={0}
+            compact
+            dashboardIcons
+          />
+          <span
+            className="report-dashboard-card__comment-count"
+            aria-label={`${commentCount} comments`}
+          >
+            <Image
+              src="/assets/report-comment-icon.png"
+              alt=""
+              width={16}
+              height={16}
+            />
+            {commentCount}
+          </span>
+        </div>
+        <div className="report-dashboard-card__footer-flag">
+          <ReportFlagControls
+            reportId={report.report_id}
+            user={user}
+            phoneVerified={phoneVerified}
+            flagIconSrc="/assets/report-flag-icon.png"
+            buttonClassName="report-dashboard-card__flag-btn"
+            label="Report"
+            labelClassName="report-dashboard-card__flag-label"
+          />
+        </div>
+      </div>
+    </article>
+  );
+});
 
 export default function ExploreListClient({
   reports,
@@ -198,7 +296,7 @@ export default function ExploreListClient({
                 aria-pressed={active}
                 onClick={() => toggleTimeline(opt.id)}
               >
-                <img src={opt.iconSrc} alt="" width={18} height={18} />
+                <Image src={opt.iconSrc} alt="" width={18} height={18} />
                 <span>{opt.label}</span>
               </button>
             );
@@ -223,7 +321,7 @@ export default function ExploreListClient({
                 aria-pressed={active}
                 onClick={() => toggleStatus(opt.key)}
               >
-                <img src={opt.iconSrc} alt="" width={18} height={18} />
+                <Image src={opt.iconSrc} alt="" width={18} height={18} />
                 <span>{opt.label}</span>
               </button>
             );
@@ -248,7 +346,7 @@ export default function ExploreListClient({
                 aria-pressed={active}
                 onClick={() => toggleCategory(opt.key)}
               >
-                <img src={opt.iconSrc} alt="" width={18} height={18} />
+                <Image src={opt.iconSrc} alt="" width={18} height={18} />
                 <span>{opt.label}</span>
               </button>
             );
@@ -296,93 +394,15 @@ export default function ExploreListClient({
         </header>
 
         <div className="report-dashboard__grid">
-          {filteredReports.map((report) => {
-            const badge = statusBadgeMeta(report.status);
-            const catIcon = categoryIconPath(report.category);
-            const loc =
-              report.city?.trim() ||
-              shortLocationFromAddress(report.address ?? null);
-
-            return (
-              <article
-                key={report.report_id}
-                className="report-dashboard-card"
-              >
-                <Link
-                  href={`/pages/reports/${report.report_id}`}
-                  className="report-dashboard-card__body"
-                  prefetch={false}
-                >
-                  <div className="report-dashboard-card__head">
-                    <div className="report-dashboard-card__category">
-                      <span className="report-dashboard-card__category-icon-wrap">
-                        <img
-                          src={catIcon}
-                          alt=""
-                          width={16}
-                          height={16}
-                          className="report-dashboard-card__category-icon"
-                        />
-                      </span>
-                      <span className="report-dashboard-card__category-text">
-                        {categoryHeadline(report.category)}
-                      </span>
-                    </div>
-                    <span
-                      className={`report-dashboard-card__badge report-dashboard-card__badge--${badge.modifier}`}
-                    >
-                      <img src={badge.iconSrc} alt="" width={13} height={13} />
-                      {badge.label}
-                    </span>
-                  </div>
-                  <div className="report-dashboard-card__text">
-                    <h2 className="report-dashboard-card__title">
-                      {report.report_title ?? 'Untitled'}
-                    </h2>
-                    <p className="report-dashboard-card__desc">
-                      {report.report_description ?? ''}
-                    </p>
-                  </div>
-                  <CardMeta dateCreated={report.created_at} location={loc} />
-                </Link>
-                <div className="report-dashboard-card__footer">
-                  <div className="report-dashboard-card__footer-actions">
-                    <VoteButtons
-                      reportId={report.report_id}
-                      initialUpvotes={report.upvotes ?? 0}
-                      initialDownvotes={report.downvotes ?? 0}
-                      initialUserVote={0}
-                      compact
-                      dashboardIcons
-                    />
-                    <span
-                      className="report-dashboard-card__comment-count"
-                      aria-label={`${commentCounts[report.report_id] ?? 0} comments`}
-                    >
-                      <img
-                        src="/assets/report-comment-icon.png"
-                        alt=""
-                        width={16}
-                        height={16}
-                      />
-                      {commentCounts[report.report_id] ?? 0}
-                    </span>
-                  </div>
-                  <div className="report-dashboard-card__footer-flag">
-                    <ReportFlagControls
-                      reportId={report.report_id}
-                      user={user}
-                      phoneVerified={phoneVerified}
-                      flagIconSrc="/assets/report-flag-icon.png"
-                      buttonClassName="report-dashboard-card__flag-btn"
-                      label="Report"
-                      labelClassName="report-dashboard-card__flag-label"
-                    />
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+          {filteredReports.map((report) => (
+            <ReportCard
+              key={report.report_id}
+              report={report}
+              commentCount={commentCounts[report.report_id] ?? 0}
+              user={user}
+              phoneVerified={phoneVerified}
+            />
+          ))}
         </div>
       </div>
     </div>

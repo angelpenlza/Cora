@@ -8,8 +8,11 @@ import type { NextConfig } from "next";
  *   as a web app manifest and service worker script respectively.
  */
 const nextConfig: NextConfig = {
+  compress: true,
+  poweredByHeader: false,
+
   // Upload form sends images via Server Actions; default body limit (~1 MB) causes 413 on typical photos.
-  // Keep at or below Vercel’s serverless request body cap (~4.5 MB).
+  // Keep at or below Vercel's serverless request body cap (~4.5 MB).
   experimental: {
     serverActions: {
       bodySizeLimit: '4.5mb',
@@ -43,6 +46,7 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
         protocol: 'https',

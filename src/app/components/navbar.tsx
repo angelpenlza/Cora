@@ -93,7 +93,6 @@ function CoraLogoLink() {
         height={56}
         className="cora-logo-img"
         priority
-        unoptimized
       />
     </Link>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import PhoneVerificationModal from '@/app/components/phone-verification-modal';
 import { useVotes } from './vote-context';
@@ -110,7 +111,7 @@ export default function VoteButtons({
           >
             {compact ? (
               detailIcons ? (
-                <img
+                <Image
                   className={`vote-detail-icon vote-detail-icon--up${userVote === 1 ? ' is-active' : ''}`}
                   src={detailArrow}
                   alt=""
@@ -118,7 +119,7 @@ export default function VoteButtons({
                   height={16}
                 />
               ) : dashboardIcons ? (
-                <img
+                <Image
                   className="vote-dashboard-icon vote-dashboard-icon--up"
                   src={upIcon}
                   alt=""
@@ -167,7 +168,7 @@ export default function VoteButtons({
               className={`downvote-button ${userVote === -1 ? 'vote-button--active' : ''} ${dashboardIcons ? 'vote-button--dashboard' : ''}`}
             >
               {detailIcons ? (
-                <img
+                <Image
                   className={`vote-detail-icon vote-detail-icon--down${userVote === -1 ? ' is-active' : ''}`}
                   src={detailArrow}
                   alt=""
@@ -175,7 +176,7 @@ export default function VoteButtons({
                   height={16}
                 />
               ) : dashboardIcons ? (
-                <img
+                <Image
                   className="vote-dashboard-icon vote-dashboard-icon--down"
                   src={downIcon}
                   alt=""

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Alexandria, Gantari, Geist, Geist_Mono, Inter } from "next/font/google";
+import { Alexandria, Gantari, Geist, Geist_Mono } from "next/font/google";
 import NavBar from "./components/navbar";
 import PhoneVerificationWrapper from "./components/phone-verification-wrapper";
 import RegisterSw from "./components/register-sw";
@@ -8,14 +8,7 @@ import './styles/globals.css';
 import './styles/navbar.css';
 import './styles/footer.css';
 import './styles/forms.css';
-import './styles/home.css';
 import './styles/reports.css';
-import './styles/upload.css';
-import './styles/report-page.css';
-import './styles/account.css';
-import './styles/verify-phone.css';
-import './styles/reset-password.css';
-import './styles/resources-page.css';
 import { createClient } from "@/lib/supabase/server";
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -48,11 +41,6 @@ const alexandria = Alexandria({
   variable: "--font-alexandria",
   subsets: ["latin"],
 });
-
-const inter = Inter({
-  variable: '--font-inter',
-  subsets: ['latin']
-})
 
 const gantari = Gantari({
   variable: "--font-gantari",

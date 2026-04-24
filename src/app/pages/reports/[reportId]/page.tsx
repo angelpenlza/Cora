@@ -1,3 +1,4 @@
+import '@/app/styles/report-page.css';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getReportComments } from '@/app/components/report-actions';
@@ -7,6 +8,7 @@ import { Avatar } from '@/app/components/client-components';
 import VoteButtons from '../vote-buttons';
 import ReportFlagControls from './report-flag-controls';
 import Link from 'next/link';
+import Image from 'next/image';
 import { categoryIconPath, categoryHeadline } from '@/lib/report-dashboard';
 import LocalDateTime from './local-datetime';
 
@@ -19,44 +21,38 @@ export default async function ReportDetailPage({ params }: PageProps) {
   const reportId = parseInt(reportIdParam, 10);
   if (Number.isNaN(reportId)) notFound();
 
-  const images = await getImages();
-
   const supabase = await createClient();
-  const { data: report, error: reportError } = await supabase
-    .from('reports_with_meta_updated')
-    .select('*')
-    .eq('report_id', reportId)
-    .maybeSingle();
+
+  // Round 1: fire all independent queries simultaneously.
+  const [
+    images,
+    { data: report, error: reportError },
+    { data: { user } },
+    comments,
+  ] = await Promise.all([
+    getImages(),
+    supabase.from('reports_with_meta_updated').select('*').eq('report_id', reportId).maybeSingle(),
+    supabase.auth.getUser(),
+    getReportComments(reportId),
+  ]);
 
   if (reportError || !report) notFound();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
   const userId = user?.id ?? null;
 
-  let phoneVerified = false;
-  if (userId) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('phone_verified')
-      .eq('id', userId)
-      .maybeSingle();
-    phoneVerified = profile?.phone_verified === true;
-  }
+  // Round 2: queries that depend on round-1 results.
+  const [phoneVerifiedResult, voteResult, { data: profile }] = await Promise.all([
+    userId
+      ? supabase.from('profiles').select('phone_verified').eq('id', userId).maybeSingle()
+      : Promise.resolve({ data: null }),
+    userId
+      ? supabase.from('votes').select('vote').eq('report_id', reportId).eq('user_id', userId).maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase.from('profiles').select('*').eq('id', report.created_by).maybeSingle(),
+  ]);
 
-  let userVote = 0;
-  if (userId) {
-    const { data: voteRow } = await supabase
-      .from('votes')
-      .select('vote')
-      .eq('report_id', reportId)
-      .eq('user_id', userId)
-      .maybeSingle();
-    userVote = voteRow?.vote ?? 0;
-  }
-
-  const comments = await getReportComments(reportId);
+  const phoneVerified = phoneVerifiedResult.data?.phone_verified === true;
+  const userVote = voteResult.data?.vote ?? 0;
   const commentCount = comments?.length ?? 0;
 
   const upvotes = report.upvotes ?? 0;
@@ -65,13 +61,6 @@ export default async function ReportDetailPage({ params }: PageProps) {
   // Always show the "Report" control in the footer (even to the author),
   // since the modal flow already guards auth + phone verification.
   const hideReportFlag = false;
-
-
-  const { data: profile } =  await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', report.created_by)
-    .maybeSingle()
 
   const Header = ({ title, username, avatar }: {
     title: string | null,
@@ -83,7 +72,7 @@ export default async function ReportDetailPage({ params }: PageProps) {
       <div className='report-page-header-container'>
         <div className='header-title'>
           <span className='header-category-image'>
-            <img src={iconSrc} alt="" width={20} height={20} />
+            <Image src={iconSrc} alt="" width={20} height={20} />
           </span>
           <h2 className='report-page-title'>{title}</h2>
         </div>
@@ -101,12 +90,13 @@ export default async function ReportDetailPage({ params }: PageProps) {
     )
   }
 
-  const Image = () => {
+  const ReportImage = () => {
     return (
       <div className='report-page-image-container'>
         <h4 className='report-detail-section-title'>Images:</h4>
         {
           report.report_image ? 
+          // eslint-disable-next-line @next/next/no-img-element
           <img 
             src={images[report.report_id + '-' +  report.report_image]} 
             alt="report-image" 
@@ -167,7 +157,7 @@ export default async function ReportDetailPage({ params }: PageProps) {
           avatar={profile?.avatar_url}
         />
         <div className='report-page-body-container'>
-          <Image />
+          <ReportImage />
           <div className='report-page-body-divider' aria-hidden="true" />
           <Info />
         </div>
@@ -183,7 +173,7 @@ export default async function ReportDetailPage({ params }: PageProps) {
                 detailIcons
               />
               <span className="report-detail-comment-count" aria-label={`${commentCount} comments`}>
-                <img src="/assets/report-details-comment-icon.png" alt="" width={18} height={18} />
+                <Image src="/assets/report-details-comment-icon.png" alt="" width={18} height={18} />
                 {commentCount}
               </span>
             </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import '@/app/styles/reset-password.css';
 import { resetpass } from '@/app/components/actions';
 import { useSearchParams } from 'next/navigation';
 import { Err } from '@/app/components/client-components';

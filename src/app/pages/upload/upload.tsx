@@ -7,6 +7,7 @@ import { createReport } from '@/app/components/report-actions';
 import PhoneVerificationModal from '@/app/components/phone-verification-modal';
 import { Dropdown } from '@/app/components/client-components';
 import Link from 'next/link';
+import Image from 'next/image';
 import { AddressForms } from '@/app/components/autocomplete';
 
 /** ~4 MiB — under Vercel’s ~4.5 MB Server Action / function body limit (multipart adds overhead). */
@@ -73,10 +74,11 @@ export default function UploadForm({
       />
       <div className='upload-card'>
         <div className='upload-container-header'>
-          <img 
+          <Image 
             src='/assets/report-megaphone.png'
             alt=''
             width={30}
+            height={30}
           />
           &ensp;
           Report Incident
@@ -90,10 +92,11 @@ export default function UploadForm({
           )}
 
         <label className="upload-label">
-          <img 
+          <Image 
             src='/assets/report-category-icon.png' 
             alt=''
             width={12}
+            height={12}
           />
           &ensp;
           Category
@@ -113,10 +116,11 @@ export default function UploadForm({
         />
 
         <label htmlFor="title" className='upload-label'>
-          <img 
+          <Image 
             src='/assets/report-title-icon.png' 
             alt=''
             width={12}
+            height={12}
           />
           &ensp;
           Title
@@ -132,10 +136,11 @@ export default function UploadForm({
         />
 
         <label className='upload-label'>
-          <img 
+          <Image 
             src='/assets/report-location-icon.png' 
             alt=''
             width={12}
+            height={12}
           />
           &ensp;
           Address
@@ -143,10 +148,11 @@ export default function UploadForm({
         <AddressForms />
 
         <label htmlFor="description" className='upload-label'>
-        <img 
+        <Image 
             src='/assets/report-description-icon.png' 
             alt=''
             width={12}
+            height={12}
           />
           &ensp;
           Description
@@ -181,10 +187,11 @@ export default function UploadForm({
             </div>
           ) : (
             <>
-              <img 
+              <Image 
                 src='/assets/cloudflare-icon.png' 
                 alt=''
                 width={40}
+                height={40}
                 className='cloudflare-icon'
               />
               <p>Click to upload images.</p>

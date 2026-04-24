@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import '@/app/styles/account.css';
 import { redirect } from 'next/navigation';
 import VerifiedToast from '@/app/components/verified-toast';
 import { Reports } from '@/app/components/client-components';

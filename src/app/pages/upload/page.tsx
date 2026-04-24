@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import UploadForm from "./upload"
+import '@/app/styles/upload.css';
 
 /**
  * Upload page.

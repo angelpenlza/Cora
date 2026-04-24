@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { updateProfile, signout } from '@/app/components/actions';
 import { Avatar } from '@/app/components/client-components';
 import AccountNotificationToggle from './account-notification-toggle';
@@ -94,9 +95,11 @@ export function AccountCard({
         {/* Username */}
         <div className="acct-field">
           <label className="acct-field__label">
-            <img
+            <Image
               src="/assets/account-page-username-icon.png"
               alt=""
+              width={18}
+              height={18}
               className="acct-field__label-icon"
             />
             Username
@@ -114,9 +117,10 @@ export function AccountCard({
               <button
                 formAction={updateProfile}
                 className="acct-save-btn"
+                disabled={saving}
                 onClick={() => setSaving(true)}
               >
-                Save
+                {saving ? 'Saving…' : 'Save'}
               </button>
             ) : (
               <button
