@@ -15,6 +15,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { sendNewReportNotification } from '@/app/push/actions';
+import { sendUserNotification } from '@/app/push/actions';
+import { adminClient } from '@/lib/supabase/admin';
 import {
   isReportFlagReasonCode,
   REPORT_FLAG_OTHER_MAX_LEN,
@@ -274,6 +276,16 @@ export async function setReportVote(
     return { error: VERIFICATION_REQUIRED };
   }
 
+  // Capture the current status before the vote updates it (best-effort).
+  // Status is derived from score (see `reports_with_meta_updated` view / logic).
+  const db = adminClient ?? supabase;
+  const { data: before } = await db
+    .from('reports_with_meta_updated')
+    .select('status, created_by, report_title')
+    .eq('report_id', reportId)
+    .maybeSingle();
+  const beforeStatus = (before?.status ?? null) as string | null;
+
   const { error: rpcError } = await supabase.rpc('set_vote', {
     p_report_id: reportId,
     p_value: value,
@@ -285,6 +297,50 @@ export async function setReportVote(
     }
     console.error('set_vote RPC error', rpcError);
     return { error: `Failed to record vote: ${rpcError.message}` };
+  }
+
+  // After vote update, check for status transition and notify the author.
+  try {
+    const { data: after } = await db
+      .from('reports_with_meta_updated')
+      .select('status, created_by, report_title')
+      .eq('report_id', reportId)
+      .maybeSingle();
+
+    const afterStatus = (after?.status ?? null) as string | null;
+    const authorId = (after?.created_by ?? before?.created_by ?? null) as string | null;
+    const reportTitle = (after?.report_title ?? before?.report_title ?? 'Your report') as string;
+
+    const normalized = (s: string | null) => {
+      if (!s) return null;
+      const v = String(s).trim().toLowerCase();
+      if (v === 'community-supported') return 'supported';
+      return v;
+    };
+
+    const fromStatus = normalized(beforeStatus);
+    const toStatus = normalized(afterStatus);
+
+    if (authorId && toStatus && toStatus !== fromStatus && (toStatus === 'supported' || toStatus === 'disputed')) {
+      const title =
+        toStatus === 'supported'
+          ? 'Your report is now community-supported'
+          : 'Your report is now disputed';
+
+      const body =
+        toStatus === 'supported'
+          ? `People in the community have supported “${reportTitle}”.`
+          : `New votes have pushed “${reportTitle}” into disputed.`;
+
+      await sendUserNotification({
+        userId: authorId,
+        title,
+        body,
+        url: `/pages/reports/${reportId}`,
+      });
+    }
+  } catch (err) {
+    console.error('Error sending status-change notification', err);
   }
 
   // Do not revalidate here: it triggers an immediate RSC refetch. The refetched payload

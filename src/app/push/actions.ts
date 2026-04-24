@@ -224,3 +224,77 @@ export async function sendNewReportNotification(
   const message = `New report: ${title}`;
   return sendNotification(message, bodyMessage, reportImageUrl, reportUrl);
 }
+
+/**
+ * Send a push notification to a single user (all their stored subscriptions).
+ */
+export async function sendUserNotification(args: {
+  userId: string;
+  title: string;
+  body: string;
+  url?: string | null;
+  imageUrl?: string | null;
+}) {
+  const { userId, title, body, url, imageUrl } = args;
+
+  if (!publicKey || !privateKey) {
+    throw new Error('VAPID keys are not configured on the server');
+  }
+  if (!adminClient) {
+    console.error('Supabase admin client is not configured');
+    return { success: false, error: 'Server push configuration is missing' };
+  }
+
+  const supabase = adminClient;
+  const { data: subscriptions, error } = await supabase
+    .from('push_subscriptions')
+    .select('id, endpoint, p256dh, auth')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error loading push subscriptions for user', error);
+    return { success: false, error: 'Failed to load subscriptions' };
+  }
+
+  if (!subscriptions || subscriptions.length === 0) {
+    return { success: false, error: 'No subscriptions available' };
+  }
+
+  const base = getNotificationBaseUrl();
+  const iconUrl = `${base}/assets/icons/android-badge-icon.png`;
+  const badgeUrl = `${base}/assets/icons/statusBarIcon-96x96.png`;
+
+  const payloadObject: Record<string, string> = {
+    title,
+    body,
+    icon: iconUrl,
+    badge: badgeUrl,
+  };
+  const trimmedUrl = url?.trim();
+  if (trimmedUrl) payloadObject.url = trimmedUrl;
+  const trimmedImage = imageUrl?.trim();
+  if (trimmedImage) payloadObject.image = trimmedImage;
+
+  const payload = JSON.stringify(payloadObject);
+
+  for (const sub of subscriptions) {
+    const pushSubscription: PushSubscription = {
+      endpoint: sub.endpoint,
+      keys: {
+        p256dh: sub.p256dh,
+        auth: sub.auth,
+      },
+    };
+    try {
+      await webpush.sendNotification(pushSubscription, payload);
+    } catch (err: unknown) {
+      console.error('Error sending user push notification:', err);
+      const statusCode = (err as { statusCode?: number } | null)?.statusCode;
+      if (statusCode === 404 || statusCode === 410) {
+        await supabase.from('push_subscriptions').delete().eq('id', sub.id);
+      }
+    }
+  }
+
+  return { success: true };
+}
