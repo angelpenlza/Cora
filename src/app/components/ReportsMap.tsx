@@ -73,6 +73,7 @@ export default function ReportsMap({
     CATEGORY_OPTIONS.map((c) => c.id)
   );
 
+  const [mapReady, setMapReady] = useState(false);
   const [statusFilters, setStatusFilters] = useState({
     supported: true,
     unconfirmed: true,
@@ -161,6 +162,8 @@ export default function ReportsMap({
         const resize = () => gmaps.maps.event.trigger(map, 'resize');
         requestAnimationFrame(() => requestAnimationFrame(resize));
       }
+
+      setMapReady(true);
     }
 
     init().catch(console.error);
@@ -178,10 +181,12 @@ export default function ReportsMap({
         m.map = null;
       });
       markersRef.current = [];
+      setMapReady(false);
     };
   }, [googleMapsApiKey, fillViewport]);
 
   useEffect(() => {
+    if (!mapReady) return;
     const map = mapInstanceRef.current;
     const clusterer = clustererRef.current;
     if (!map || !clusterer) return;
@@ -282,7 +287,7 @@ export default function ReportsMap({
     };
 
     requestAnimationFrame(buildChunk);
-  }, [filteredReports]);
+  }, [filteredReports, mapReady]);
 
   function handleUseCurrentLocation() {
     setLocationError("");
