@@ -96,10 +96,13 @@ export async function POST(req: NextRequest) {
     }
 
     const url = await getSignedUrl(r2, databaseImage, { expiresIn: PRESIGNED_GET_EXPIRES_SEC });
+    const imagePublicBase = process.env.NEXT_PUBLIC_R2_PUBLIC_IMAGE_URL?.trim();
+    const publicUrl = imagePublicBase ? `${imagePublicBase.replace(/\/$/, '')}/${key}` : null;
     return NextResponse.json({
       success: true,
       message: res,
       url: url,
+      publicUrl: publicUrl,
       status: 200
     })
   } catch(err) {

@@ -167,11 +167,17 @@ export async function createReport(formData: FormData) {
       res &&
       typeof res === 'object' &&
       'success' in res &&
-      res.success === true &&
-      'url' in res &&
-      typeof (res as { url: unknown }).url === 'string'
+      res.success === true
     ) {
-      notificationImageUrl = (res as { url: string }).url;
+      // Prefer the stable public URL for notifications (presigned URLs can have
+      // CORS/length issues in push notification image previews).
+      const pub = (res as { publicUrl?: unknown }).publicUrl;
+      const signed = (res as { url?: unknown }).url;
+      if (typeof pub === 'string' && pub.trim()) {
+        notificationImageUrl = pub.trim();
+      } else if (typeof signed === 'string' && signed.trim()) {
+        notificationImageUrl = signed.trim();
+      }
     }
   }
 
