@@ -140,6 +140,7 @@ export async function sendNotification(
   message: string,
   bodyMessage: string,
   notificationImageUrl?: string | null,
+  url?: string | null,
 ) {
   if (!publicKey || !privateKey) {
     throw new Error('VAPID keys are not configured on the server');
@@ -174,6 +175,10 @@ export async function sendNotification(
     icon: iconUrl,
     badge: badgeUrl,
   };
+  const trimmedUrl = url?.trim();
+  if (trimmedUrl) {
+    payloadObject.url = trimmedUrl;
+  }
   const trimmedImage = notificationImageUrl?.trim();
   if (trimmedImage) {
     payloadObject.image = trimmedImage;
@@ -214,7 +219,8 @@ export async function sendNewReportNotification(
   title: string,
   bodyMessage: string,
   reportImageUrl?: string | null,
+  reportUrl?: string | null,
 ) {
   const message = `New report: ${title}`;
-  return sendNotification(message, bodyMessage, reportImageUrl);
+  return sendNotification(message, bodyMessage, reportImageUrl, reportUrl);
 }

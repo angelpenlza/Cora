@@ -182,19 +182,23 @@ self.addEventListener('notificationclick', function (event) {
   event.notification.close();
 
   var notificationData = event.notification.data || {};
-  var targetUrl = notificationData.url || '/';
+  var rawTarget = notificationData.url || '/';
+  var targetHref = new URL(rawTarget, self.location.origin).href;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
-      for (var i = 0; i < clientList.length; i++) {
-        var client = clientList[i];
-        if ('focus' in client && client.url === targetUrl) {
-          return client.focus();
-        }
+      // Prefer focusing an existing window (any) and navigating it to target.
+      // This avoids strict URL matching issues (absolute vs relative, hash, query).
+      var client = clientList && clientList.length ? clientList[0] : null;
+      if (client) {
+        return client.focus().then(function () {
+          if ('navigate' in client) {
+            return client.navigate(targetHref);
+          }
+          return undefined;
+        });
       }
-      if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
-      }
+      if (clients.openWindow) return clients.openWindow(targetHref);
       return undefined;
     })
   );

@@ -162,10 +162,12 @@ export async function createReport(formData: FormData) {
   try {
     const bodySnippet =
       description.length > 240 ? `${description.slice(0, 237)}…` : description;
+    const reportUrl = `/pages/reports/${data.report_id}`;
     await sendNewReportNotification(
       data.report_title,
       bodySnippet,
       notificationImageUrl,
+      reportUrl,
     );
   } catch (err) {
     console.error('Error sending new report notification', err);
