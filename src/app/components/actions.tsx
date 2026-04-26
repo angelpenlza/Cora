@@ -222,6 +222,9 @@ export async function updateProfile(formData: FormData) {
       })
       .eq('id', uid)
   }
+
+  revalidatePath('/pages/account')
+  redirect('/pages/account?success=Profile Updated');
 }
 
 /**

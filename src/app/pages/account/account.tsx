@@ -5,8 +5,6 @@ import Image from 'next/image';
 import { updateProfile, signout } from '@/app/components/actions';
 import { Avatar } from '@/app/components/client-components';
 import AccountNotificationToggle from './account-notification-toggle';
-import { postImage } from '@/app/components/cfhelpers';
-import { useSearchParams } from 'next/navigation';
 
 export function AccountCard({
   profile,
@@ -19,10 +17,6 @@ export function AccountCard({
   const [editing, setEditing] = useState(false);
   const [deleteImage, setDeleteImage] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  // const [saving, setSaving] = useState(false);
-  const err = useSearchParams().get('err')
-  const success = useSearchParams().get('success')
-
 
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -68,6 +62,8 @@ export function AccountCard({
       </div>
 
       <form onSubmit={(e) => { 
+        e.preventDefault();
+        setEditing(false);
         const formData = new FormData(e.currentTarget)
         updateProfile(formData);
       }}>
@@ -194,8 +190,6 @@ export function AccountCard({
           </svg>
           Sign Out
         </button>
-        { err && <div className='error'>error: {err}</div>}
-        { success && <div className='success'>success: {success}</div>}
       </div>
     </div>
   );
