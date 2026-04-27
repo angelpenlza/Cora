@@ -11,23 +11,33 @@ export async function postImage({image, database, username, rid}: {
   username: string | null,
   rid: string | null,
 }) {
+    console.log('posting img...')
     if(!image || !database) { 
       return {
         status: 500,
         message: 'error getting image or database'
       }
     } 
+    console.log(`img: ${image.name}, database: ${database}`)
+
     try {
+      console.log('trying...')
       const formData = new FormData();
       formData.append('image', image)
       formData.append('database', `${database}`)
-      if(username) { formData.append('username', username) }
-      if(rid) { formData.append('rid', rid) }
+      if(username) { 
+        console.log('this is an AVATAR not a REPORT')
+        formData.append('username', username) 
+      } if(rid) { 
+        console.log('this is a REPORT not an AVATAR')
+        formData.append('rid', rid) 
+      }
       const res = await fetch(`${process.env.NEXT_PUBLIC_HOME_PAGE}/api/cloudflare`, {
         method: 'POST', 
         body: formData
       })
       const data = await res.json();
+      console.log('data: ', data)
       return data;
     } catch(err) { 
       return {

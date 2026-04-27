@@ -187,7 +187,9 @@ export default async function RootLayout({
         <RegisterSw />
         <NavBar user={user} profileAvatarUrl={profileAvatarUrl} />
         <PhoneVerificationWrapper user={user} phoneVerified={phoneVerified} />
-        <main className="site-main">{children}</main>
+        <main className="site-main">
+          {children}
+        </main>
         <ConditionalSiteFooter
           siteOrigin={defaultUrl}
           contactEmail={process.env.NEXT_PUBLIC_CONTACT_EMAIL}

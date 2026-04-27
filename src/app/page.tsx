@@ -1,8 +1,13 @@
+'use server'
+
 import Image from "next/image";
 import Link from "next/link";
 import './styles/home.css';
+import { createClient } from "@/lib/supabase/server";
  
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser();
 
   return (
     <section className="home-landing" aria-labelledby="home-landing-title">
@@ -18,9 +23,15 @@ export default function Home() {
           </p>
 
           <div className="home-landing__actions">
-            <Link href="/pages/signup" className="home-landing__button home-landing__button--signup">
-              Sign Up
-            </Link>
+            {
+              data.user?.role === 'authenticated' ?
+              <Link href="/pages/reports" className="home-landing__button home-landing__button--signup">
+                Reports
+              </Link> :
+              <Link href='/pages/signup' className="home-landing__button home-landing__button--signup">
+                Sign Up
+              </Link>
+            }
             <Link href="/pages/interactive-map" className="home-landing__button home-landing__button--explore">
               Explore Map
             </Link>

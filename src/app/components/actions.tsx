@@ -11,7 +11,7 @@
  *
  */
 
-import { revalidatePath } from 'next/cache'
+import { refresh, revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
@@ -181,89 +181,78 @@ updateProfile()
 */
 export async function updateProfile(formData: FormData) {
   const pfpDatabase = 'user-avatars';
-  const supabase = await createClient();
-  const imageEntry = formData.get('image');
-  const hasNewImage = imageEntry instanceof File && imageEntry.size > 0;
-  const image = hasNewImage ? imageEntry : null;
-  const oldAvatarName = trim(formData.get('oldAvatarName'));
-  const removeAvatar = formData.get('removeAvatar');
-  const wantsRemove =
-    removeAvatar === '1' ||
-    removeAvatar === 'true' ||
-    (typeof removeAvatar === 'string' && removeAvatar.toLowerCase() === 'on');
-  const username = trim(formData.get('Username'));
-  const name = trim(formData.get('Name'));
+  const username = trim(formData.get('username'));
+  const prevUsername = trim(formData.get('prev-username'));
   const uid = trim(formData.get('uid'));
+  const image: File = formData.get('image') as File;
+  const imgName = trim(formData.get('img-name'));
+  const deleteImg = trim(formData.get('delete-img'));
+  const supabase = await createClient();
 
-  let nextAvatarUrl: string | null | undefined = undefined;
-  let nextAvatarName: string | null | undefined = undefined;
+  if(username !== prevUsername) {
+    const { error } = await supabase 
+      .from('profiles')
+      .update({
+        username: username
+      })
+      .eq('id', uid)
+  }
 
-  if (wantsRemove) {
-    await deleteImage({ image: oldAvatarName, database: 'user-avatars' });
-    nextAvatarUrl = null;
-    nextAvatarName = null;
-  } else if (image) {
-    const avatarName = `${username}-${image.name}`;
-    const uploadImageStatus = await postImage({
-      image,
+  if(image.name !== 'undefined') {
+    console.log('there is an image: ', image)
+    const res = await postImage({
       database: pfpDatabase,
+      image: image,
       rid: null,
-      username: username,
-    });
-
-    if (uploadImageStatus.status !== 200 || typeof uploadImageStatus.url !== 'string') {
-      redirect(
-        `/pages/account?err=${encodeURIComponent('Could not upload profile image. Try again.')}`,
-      );
-    }
-    nextAvatarUrl =
-      typeof uploadImageStatus.url === 'string' && !isPresignedUrl(uploadImageStatus.url)
-        ? uploadImageStatus.url
-        : null;
-    nextAvatarName = avatarName;
-  }
-
-  const updateRow: Record<string, unknown> = {
-    full_name: name,
-    username: username,
-  };
-  if (nextAvatarUrl !== undefined) {
-    updateRow.avatar_url = nextAvatarUrl;
-    updateRow.avatar_name = nextAvatarName;
-  }
-
-  const { error } = await supabase.from('profiles').update(updateRow).eq('id', uid);
-
-
-  if (error) {
-    redirect(`/pages/account?err=${error.message}`)
-  }
-
-  const { data: profileRow } = await supabase
-    .from('profiles')
-    .select('avatar_url')
-    .eq('id', uid)
-    .maybeSingle()
-
-  const syncedAvatar =
-    typeof profileRow?.avatar_url === 'string'
-      ? profileRow.avatar_url.trim()
-      : ''
-
-  // Only sync non-empty URLs into JWT metadata. Writing '' can clear a good DB URL from
-  // being reflected in clients that read metadata before the next profile fetch, and is
-  // unnecessary when the profile row already stores the canonical `avatar_url`.
-  if (syncedAvatar.length > 0) {
-    const { error: metaErr } = await supabase.auth.updateUser({
-      data: { avatar_url: syncedAvatar },
+      username: username
     })
-    if (metaErr) {
-      console.error('sync avatar to auth metadata:', metaErr.message)
+
+    if(res.status !== 200) {
+      console.log('error uploading to database')
+      redirect(`/pages/account?err=${res.message}`)
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        avatar_url: res.url, 
+        avatar_name: `${username}-${image.name}`
+      })
+      .eq('id', uid)
+
+    if(error) {
+      console.log('error: ', error.message)
+      redirect(`/pages/account?err=${error.message}`)
     }
   }
 
-  revalidatePath('/', 'layout')
-  redirect('/pages/account?success=Account updated successfully')
+  if(deleteImg === 'delete' && image) {
+    console.log('attempting to delete img')
+    const res = await deleteImage({
+      database: pfpDatabase,
+      image: imgName
+    })
+    
+    if(res !== 200) {
+      redirect('/pages/account?err?Cloudflare could not delete the image.')
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        avatar_name: null,
+        avatar_url: null,
+      })
+      .eq('id', uid)
+
+    if(error) {
+      redirect('/pages/account?err?Supabase did not properly delete avatar.')
+    }
+  }
+
+  revalidatePath('/pages/account')
+  refresh()
+  redirect('/pages/account?success=Profile Updated');
 }
 
 /**

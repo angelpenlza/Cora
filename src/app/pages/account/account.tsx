@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { updateProfile, signout } from '@/app/components/actions';
 import { Avatar } from '@/app/components/client-components';
@@ -17,7 +17,6 @@ export function AccountCard({
   const [editing, setEditing] = useState(false);
   const [deleteImage, setDeleteImage] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
 
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -32,6 +31,12 @@ export function AccountCard({
     setAvatarPreview(null);
   }
 
+  function handleRevertChanges() {
+    setDeleteImage(false);
+    setAvatarPreview(profile?.avatar_url);
+    setUsername(profile?.username ?? '')
+  }
+
   function confirmSignout() {
     if (window.confirm('Log out?')) signout();
   }
@@ -39,6 +44,14 @@ export function AccountCard({
   const avatarSrc = deleteImage
     ? null
     : avatarPreview ?? profile?.avatar_url ?? null;
+
+  // useEffect(() => {
+  //   console.log('editing clicked: ', editing)
+  //   if(!editing) {
+  //     handleRevertAvatar();
+  //     setUsername(profile?.username)
+  //   }
+  // }, [editing]);
 
   return (
     <div className="acct-card">
@@ -49,52 +62,65 @@ export function AccountCard({
         </p>
       </div>
 
-      <form onSubmit={(e) => { if (!saving) e.preventDefault(); }}>
-        <input type="hidden" name="uid" value={profile?.id ?? ''} />
-        <input
-          type="hidden"
-          name="oldAvatarName"
-          value={profile?.avatar_name ?? ''}
-        />
-        {deleteImage && <input type="hidden" name="removeAvatar" value="1" />}
-
-        {/* Avatar — pencil always opens file picker in one click */}
+      <form 
+        onSubmit={(e) => { 
+          e.preventDefault()
+          setEditing(false);
+          const formData = new FormData(e.currentTarget)
+          updateProfile(formData);
+        }}
+        className='acct-form-container'
+      >
+        <input type='hidden' name='uid' value={profile?.id} />
+        <input type='hidden' name='prev-username' value={profile?.username} />
+        <input type='hidden' name='img-name' value={profile?.avatar_name ?? 'empty'} />
+        <input type='hidden' name='delete-img' value={deleteImage ? 'delete' : 'keep'} />
+   
         <div className="acct-avatar-section">
           <div className="acct-avatar-wrap">
             <Avatar avatar_url={avatarSrc} />
-            <label className="acct-avatar-edit-btn" title="Change avatar">
+            <label 
+              className="acct-avatar-edit-btn" 
+              title="Change avatar" 
+              style={
+                editing ? { } :
+                {display: 'none'}
+              }>
               ✎
               <input
                 type="file"
+                id='image'
                 name="image"
                 accept="image/png, image/jpeg"
                 onChange={handleAvatarChange}
                 style={{ display: 'none' }}
+                disabled={!editing}
               />
             </label>
           </div>
           <div className="acct-avatar-name">{displayName}</div>
-          {avatarPreview && (
-            <button
-              type="button"
-              onClick={handleDeleteAvatar}
-              style={{
-                marginTop: '0.35rem',
-                fontSize: '0.8rem',
-                color: '#b91c1c',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              Remove avatar
-            </button>
+          {editing && (
+
+              <button
+                type="button"
+                onClick={handleDeleteAvatar}
+                style={{
+                  marginTop: '0.35rem',
+                  fontSize: '0.8rem',
+                  color: '#b91c1c',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                Remove avatar
+              </button>
           )}
         </div>
+      
 
-        {/* Username */}
-        <div className="acct-field">
-          <label className="acct-field__label">
+        <div className='acct-field'>
+          <label htmlFor='username' className='acct-field__label'>
             <Image
               src="/assets/account-page-username-icon.png"
               alt=""
@@ -104,42 +130,57 @@ export function AccountCard({
             />
             Username
           </label>
-          <div className="acct-field__row">
-            <input
-              name="Username"
-              className="acct-field__input"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              disabled={!editing}
-              placeholder="New Username"
-            />
-            {editing ? (
-              <button
-                formAction={updateProfile}
-                className="acct-save-btn"
-                disabled={saving}
-                onClick={() => setSaving(true)}
-              >
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="acct-edit-btn"
-                onClick={() => setEditing(true)}
-              >
-                Edit
-              </button>
-            )}
-          </div>
+          <input 
+            id='username'
+            name='username'
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className='acct-field__input'
+            disabled={!editing}
+          />
         </div>
 
-        {/* Hidden full_name field so the existing server action still gets a value */}
-        <input
-          type="hidden"
-          name="Name"
-          value={profile?.full_name ?? displayName}
-        />
+        { editing ? 
+        <div className='edit-btns'> 
+          <button 
+            onClick={() => {
+              setEditing(!editing)
+              handleRevertChanges()
+            }} 
+            className='acct-edit-btn'>Cancel Changes</button>
+          <button type='submit' className='acct-save-btn'>Save Changes</button>
+        </div> :
+        <button onClick={() => setEditing(!editing)} className='acct-edit-btn'>Edit Profile</button>
+        
+        }
+
+        <div className='acct-field'>
+          <label className='acct-field__label'>
+          <Image 
+            src='/assets/orange-lock.svg'
+            alt=''
+            width={15}
+            height={15}
+            className='acct-field__label-icon'
+          />
+
+          
+            Update Password
+          </label>
+          <div className='acct-field__row'>
+            <input 
+              name='text'
+              id='text'
+              value='Send a code to your email.'
+              placeholder='Send a code to your email.' 
+              className='acct-field__input'
+              disabled
+            />
+            <button className='acct-edit-btn'>
+              Send
+            </button>
+          </div>
+        </div>
       </form>
 
       {/* Notification toggle */}

@@ -7,6 +7,11 @@
     font-family: var(--font-alexandria), ui-sans-serif, system-ui, sans-serif;
 }
 
+.acct-form-container {
+    display: flex;
+    flex-direction: column;
+}
+
 .acct-back-link {
     display: inline-flex;
     align-items: center;
@@ -169,7 +174,9 @@
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.14s ease;
+    
 }
+
 
 .acct-save-btn:hover {
     background: #dd7d00;
@@ -446,6 +453,12 @@
     background: #fca5a5;
 }
 
+.edit-btns {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 599px) {
     .acct-page {
@@ -479,5 +492,12 @@
 
     .acct-reports .report-title {
         white-space: normal;
+    }
+
+    
+
+    .edit-btns {
+        display: flex;
+        flex-direction: column;
     }
 }
