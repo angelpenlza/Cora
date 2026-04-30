@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
     return [{ source: '/manifest.json', destination: '/api/manifest' }];
   },
   async headers() {
-    return [
+    const sharedHeaders = [
       {
         source: '/manifest.json',
         headers: [
@@ -46,13 +46,21 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: '/_next/static/:path*',
+        source: '/icons/:path*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
+    ];
+
+    if (process.env.NODE_ENV !== 'production') {
+      return sharedHeaders;
+    }
+
+    return [
+      ...sharedHeaders,
       {
-        source: '/icons/:path*',
+        source: '/_next/static/:path*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],

@@ -158,10 +158,11 @@ export default async function RootLayout({
 
   let phoneVerified = false;
   let profileAvatarUrl: string | null = null;
+  let profileUsername: string | null = null;
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('phone_verified, avatar_url, avatar_name')
+      .select('phone_verified, avatar_url, avatar_name, username')
       .eq('id', user.id)
       .maybeSingle();
     phoneVerified = profile?.phone_verified === true;
@@ -170,6 +171,7 @@ export default async function RootLayout({
       avatarName: profile?.avatar_name,
       publicBase: process.env.NEXT_PUBLIC_R2_PUBLIC_AVATAR_URL,
     });
+    profileUsername = profile?.username ?? null;
   }
 
   return (
@@ -178,7 +180,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${alexandria.variable} ${gantari.variable} antialiased`}
       >
         <RegisterSw />
-        <NavBar user={user} profileAvatarUrl={profileAvatarUrl} />
+        <NavBar user={user} profileAvatarUrl={profileAvatarUrl} profileUsername={profileUsername} />
         <PhoneVerificationWrapper user={user} phoneVerified={phoneVerified} />
         <main className="site-main">
           {children}

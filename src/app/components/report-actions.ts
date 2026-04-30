@@ -478,7 +478,7 @@ export async function getReportComments(
 export async function createReportComment(
   reportId: number,
   body: string
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; comment?: ReportCommentRow }> {
   const trimmed = (body ?? '').toString().trim();
   if (!trimmed) return { error: 'Comment cannot be empty.' };
 
@@ -494,7 +494,7 @@ export async function createReportComment(
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('phone_verified')
+    .select('phone_verified, username, avatar_url, avatar_name')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -502,19 +502,40 @@ export async function createReportComment(
     return { error: VERIFICATION_REQUIRED };
   }
 
-  const { error: insertError } = await supabase.from('report_comments').insert({
-    report_id: reportId,
-    user_id: user.id,
-    body: trimmed,
-  });
+  const { data: insertedComment, error: insertError } = await supabase
+    .from('report_comments')
+    .insert({
+      report_id: reportId,
+      user_id: user.id,
+      body: trimmed,
+    })
+    .select('id, body, created_at')
+    .single();
 
   if (insertError) {
     console.error('Error inserting comment', insertError);
     return { error: 'Failed to post comment.' };
   }
 
-  revalidatePath(`/pages/explore/${reportId}`);
-  return {};
+  const publicBase = process.env.NEXT_PUBLIC_R2_PUBLIC_AVATAR_URL;
+  const rawAvatarUrl = typeof profile?.avatar_url === 'string' ? profile.avatar_url.trim() : '';
+  let avatarUrl: string | null = null;
+  if (rawAvatarUrl && !isPresignedUrl(rawAvatarUrl)) {
+    avatarUrl = rawAvatarUrl;
+  } else {
+    avatarUrl = buildPublicR2Url(publicBase, profile?.avatar_name);
+  }
+
+  revalidatePath(`/pages/reports/${reportId}`);
+  return {
+    comment: {
+      id: insertedComment.id,
+      body: insertedComment.body,
+      created_at: insertedComment.created_at,
+      username: profile?.username ?? 'Unknown',
+      avatar_url: avatarUrl,
+    },
+  };
 }
 
 /**

@@ -11,7 +11,7 @@
  *
  */
 
-import { refresh, revalidatePath } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
@@ -200,6 +200,14 @@ export async function updateProfile(formData: FormData) {
         username: username
       })
       .eq('id', uid)
+
+    if (error) {
+      redirect(`/pages/account?err=${encodeURIComponent(error.message)}`);
+    }
+
+    await supabase.auth.updateUser({
+      data: { username },
+    });
   }
 
   if(image.name !== 'undefined') {
@@ -254,8 +262,7 @@ export async function updateProfile(formData: FormData) {
     }
   }
 
-  revalidatePath('/pages/account')
-  refresh()
+  revalidatePath('/', 'layout')
   redirect('/pages/account?success=Profile Updated');
 }
 

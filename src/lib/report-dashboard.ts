@@ -29,8 +29,8 @@ export const DASHBOARD_STATUS_FILTERS = [
     match: (s: ReportStatus) => s === 'Community-Supported',
   },
   {
-    key: 'unconfirmed' as const,
-    label: 'Unconfirmed',
+    key: 'unverified' as const,
+    label: 'Unverified',
     iconSrc: '/assets/report-unconfirmed-icon.png',
     match: (s: ReportStatus) => s === 'Unconfirmed' || s == null,
   },

@@ -110,7 +110,7 @@ export default function ReportsMap({
       if (statusActive) {
         const status = resolveMapStatus(r.score, r.status);
         if (status === "supported" && !statusFilters.supported) return false;
-        if (status === "unconfirmed" && !statusFilters.unconfirmed) return false;
+        if (status === "unconfirmed" && !statusFilters.unverified) return false;
         if (status === "disputed" && !statusFilters.disputed) return false;
       }
 

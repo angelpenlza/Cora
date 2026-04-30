@@ -58,7 +58,9 @@ export default function ReportDetailClient({
     }
     if (result.error) return;
     setCommentBody('');
-    router.refresh();
+    if (result.comment) {
+      setComments((prev) => [result.comment!, ...prev.filter((c) => c.id !== result.comment!.id)]);
+    }
   };
 
   const commentsSection = (

@@ -142,7 +142,8 @@ function LogOutMenuIcon() {
   );
 }
 
-function displayName(user: User) {
+function displayName(user: User, profileUsername?: string | null) {
+  if (profileUsername?.trim()) return profileUsername.trim();
   const meta = user.user_metadata as Record<string, unknown> | undefined;
   const full =
     (typeof meta?.full_name === 'string' && meta.full_name) ||
@@ -209,9 +210,11 @@ function UserAvatarButton({
 function UserMenu({
   user,
   profileAvatarUrl,
+  profileUsername,
 }: {
   user: User;
   profileAvatarUrl?: string | null;
+  profileUsername?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -249,7 +252,7 @@ function UserMenu({
       />
       {open && (
         <div className="site-header-user-dropdown" role="menu">
-          <div className="site-header-user-name">{displayName(user)}</div>
+          <div className="site-header-user-name">{displayName(user, profileUsername)}</div>
           <Link
             href={ACCOUNT_HREF}
             className="site-header-dropdown-item"
@@ -280,10 +283,13 @@ function UserMenu({
 export default function NavBar({
   user,
   profileAvatarUrl,
+  profileUsername,
 }: {
   user: User | null;
   /** From `profiles.avatar_url` (layout); takes precedence over OAuth-only JWT metadata. */
   profileAvatarUrl?: string | null;
+  /** From `profiles.username` (layout); takes precedence over JWT metadata. */
+  profileUsername?: string | null;
 }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -340,7 +346,7 @@ export default function NavBar({
             Make a Report
           </Link>
           {user ? (
-            <UserMenu user={user} profileAvatarUrl={profileAvatarUrl} />
+            <UserMenu user={user} profileAvatarUrl={profileAvatarUrl} profileUsername={profileUsername} />
           ) : (
             <Link
               href={LOGIN_HREF}

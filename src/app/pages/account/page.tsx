@@ -34,8 +34,8 @@ export default async function Account() {
     .eq('created_by', user?.id);
 
   const displayName =
-    profile?.full_name ??
     profile?.username ??
+    profile?.full_name ??
     (user.user_metadata as { username?: string } | null)?.username ??
     user.email?.split('@')[0] ??
     'User';
