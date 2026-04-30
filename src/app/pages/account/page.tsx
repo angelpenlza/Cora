@@ -45,7 +45,11 @@ export default async function Account() {
         ← Go back
       </Link>
 
-      <AccountCard profile={profile} displayName={displayName} />
+      <AccountCard 
+        profile={profile} 
+        displayName={displayName} 
+        email={user?.email!}
+      />
 
       <div className="acct-reports">
         <h2 className="acct-reports__title">Your Reports</h2>

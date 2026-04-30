@@ -2,21 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { updateProfile, signout } from '@/app/components/actions';
+import { updateProfile, signout, forgotpass } from '@/app/components/actions';
 import { Avatar } from '@/app/components/client-components';
 import AccountNotificationToggle from './account-notification-toggle';
 
 export function AccountCard({
   profile,
   displayName,
+  email,
 }: {
   profile: any;
   displayName: string;
+  email: string;
 }) {
   const [username, setUsername] = useState(profile?.username ?? '');
   const [editing, setEditing] = useState(false);
   const [deleteImage, setDeleteImage] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const formData = new FormData();
+  formData.append('email', email)
 
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -75,6 +79,7 @@ export function AccountCard({
         <input type='hidden' name='prev-username' value={profile?.username} />
         <input type='hidden' name='img-name' value={profile?.avatar_name ?? 'empty'} />
         <input type='hidden' name='delete-img' value={deleteImage ? 'delete' : 'keep'} />
+        {/* <input type='hidden' name='email' value={email} /> */}
    
         <div className="acct-avatar-section">
           <div className="acct-avatar-wrap">
@@ -176,7 +181,12 @@ export function AccountCard({
               className='acct-field__input'
               disabled
             />
-            <button className='acct-edit-btn'>
+            <button 
+              onClick={(e) => { 
+                e.preventDefault()
+                forgotpass(formData) 
+              }}  
+              className='acct-edit-btn'>
               Send
             </button>
           </div>

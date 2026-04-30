@@ -192,7 +192,7 @@ export default function UploadForm({
                 src='/assets/cloudflare-icon.png' 
                 alt=''
                 width={40}
-                height={40}
+                height={28}
                 className='cloudflare-icon'
               />
               <p>Click to upload images.</p>
