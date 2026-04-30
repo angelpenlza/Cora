@@ -13,7 +13,7 @@ import './styles/reset-password.css'
 import { createClient } from "@/lib/supabase/server";
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
-import { buildPublicR2Url, isPresignedUrl } from "@/lib/presigned-url";
+import { resolveProfileAvatarUrl } from "@/lib/avatar-url";
 
 /**
  * Root layout: defines global HTML shell, fonts, navigation, analytics,
@@ -165,18 +165,11 @@ export default async function RootLayout({
       .eq('id', user.id)
       .maybeSingle();
     phoneVerified = profile?.phone_verified === true;
-    const rawAvatar = profile?.avatar_url;
-    const trimmed =
-      typeof rawAvatar === 'string' && rawAvatar.trim()
-        ? rawAvatar.trim()
-        : null;
-    if (trimmed && !isPresignedUrl(trimmed)) {
-      profileAvatarUrl = trimmed;
-    } else {
-      // If we have an old presigned URL stored, rebuild a stable public URL from avatar_name.
-      const rebuilt = buildPublicR2Url(process.env.NEXT_PUBLIC_R2_PUBLIC_AVATAR_URL, profile?.avatar_name);
-      profileAvatarUrl = rebuilt;
-    }
+    profileAvatarUrl = resolveProfileAvatarUrl({
+      avatarUrl: profile?.avatar_url,
+      avatarName: profile?.avatar_name,
+      publicBase: process.env.NEXT_PUBLIC_R2_PUBLIC_AVATAR_URL,
+    });
   }
 
   return (

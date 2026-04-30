@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { signout } from './actions';
-import { isPresignedUrl } from '@/lib/presigned-url';
+import { DEFAULT_AVATAR_URL, normalizeAvatarUrl } from '@/lib/avatar-url';
 
 const MAP_HREF = '/pages/interactive-map';
 const REPORTS_HREF = '/pages/reports';
@@ -15,20 +15,14 @@ const UPLOAD_HREF = '/pages/upload';
 const LOGIN_HREF = '/pages/login';
 const ACCOUNT_HREF = '/pages/account';
 const PERSON_GLYPH_FILL = '#F27F0D';
-const DEFAULT_AVATAR_URL =
-  'https://pub-2cb33e70d73b4e729e9246e178904e40.r2.dev/default-pfp.png';
-
 /** First non-empty avatar URL from Supabase / OAuth metadata, or null. */
 function readAvatarUrlFromMeta(
   meta: Record<string, unknown> | undefined,
 ): string | null {
   if (!meta) return null;
   for (const key of ['avatar_url', 'picture'] as const) {
-    const v = meta[key];
-    if (typeof v !== 'string') continue;
-    const t = v.trim();
-    if (!t || t === 'null' || t === 'undefined') continue;
-    return t;
+    const normalized = normalizeAvatarUrl(meta[key]);
+    if (normalized) return normalized;
   }
   return null;
 }
@@ -38,16 +32,8 @@ function readPreferredAvatarUrl(
   profileAvatarUrl: string | null | undefined,
   meta: Record<string, unknown> | undefined,
 ): string | null {
-  if (typeof profileAvatarUrl === 'string') {
-    const t = profileAvatarUrl.trim();
-    if (t && t !== 'null' && t !== 'undefined') {
-      // Legacy default shipped from /public; migrate display to R2 default.
-      if (t === '/assets/user.png') return DEFAULT_AVATAR_URL;
-      // Do not render expiring presigned URLs; fall back to default.
-      if (isPresignedUrl(t)) return null;
-      return t;
-    }
-  }
+  const normalizedProfile = normalizeAvatarUrl(profileAvatarUrl);
+  if (normalizedProfile) return normalizedProfile;
   return readAvatarUrlFromMeta(meta);
 }
 

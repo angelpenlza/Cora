@@ -5,7 +5,7 @@ import VerifiedToast from '@/app/components/verified-toast';
 import { Reports } from '@/app/components/client-components';
 import { AccountCard } from './account';
 import { getImages } from '@/app/components/cfhelpers';
-import { buildPublicR2Url, isPresignedUrl } from '@/lib/presigned-url';
+import { resolveProfileAvatarUrl } from '@/lib/avatar-url';
 import Link from 'next/link';
 
 export default async function Account() {
@@ -20,9 +20,12 @@ export default async function Account() {
     .eq('id', user.id)
     .single();
 
-  if (profile && typeof profile.avatar_url === 'string' && isPresignedUrl(profile.avatar_url)) {
-    const rebuilt = buildPublicR2Url(process.env.NEXT_PUBLIC_R2_PUBLIC_AVATAR_URL, profile.avatar_name);
-    profile.avatar_url = rebuilt;
+  if (profile) {
+    profile.avatar_url = resolveProfileAvatarUrl({
+      avatarUrl: profile.avatar_url,
+      avatarName: profile.avatar_name,
+      publicBase: process.env.NEXT_PUBLIC_R2_PUBLIC_AVATAR_URL,
+    });
   }
 
   const { data: report } = await supabase
