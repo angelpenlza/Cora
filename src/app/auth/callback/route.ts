@@ -3,6 +3,8 @@ import { revalidatePath } from 'next/cache'
 // The client you created from the Server-Side Auth instructions
 import { createClient } from '@/lib/supabase/server'
 
+type EmailOtpType = 'signup' | 'recovery' | 'email' | 'invite' | 'email_change'
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
@@ -35,13 +37,17 @@ export async function GET(request: Request) {
 
   // Some Supabase email templates/flows provide token_hash + type instead of code.
   if (tokenHash && otpType) {
-    const type = otpType as
-      | 'signup'
-      | 'recovery'
-      | 'email'
-      | 'invite'
-      | 'email_change'
-      | 'phone_change'
+    const validEmailOtpTypes: EmailOtpType[] = [
+      'signup',
+      'recovery',
+      'email',
+      'invite',
+      'email_change',
+    ]
+    if (!validEmailOtpTypes.includes(otpType as EmailOtpType)) {
+      return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+    }
+    const type = otpType as EmailOtpType
     const { error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
       type,
