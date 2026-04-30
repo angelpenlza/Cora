@@ -15,7 +15,6 @@ var PAGES_CACHE  = 'cora-pages-v3';
 var PRECACHE_URLS = [
   '/',
   '/assets/cora-logo.png',
-  '/assets/favicon-96x96.png',
   '/favicon.ico',
 ];
 
@@ -23,7 +22,13 @@ var PRECACHE_URLS = [
 self.addEventListener('install', function (event) {
   event.waitUntil(
     caches.open(STATIC_CACHE).then(function (cache) {
-      return cache.addAll(PRECACHE_URLS);
+      return Promise.all(
+        PRECACHE_URLS.map(function (url) {
+          return cache.add(url).catch(function (err) {
+            console.warn('[SW] Failed to precache:', url, err);
+          });
+        })
+      );
     })
   );
   self.skipWaiting();

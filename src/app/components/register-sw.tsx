@@ -15,7 +15,6 @@ export default function RegisterSw() {
 
     (async () => {
       try {
-        // Purge all zombie/stale registrations for this origin
         const all = await navigator.serviceWorker.getRegistrations();
         for (const reg of all) {
           if (!reg.active || reg.active.scriptURL === '') {
@@ -23,7 +22,6 @@ export default function RegisterSw() {
           }
         }
 
-        // Small delay to let Chrome fully clear the zombie state
         await new Promise((r) => setTimeout(r, 100));
 
         const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });

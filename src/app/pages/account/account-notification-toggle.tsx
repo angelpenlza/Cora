@@ -20,16 +20,12 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 /**
- * Aggressively ensures a healthy SW registration by:
- * 1. Purging any zombie registrations (no active worker / unknown script)
- * 2. Waiting for Chrome to finish cleanup
- * 3. Registering /sw.js fresh
- * 4. Waiting for the worker to reach "activated" state
+ * Ensures a healthy SW registration by purging zombies, registering
+ * /sw.js if needed, and waiting for the worker to reach "activated" state.
  */
 async function ensureActiveRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null;
 
-  // Step 1: Purge zombies
   const all = await navigator.serviceWorker.getRegistrations();
   for (const reg of all) {
     if (!reg.active || reg.active.scriptURL === '') {
@@ -37,11 +33,9 @@ async function ensureActiveRegistration(): Promise<ServiceWorkerRegistration | n
     }
   }
 
-  // Step 2: Check for a healthy existing registration
   let reg = await navigator.serviceWorker.getRegistration('/');
   if (reg?.active) return reg;
 
-  // Step 3: If still no healthy registration, register fresh
   await new Promise((r) => setTimeout(r, 100));
   try {
     reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
@@ -51,7 +45,6 @@ async function ensureActiveRegistration(): Promise<ServiceWorkerRegistration | n
 
   if (reg.active) return reg;
 
-  // Step 4: Wait for activation (up to 6s)
   const worker = reg.installing ?? reg.waiting;
   if (!worker) return null;
 
