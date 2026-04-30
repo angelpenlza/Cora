@@ -56,15 +56,20 @@ export default function VerifyPhoneForm() {
     setLoadingSend(true);
     setError(null);
     const e164 = formatPhone(phone);
-    const result = await sendPhoneOtp(e164);
-    setLoadingSend(false);
-    if (result.error) {
-      setError(result.error);
-      return;
+    try {
+      const result = await sendPhoneOtp(e164);
+      if (result.error) {
+        setError(result.error);
+        setLoadingSend(false);
+        return;
+      }
+      setStep('otp');
+      startCooldown();
+      otpInputRefs.current[0]?.focus();
+    } catch {
+      setError('Unable to reach the verification service. Please check your connection and try again.');
     }
-    setStep('otp');
-    startCooldown();
-    otpInputRefs.current[0]?.focus();
+    setLoadingSend(false);
   };
 
   const handleSendCodeAgain = async (e: React.MouseEvent) => {
@@ -73,15 +78,20 @@ export default function VerifyPhoneForm() {
     setLoadingSend(true);
     setError(null);
     const e164 = formatPhone(phone);
-    const result = await sendPhoneOtp(e164);
-    setLoadingSend(false);
-    if (result.error) {
-      setError(result.error);
-      return;
+    try {
+      const result = await sendPhoneOtp(e164);
+      if (result.error) {
+        setError(result.error);
+        setLoadingSend(false);
+        return;
+      }
+      startCooldown();
+      setOtpDigits(Array(OTP_LENGTH).fill(''));
+      otpInputRefs.current[0]?.focus();
+    } catch {
+      setError('Unable to reach the verification service. Please check your connection and try again.');
     }
-    startCooldown();
-    setOtpDigits(Array(OTP_LENGTH).fill(''));
-    otpInputRefs.current[0]?.focus();
+    setLoadingSend(false);
   };
 
   const handleVerify = async (e: React.FormEvent) => {
@@ -90,14 +100,19 @@ export default function VerifyPhoneForm() {
     setLoadingVerify(true);
     setError(null);
     const e164 = formatPhone(phone);
-    const result = await verifyPhoneOtp(e164, otp);
-    setLoadingVerify(false);
-    if (result.error) {
-      setError(result.error);
-      return;
+    try {
+      const result = await verifyPhoneOtp(e164, otp);
+      if (result.error) {
+        setError(result.error);
+        setLoadingVerify(false);
+        return;
+      }
+      router.push('/pages/account?verified=1');
+      router.refresh();
+    } catch {
+      setError('Unable to reach the verification service. Please check your connection and try again.');
     }
-    router.push('/pages/account?verified=1');
-    router.refresh();
+    setLoadingVerify(false);
   };
 
   const handleOtpChange = (index: number, value: string) => {
