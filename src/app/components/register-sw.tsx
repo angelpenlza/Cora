@@ -3,15 +3,11 @@
 import { useEffect } from 'react';
 
 /**
- * Client-only component that manages the service worker (`/sw.js`).
+ * Registers the service worker (`/sw.js`) for push notifications and caching.
  *
- * Registers the SW in all environments — it's required for push
- * notifications and offline caching. In development, the SW's
- * fetch handler already uses network-first for pages and
- * network-only for API routes, so registration is safe.
- *
- * Handles "zombie" registrations left over from previous code that
- * unregistered workers — clears them and re-registers cleanly.
+ * Handles "zombie" registrations: previous deployments unregistered the SW,
+ * leaving Chrome with broken entries that prevent re-registration. This
+ * component purges all existing registrations first, then registers cleanly.
  */
 export default function RegisterSw() {
   useEffect(() => {
@@ -19,14 +15,19 @@ export default function RegisterSw() {
 
     (async () => {
       try {
-        const existing = await navigator.serviceWorker.getRegistration('/');
-        // Clear zombie registrations (deleted state: no workers attached)
-        if (existing && !existing.active && !existing.installing && !existing.waiting) {
-          await existing.unregister();
+        // Purge all zombie/stale registrations for this origin
+        const all = await navigator.serviceWorker.getRegistrations();
+        for (const reg of all) {
+          if (!reg.active || reg.active.scriptURL === '') {
+            await reg.unregister();
+          }
         }
 
+        // Small delay to let Chrome fully clear the zombie state
+        await new Promise((r) => setTimeout(r, 100));
+
         const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-        reg.update();
+
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           if (!newWorker) return;
@@ -37,7 +38,7 @@ export default function RegisterSw() {
           });
         });
       } catch (err) {
-        console.error('SW registration failed', err);
+        console.error('SW registration failed:', err);
       }
     })();
   }, []);
