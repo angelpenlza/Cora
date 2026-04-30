@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import {
   subscribeUser,
@@ -19,71 +19,79 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-export default function AccountNotificationToggle() {
-  const [isSupported, setIsSupported] = useState(false);
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+/**
+ * Ensure an active service worker registration exists.
+ * Registers /sw.js if needed and waits up to 5 s for activation.
+ */
+async function ensureActiveRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (!('serviceWorker' in navigator)) return null;
 
-  async function waitForActiveWorker(registration: ServiceWorkerRegistration) {
-    if (registration.active) return registration;
+  let reg = await navigator.serviceWorker.getRegistration('/');
 
-    const candidate = registration.installing || registration.waiting;
-    if (!candidate) return null;
-
-    await new Promise<void>((resolve) => {
-      const onStateChange = () => {
-        if (candidate.state === 'activated') {
-          candidate.removeEventListener('statechange', onStateChange);
-          resolve();
-        }
-      };
-      candidate.addEventListener('statechange', onStateChange);
-      setTimeout(() => {
-        candidate.removeEventListener('statechange', onStateChange);
-        resolve();
-      }, 4000);
-    });
-
-    const refreshed = await navigator.serviceWorker.getRegistration('/');
-    return refreshed?.active ? refreshed : null;
-  }
-
-  async function hydrateExistingSubscription() {
+  if (!reg) {
     try {
-      const registration = await getOrCreateRegistration();
-      if (!registration) return;
-      const existing = await registration.pushManager.getSubscription();
-      if (existing) setIsSubscribed(true);
-    } catch {
-      /* ignore */
-    }
-  }
-
-  async function getOrCreateRegistration() {
-    if (!('serviceWorker' in navigator) || !window.isSecureContext) return null;
-    const existing = await navigator.serviceWorker.getRegistration('/');
-    if (existing?.active) return existing;
-    try {
-      const created = existing ?? await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-      const ready = await navigator.serviceWorker.ready;
-      if (ready?.active) return ready;
-      return await waitForActiveWorker(created);
+      reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
     } catch {
       return null;
     }
   }
 
+  if (reg.active) return reg;
+
+  const worker = reg.installing ?? reg.waiting;
+  if (!worker) return null;
+
+  await new Promise<void>((resolve) => {
+    if (worker.state === 'activated') {
+      resolve();
+      return;
+    }
+    const onChange = () => {
+      if (worker.state === 'activated') {
+        worker.removeEventListener('statechange', onChange);
+        resolve();
+      }
+    };
+    worker.addEventListener('statechange', onChange);
+    setTimeout(() => {
+      worker.removeEventListener('statechange', onChange);
+      resolve();
+    }, 5000);
+  });
+
+  const refreshed = await navigator.serviceWorker.getRegistration('/');
+  return refreshed?.active ? refreshed : null;
+}
+
+export default function AccountNotificationToggle() {
+  const [isSupported, setIsSupported] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const mounted = useRef(true);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (
+    const supported =
       'serviceWorker' in navigator &&
       'PushManager' in window &&
-      'Notification' in window
-    ) {
-      setIsSupported(true);
-      void hydrateExistingSubscription();
-    }
+      'Notification' in window;
+    if (!supported) return;
+    setIsSupported(true);
+
+    (async () => {
+      try {
+        const reg = await ensureActiveRegistration();
+        if (!reg || !mounted.current) return;
+        const existing = await reg.pushManager.getSubscription();
+        if (existing && mounted.current) setIsSubscribed(true);
+      } catch { /* ignore */ }
+    })();
   }, []);
 
   async function handleToggle() {
@@ -102,38 +110,37 @@ export default function AccountNotificationToggle() {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         setError('Notifications are blocked in your browser settings.');
-        setLoading(false);
         return;
       }
+
       const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!publicKey) {
         setError('Push notifications are not configured on the server.');
-        setLoading(false);
         return;
       }
-      const registration = await getOrCreateRegistration();
-      if (!registration) {
-        setError('Service worker is not available. Refresh and try again.');
-        setLoading(false);
+
+      const reg = await ensureActiveRegistration();
+      if (!reg) {
+        setError('Service worker could not activate. Try refreshing the page.');
         return;
       }
-      const sub = await registration.pushManager.subscribe({
+
+      const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey),
       });
-      const serialized = JSON.parse(
-        JSON.stringify(sub),
-      ) as PushSubscriptionJSON;
+
+      const serialized = JSON.parse(JSON.stringify(sub)) as PushSubscriptionJSON;
       const result = await subscribeUser(serialized);
       if (!result?.success) {
         setError(result?.error ?? 'Failed to save subscription.');
         await sub.unsubscribe().catch(() => {});
-        setLoading(false);
         return;
       }
+
       setIsSubscribed(true);
     } catch (err: unknown) {
-      const msg = err && (err as Error).message ? (err as Error).message : '';
+      const msg = err instanceof Error ? err.message : '';
       setError('Failed to subscribe.' + (msg ? ` (${msg})` : ''));
     } finally {
       setLoading(false);
@@ -144,14 +151,11 @@ export default function AccountNotificationToggle() {
     setLoading(true);
     setError(null);
     try {
-      const registration = await getOrCreateRegistration();
-      if (!registration) {
-        setError('Service worker is not available.');
-        setLoading(false);
-        return;
+      const reg = await navigator.serviceWorker.getRegistration('/');
+      if (reg) {
+        const existing = await reg.pushManager.getSubscription();
+        await existing?.unsubscribe();
       }
-      const existing = await registration.pushManager.getSubscription();
-      await existing?.unsubscribe();
       const result = await unsubscribeUser();
       if (!result?.success) {
         setError(result?.error ?? 'Failed to unsubscribe.');
@@ -203,15 +207,16 @@ export default function AccountNotificationToggle() {
           <strong>Push Notifications</strong>
           <span>Get instant community safety alerts</span>
         </div>
-        <label className="acct-toggle">
-          <input
-            type="checkbox"
-            checked={isSubscribed}
-            onChange={handleToggle}
-            disabled={loading}
-          />
-          <span className="acct-toggle__track" />
-        </label>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isSubscribed}
+          disabled={loading}
+          className={`acct-toggle${isSubscribed ? ' acct-toggle--on' : ''}`}
+          onClick={handleToggle}
+        >
+          <span className="acct-toggle__knob" />
+        </button>
       </div>
 
       {error && <p className="acct-notif__error">{error}</p>}

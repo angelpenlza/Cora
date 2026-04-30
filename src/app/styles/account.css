@@ -243,49 +243,52 @@
     color: #64748b;
 }
 
-/* Toggle switch */
+/* Toggle switch — pill-shaped button[role="switch"] */
 .acct-toggle {
     position: relative;
-    display: inline-block;
-    width: 46px;
-    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    width: 48px;
+    height: 28px;
     flex-shrink: 0;
-}
-
-.acct-toggle input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    position: absolute;
-}
-
-.acct-toggle__track {
-    position: absolute;
-    inset: 0;
-    border-radius: 999px;
+    border: none;
+    padding: 0;
+    border-radius: 14px;
     background: #d1d5db;
     cursor: pointer;
     transition: background 0.2s ease;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
-.acct-toggle input:checked + .acct-toggle__track {
+.acct-toggle:focus-visible {
+    box-shadow: 0 0 0 3px rgba(242, 127, 13, 0.35);
+}
+
+.acct-toggle--on {
     background: #f27f0d;
 }
 
-.acct-toggle__track::after {
-    content: '';
+.acct-toggle:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.acct-toggle__knob {
     position: absolute;
     top: 3px;
     left: 3px;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
     transition: transform 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
 }
 
-.acct-toggle input:checked + .acct-toggle__track::after {
+.acct-toggle--on .acct-toggle__knob {
     transform: translateX(20px);
 }
 
