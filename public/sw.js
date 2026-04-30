@@ -8,9 +8,9 @@
  *   - API routes / Server Actions: network-only (never cache mutations)
  */
 
-var CACHE_VERSION = 'cora-v2';
-var STATIC_CACHE = 'cora-static-v2';
-var PAGES_CACHE  = 'cora-pages-v2';
+var CACHE_VERSION = 'cora-v3';
+var STATIC_CACHE = 'cora-static-v3';
+var PAGES_CACHE  = 'cora-pages-v3';
 
 var PRECACHE_URLS = [
   '/',
@@ -68,6 +68,15 @@ function isApiOrAction(url) {
     || path.startsWith('/auth/');
 }
 
+function isAuthCriticalPath(url) {
+  var path = url.pathname;
+  return path.startsWith('/auth/')
+    || path.startsWith('/pages/verify-phone')
+    || path.startsWith('/pages/login')
+    || path.startsWith('/pages/signup')
+    || path.startsWith('/pages/account');
+}
+
 function isNextDataLikeRequest(request, url) {
   var accept = request.headers.get('accept') || '';
   var hasRscHeader = request.headers.has('rsc');
@@ -92,6 +101,9 @@ self.addEventListener('fetch', function (event) {
 
   // Next.js data/RSC/prefetch requests: network-only (avoid synthetic offline 503s)
   if (url.origin === self.location.origin && isNextDataLikeRequest(event.request, url)) return;
+
+  // Auth/verification/account routes: always network-only
+  if (url.origin === self.location.origin && isAuthCriticalPath(url)) return;
 
   // Static assets from our origin: cache-first
   if (url.origin === self.location.origin && isStaticAsset(url)) {
